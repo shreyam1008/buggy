@@ -11,14 +11,13 @@ import Divider from "@material-ui/core/Divider";
 import IconButton from "@material-ui/core/IconButton";
 import MenuIcon from "@material-ui/icons/Menu";
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
-import ChevronRightIcon from "@material-ui/icons/ChevronRight";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
 import ListItemText from "@material-ui/core/ListItemText";
 import InboxIcon from "@material-ui/icons/MoveToInbox";
 
 import Footer from "./Footer";
-import { Avatar } from "@material-ui/core";
+import { Avatar, Button } from "@material-ui/core";
 
 const drawerWidth = 240;
 
@@ -28,7 +27,7 @@ const primaryMenu = [
   { listIcon: <InboxIcon />, listText: "Portfolio", listPath: "/portfolio" },
   { listIcon: <InboxIcon />, listText: "Contact", listPath: "/contact" },
 ];
-const secondayMenu = [
+const secondaryMenu = [
   { listIcon: <InboxIcon />, listText: "TOLG(tech blog)", listPath: "/tlog" },
   { listIcon: <InboxIcon />, listText: "Media", listPath: "/media" },
   { listIcon: <InboxIcon />, listText: "Life", listPath: "/life" },
@@ -82,6 +81,7 @@ const useStyles = makeStyles((theme) => ({
       width: theme.spacing(9) + 1,
     },
   },
+
   toolbar: {
     display: "flex",
     alignItems: "center",
@@ -90,15 +90,17 @@ const useStyles = makeStyles((theme) => ({
     // necessary for content to be below app bar
     ...theme.mixins.toolbar,
   },
+  avatar: {
+    justifyContent: "center",
+  },
   content: {
     flexGrow: 1,
     padding: theme.spacing(3),
   },
 }));
 
-export default function Header() {
+export default function Layout() {
   const classes = useStyles();
-  const theme = useTheme();
   const [open, setOpen] = React.useState(false);
 
   const handleDrawerOpen = () => {
@@ -133,6 +135,8 @@ export default function Header() {
           <Typography variant="h6" noWrap>
             Welcome To house of Buggy
           </Typography>
+          {/* put button on this end for theme change */}
+          {/* <Button> THEME CHANGE</Button> */}
         </Toolbar>
       </AppBar>
       <Drawer
@@ -149,7 +153,7 @@ export default function Header() {
         }}
       >
         <div className={classes.toolbar}>
-          <Avatar />
+          <Avatar className={classes.avatar} />
           <IconButton onClick={handleDrawerClose}>
             <ChevronLeftIcon />
           </IconButton>
@@ -165,13 +169,14 @@ export default function Header() {
         </List>
         <Divider />
         <List>
-          {secondayMenu.map((item, index) => (
+          {secondaryMenu.map((item, index) => (
             <ListItem button key={item.listText}>
               <ListItemIcon>{item.listIcon}</ListItemIcon>
               <ListItemText primary={item.listText} />
             </ListItem>
           ))}
         </List>
+        <Divider />
         <Footer />
       </Drawer>
       <main className={classes.content}>

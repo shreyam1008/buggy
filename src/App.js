@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "./App.css";
-import Header from "./Components/Header";
+import Layout from "./Components/Layout";
 
 import { createMuiTheme, ThemeProvider } from "@material-ui/core/styles";
 import { Button } from "@material-ui/core";
@@ -19,7 +19,7 @@ const App = () => {
   return (
     <div className="app">
       <ThemeProvider theme={darkTheme}>
-        <Header />
+        <Layout />
         {/* shift the button into the drawer cmoponent to above cmponent */}
         <Button onClick={handleThemeChange}>DARK?LIGHT theme</Button>
       </ThemeProvider>
