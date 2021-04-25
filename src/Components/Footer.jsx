@@ -16,8 +16,8 @@ const useStyles = makeStyles({
     "& .MuiSvgIcon-root": {
       fill: "black",
       "&:hover": {
-        fill: "tomato",
-        fontSize: "1.8rem",
+        fill: "blue",
+        fontSize: "2rem",
       },
     },
   },
@@ -33,7 +33,7 @@ const Footer = () => {
         <BottomNavigationAction icon={<Twitter />} className={classes.root} />
         <BottomNavigationAction icon={<Instagram />} className={classes.root} />
       </BottomNavigation>
-      <BottomNavigation className={classes.bottomNavContainer}>
+      {/* <BottomNavigation className={classes.bottomNavContainer}>
         <BottomNavigationAction
           icon={<LinkedInIcon />}
           className={classes.root}
@@ -43,7 +43,7 @@ const Footer = () => {
           className={classes.root}
         />
         <BottomNavigationAction icon={<Instagram />} className={classes.root} />
-      </BottomNavigation>
+      </BottomNavigation> */}
     </React.Fragment>
   );
 };

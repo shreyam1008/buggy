@@ -16,7 +16,6 @@ import ListItem from "@material-ui/core/ListItem";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
 import ListItemText from "@material-ui/core/ListItemText";
 import InboxIcon from "@material-ui/icons/MoveToInbox";
-import MailIcon from "@material-ui/icons/Mail";
 
 import Footer from "./Footer";
 import { Avatar } from "@material-ui/core";
@@ -30,9 +29,9 @@ const primaryMenu = [
   { listIcon: <InboxIcon />, listText: "Contact", listPath: "/contact" },
 ];
 const secondayMenu = [
-  { listIcon: <InboxIcon />, listText: "TOLG(tech blog)", listPath: "/" },
-  { listIcon: <InboxIcon />, listText: "Media", listPath: "/resume" },
-  { listIcon: <InboxIcon />, listText: "Life", listPath: "/portfolio" },
+  { listIcon: <InboxIcon />, listText: "TOLG(tech blog)", listPath: "/tlog" },
+  { listIcon: <InboxIcon />, listText: "Media", listPath: "/media" },
+  { listIcon: <InboxIcon />, listText: "Life", listPath: "/life" },
 ];
 
 const useStyles = makeStyles((theme) => ({
@@ -152,11 +151,7 @@ export default function Header() {
         <div className={classes.toolbar}>
           <Avatar />
           <IconButton onClick={handleDrawerClose}>
-            {theme.direction === "rtl" ? (
-              <ChevronRightIcon />
-            ) : (
-              <ChevronLeftIcon />
-            )}
+            <ChevronLeftIcon />
           </IconButton>
         </div>
         <Divider />

@@ -2,11 +2,27 @@ import React, { useState } from "react";
 import "./App.css";
 import Header from "./Components/Header";
 
+import { createMuiTheme, ThemeProvider } from "@material-ui/core/styles";
+import { Button } from "@material-ui/core";
+
 const App = () => {
+  const [darkState, setDarkState] = useState(false);
+  const palletType = darkState ? "dark" : "light";
+  const darkTheme = createMuiTheme({
+    palette: {
+      type: palletType,
+    },
+  });
+  const handleThemeChange = () => {
+    setDarkState(!darkState);
+  };
   return (
     <div className="app">
-      {/* header */}
-      <Header />
+      <ThemeProvider theme={darkTheme}>
+        <Header />
+        {/* shift the button into the drawer cmoponent to above cmponent */}
+        <Button onClick={handleThemeChange}>DARK?LIGHT theme</Button>
+      </ThemeProvider>
       {/* sidebar */}
 
       {/* body */}
