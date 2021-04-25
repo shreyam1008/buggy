@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import clsx from "clsx";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import Drawer from "@material-ui/core/Drawer";
@@ -91,7 +92,9 @@ const useStyles = makeStyles((theme) => ({
     ...theme.mixins.toolbar,
   },
   avatar: {
-    justifyContent: "center",
+    margin: "0.5rem auto",
+    width: theme.spacing(10),
+    height: theme.spacing(10),
   },
   content: {
     flexGrow: 1,
@@ -161,7 +164,7 @@ export default function Layout() {
         <Divider />
         <List>
           {primaryMenu.map((item, index) => (
-            <ListItem button key={item.listText}>
+            <ListItem button key={index} component={Link} to={item.listPath}>
               <ListItemIcon>{item.listIcon}</ListItemIcon>
               <ListItemText primary={item.listText} />
             </ListItem>
@@ -170,7 +173,7 @@ export default function Layout() {
         <Divider />
         <List>
           {secondaryMenu.map((item, index) => (
-            <ListItem button key={item.listText}>
+            <ListItem button key={index} component={Link} to={item.listPath}>
               <ListItemIcon>{item.listIcon}</ListItemIcon>
               <ListItemText primary={item.listText} />
             </ListItem>
