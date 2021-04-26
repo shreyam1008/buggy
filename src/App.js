@@ -25,8 +25,8 @@ const App = () => {
     <div className="app">
       <ThemeProvider theme={darkTheme}>
         <Layout />
-        {/* shift the button into the drawer cmoponent to above cmponent */}
         <Button onClick={handleThemeChange}>DARK?LIGHT theme</Button>
+        {/* shift the button into the drawer cmoponent to above cmponent */}
       </ThemeProvider>
     </div>
   );

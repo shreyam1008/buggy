@@ -1,7 +1,15 @@
+import { Avatar, Box, Typography } from "@material-ui/core";
 import React from "react";
 
 const Home = () => {
-  return <div>someday i wish</div>;
+  return (
+    <div>
+      <Box color="text.secondary">
+        <Avatar alt="Shreyam Adhikari" />
+        <Typography variant="h3">Shreyam Adhiakri</Typography>
+      </Box>
+    </div>
+  );
 };
 
 export default Home;
