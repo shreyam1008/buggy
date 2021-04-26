@@ -5,8 +5,8 @@ import BottomNavigationAction from "@material-ui/core/BottomNavigationAction";
 import Facebook from "@material-ui/icons/Facebook";
 import Twitter from "@material-ui/icons/Twitter";
 import Instagram from "@material-ui/icons/Instagram";
-import LinkedInIcon from "@material-ui/icons/LinkedIn";
-import GitHubIcon from "@material-ui/icons/GitHub";
+// import LinkedInIcon from "@material-ui/icons/LinkedIn";
+// import GitHubIcon from "@material-ui/icons/GitHub";
 
 const useStyles = makeStyles({
   bottomNavContainer: {
@@ -16,8 +16,8 @@ const useStyles = makeStyles({
     "& .MuiSvgIcon-root": {
       fill: "black",
       "&:hover": {
-        fill: "tomato",
-        fontSize: "1.8rem",
+        fill: "blue",
+        fontSize: "2rem",
       },
     },
   },
@@ -33,7 +33,7 @@ const Footer = () => {
         <BottomNavigationAction icon={<Twitter />} className={classes.root} />
         <BottomNavigationAction icon={<Instagram />} className={classes.root} />
       </BottomNavigation>
-      <BottomNavigation className={classes.bottomNavContainer}>
+      {/* <BottomNavigation className={classes.bottomNavContainer}>
         <BottomNavigationAction
           icon={<LinkedInIcon />}
           className={classes.root}
@@ -43,7 +43,7 @@ const Footer = () => {
           className={classes.root}
         />
         <BottomNavigationAction icon={<Instagram />} className={classes.root} />
-      </BottomNavigation>
+      </BottomNavigation> */}
     </React.Fragment>
   );
 };
