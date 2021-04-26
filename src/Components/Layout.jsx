@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, Outlet, Route, Routes } from "react-router-dom";
+import { Link } from "react-router-dom";
 import clsx from "clsx";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import Drawer from "@material-ui/core/Drawer";
@@ -20,6 +20,7 @@ import InboxIcon from "@material-ui/icons/MoveToInbox";
 import Footer from "./Footer";
 import { Avatar, Button } from "@material-ui/core";
 
+import data from "../data";
 import Routing from "../Routing";
 const drawerWidth = 240;
 
@@ -137,7 +138,8 @@ export default function Layout() {
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap>
-            Welcome To house of Buggy
+            {/* title of the page . make it change with page change later */}
+            {data.title}
           </Typography>
           {/* put button on this end for theme change */}
           {/* <Button> THEME CHANGE</Button> */}
@@ -157,7 +159,7 @@ export default function Layout() {
         }}
       >
         <div className={classes.toolbar}>
-          <Avatar className={classes.avatar} />
+          <Avatar src={data.personalPhoto} className={classes.avatar} />
           <IconButton onClick={handleDrawerClose}>
             <ChevronLeftIcon />
           </IconButton>
