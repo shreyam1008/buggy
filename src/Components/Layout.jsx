@@ -14,28 +14,14 @@ import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
 import ListItemText from "@material-ui/core/ListItemText";
-import InboxIcon from "@material-ui/icons/MoveToInbox";
 
 import Footer from "./Footer";
 import { Avatar, Button } from "@material-ui/core";
 
-import data from "../data";
+import { data, sidebarMenu } from "../data";
 import Routing from "../Routing";
 
 import useStyles from "./Layout.style";
-const drawerWidth = 240;
-
-const primaryMenu = [
-  { listIcon: <InboxIcon />, listText: "Home", listPath: "/" },
-  { listIcon: <InboxIcon />, listText: "Resume", listPath: "/resume" },
-  { listIcon: <InboxIcon />, listText: "Portfolio", listPath: "/portfolio" },
-  { listIcon: <InboxIcon />, listText: "Contact", listPath: "/contact" },
-];
-const secondaryMenu = [
-  { listIcon: <InboxIcon />, listText: "TOLG(tech blog)", listPath: "/tlog" },
-  { listIcon: <InboxIcon />, listText: "Media", listPath: "/media" },
-  { listIcon: <InboxIcon />, listText: "Life", listPath: "/life" },
-];
 
 export default function Layout() {
   const classes = useStyles();
@@ -92,6 +78,7 @@ export default function Layout() {
         }}
       >
         <div className={classes.toolbar}>
+          {/* logo avatar put here */}
           <Avatar src={data.logo} alt="tophats" className={classes.avatar} />
           <IconButton onClick={handleDrawerClose}>
             <ChevronLeftIcon />
@@ -99,7 +86,8 @@ export default function Layout() {
         </div>
         <Divider />
         <List>
-          {primaryMenu.map((item, index) => (
+          {/* primary menu */}
+          {sidebarMenu.primaryMenu.map((item, index) => (
             <ListItem button key={index} component={Link} to={item.listPath}>
               <ListItemIcon>{item.listIcon}</ListItemIcon>
               <ListItemText primary={item.listText} />
@@ -108,7 +96,8 @@ export default function Layout() {
         </List>
         <Divider />
         <List>
-          {secondaryMenu.map((item, index) => (
+          {/* secondary menu of side bar */}
+          {sidebarMenu.secondaryMenu.map((item, index) => (
             <ListItem button key={index} component={Link} to={item.listPath}>
               <ListItemIcon>{item.listIcon}</ListItemIcon>
               <ListItemText primary={item.listText} />
