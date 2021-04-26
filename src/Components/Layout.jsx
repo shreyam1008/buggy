@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, Outlet } from "react-router-dom";
+import { Link, Outlet, Route, Routes } from "react-router-dom";
 import clsx from "clsx";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import Drawer from "@material-ui/core/Drawer";
@@ -20,6 +20,7 @@ import InboxIcon from "@material-ui/icons/MoveToInbox";
 import Footer from "./Footer";
 import { Avatar, Button } from "@material-ui/core";
 
+import Routing from "../Routing";
 const drawerWidth = 240;
 
 const primaryMenu = [
@@ -180,12 +181,12 @@ export default function Layout() {
           ))}
         </List>
         <Divider />
+        {/* manage styling of footer to bottom */}
         <Footer />
       </Drawer>
       <main className={classes.content}>
         <div className={classes.toolbar} />
-        <Outlet />
-        testing
+        <Routing />
       </main>
     </div>
   );

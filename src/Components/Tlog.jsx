@@ -6,8 +6,6 @@ const useStyles = makeStyles((theme) => ({
   root: { display: "flex" },
   text: {
     backgroundColor: "red",
-    flexGrow: 1,
-    padding: theme.spacing(5),
   },
 }));
 
@@ -15,12 +13,10 @@ const Tlog = () => {
   const classes = useStyles();
   return (
     <div className={classes.root}>
-      <Container>
-        <Typography variant="h5" className={classes.text}>
-          tlog is something to be revered from the unique and unpredictable mind
-          of buggy
-        </Typography>
-      </Container>
+      <Typography variant="h5" className={classes.text}>
+        Tlog is something to be revered from the unique and unpredictable mind
+        of buggy
+      </Typography>
     </div>
   );
 };

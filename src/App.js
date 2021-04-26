@@ -28,13 +28,6 @@ const App = () => {
         {/* shift the button into the drawer cmoponent to above cmponent */}
         <Button onClick={handleThemeChange}>DARK?LIGHT theme</Button>
       </ThemeProvider>
-      <Routes>
-        <Route path="/home" element={<Layout />} />
-        <Route path="/resume" element={<Resume />} />
-        <Route path="/portfolio" element={<Portfolio />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/tlog" element={<Tlog />} />
-      </Routes>
     </div>
   );
 };
