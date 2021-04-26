@@ -7,7 +7,7 @@ const Home = () => {
     <div>
       <Box color="text.secondary">
         <Avatar src={data.personalPhoto} alt="Shreyam Adhikari" />
-        <Typography variant="h3">Shreyam Adhiakri</Typography>
+        <Typography variant="h3">{data.name}</Typography>
       </Box>
     </div>
   );
