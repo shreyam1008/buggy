@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, Outlet } from "react-router-dom";
 import clsx from "clsx";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import Drawer from "@material-ui/core/Drawer";
@@ -184,8 +184,8 @@ export default function Layout() {
       </Drawer>
       <main className={classes.content}>
         <div className={classes.toolbar} />
-        <Typography paragraph>my portfolio goes here</Typography>
-        <Typography paragraph>contents here</Typography>
+        <Outlet />
+        testing
       </main>
     </div>
   );

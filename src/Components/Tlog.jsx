@@ -11,18 +11,18 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const Portfolio = () => {
+const Tlog = () => {
   const classes = useStyles();
   return (
     <div className={classes.root}>
       <Container>
         <Typography variant="h5" className={classes.text}>
-          Portfolio is something to be revered from the unique and unpredictable
-          mind of buggy
+          tlog is something to be revered from the unique and unpredictable mind
+          of buggy
         </Typography>
       </Container>
     </div>
   );
 };
 
-export default Portfolio;
+export default Tlog;

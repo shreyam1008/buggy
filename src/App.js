@@ -4,10 +4,11 @@ import Layout from "./Components/Layout";
 
 import { createMuiTheme, ThemeProvider } from "@material-ui/core/styles";
 import { Button } from "@material-ui/core";
-import { Route, Switch } from "react-router";
+import { Route, Routes } from "react-router-dom";
 import Resume from "./Components/Resume";
 import Contact from "./Components/Contact";
 import Portfolio from "./Components/Portfolio";
+import Tlog from "./Components/Tlog";
 
 const App = () => {
   const [darkState, setDarkState] = useState(false);
@@ -25,14 +26,15 @@ const App = () => {
       <ThemeProvider theme={darkTheme}>
         <Layout />
         {/* shift the button into the drawer cmoponent to above cmponent */}
-        <Switch>
-          <Route exact path="/home" component={Layout} />
-          <Route exact path="/resume" component={Resume} />
-          <Route exact path="/portfolio" component={Portfolio} />
-          <Route exact path="/contact" component={Contact} />
-        </Switch>
         <Button onClick={handleThemeChange}>DARK?LIGHT theme</Button>
       </ThemeProvider>
+      <Routes>
+        <Route path="/home" element={<Layout />} />
+        <Route path="/resume" element={<Resume />} />
+        <Route path="/portfolio" element={<Portfolio />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/tlog" element={<Tlog />} />
+      </Routes>
     </div>
   );
 };
