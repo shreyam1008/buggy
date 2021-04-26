@@ -1,6 +1,6 @@
 import { Avatar, Box, Typography } from "@material-ui/core";
 import React from "react";
-import data from "../data";
+import { data } from "../data";
 
 const Home = () => {
   return (
