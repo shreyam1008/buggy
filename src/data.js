@@ -8,6 +8,37 @@ export const data = {
   name: "Shreyam Adhikari",
   personalPhoto: me,
   logo,
+  projects: [
+    {
+      title: "proj1",
+      description: "testing proj",
+      thumbnail: logo,
+      screenshots: [logo, logo],
+      link: "chordyclone.web.app",
+      details: "something",
+    },
+    {
+      title: "psdfsdaf",
+      description: "testing proj",
+      thumbnail: logo,
+      screenshots: [logo, logo],
+      link: "chordyclone.web.app",
+    },
+    {
+      title: "projfasdfsd",
+      description: "testing proj",
+      thumbnail: logo,
+      screenshots: [logo, logo],
+      link: "chordyclone.web.app",
+    },
+    {
+      title: "projfasdfsd",
+      description: "testing proj",
+      thumbnail: logo,
+      screenshots: [logo, logo],
+      link: "chordyclone.web.app",
+    },
+  ],
 };
 
 export const sidebarMenu = {

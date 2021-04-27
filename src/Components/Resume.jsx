@@ -11,12 +11,10 @@ const Resume = () => {
   const classes = useStyles();
   return (
     <div className={classes.root}>
-     
-        <Typography variant="h5" className={classes.text}>
-          Resume is something to be revered from the unique and unpredictable
-          mind of buggy
-        </Typography>
-   
+      <Typography variant="h5" className={classes.text}>
+        resue is something to be revered from the unique and unpredictable mind
+        of buggy
+      </Typography>
     </div>
   );
 };
