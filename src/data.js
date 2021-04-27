@@ -41,6 +41,27 @@ export const data = {
   ],
 };
 
+export const blog = [
+  {
+    title: "soem title",
+    description: "some descripton",
+    category: "torrent",
+    date: "2020-20-20",
+    content: "something happend and something is about to happen",
+    thumbnail: logo,
+    images: [logo, logo],
+  },
+  {
+    title: "soem title",
+    description: "some descripton",
+    category: "torrent",
+    date: "2020-20-20",
+    content: "something happend and something is about to happen",
+    thumbnail: logo,
+    images: [logo, logo],
+  },
+];
+
 export const sidebarMenu = {
   primaryMenu: [
     { listIcon: <InboxIcon />, listText: "Home", listPath: "/" },
