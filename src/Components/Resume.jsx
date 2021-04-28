@@ -1,30 +1,10 @@
 import React from "react";
-import { makeStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
 import Box from "@material-ui/core/Box";
 
 import useStyles from "./Resume.style";
 
-const resume = [
-  {
-    companyName: "spaceX",
-    workTitle: "software something",
-    endYear: "2020",
-    workDescription: "shark.dododododo. babay shark . ddodo",
-  },
-  {
-    companyName: "spaceX",
-    workTitle: "software something",
-    endYear: "2020",
-    workDescription: "shark.dododododo. babay shark . ddodo",
-  },
-  {
-    companyName: "spaceX",
-    workTitle: "software something",
-    endYear: "2020",
-    workDescription: "shark.dododododo. babay shark . ddodo",
-  },
-];
+import { resume } from "../data";
 
 const Resume = () => {
   const classes = useStyles();

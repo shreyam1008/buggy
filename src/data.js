@@ -62,6 +62,27 @@ export const blog = [
   },
 ];
 
+export const resume = [
+  {
+    companyName: "spaceX",
+    workTitle: "software something",
+    endYear: "2020",
+    workDescription: "shark.dododododo. babay shark . ddodo",
+  },
+  {
+    companyName: "spaceX",
+    workTitle: "software something",
+    endYear: "2020",
+    workDescription: "shark.dododododo. babay shark . ddodo",
+  },
+  {
+    companyName: "spaceX",
+    workTitle: "software something",
+    endYear: "2020",
+    workDescription: "shark.dododododo. babay shark . ddodo",
+  },
+];
+
 export const sidebarMenu = {
   primaryMenu: [
     { listIcon: <InboxIcon />, listText: "Home", listPath: "/" },
