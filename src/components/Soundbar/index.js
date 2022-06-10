@@ -1,7 +1,7 @@
-import React, { useRef, useState } from 'react'
-import styled, { keyframes } from 'styled-components'
+import React, { useRef, useState } from "react";
+import styled, { keyframes } from "styled-components";
 
-import music from '../../assets/sounds/fake_verthandi.mp3'
+import music from "../../assets/sounds/fake_verthandi.mp3";
 
 const Box = styled.div`
   display: flex;
@@ -28,8 +28,8 @@ const Box = styled.div`
   }
 
   &:before {
-    content: '<music>';
-    font-family: 'La Belle Aurore', cursive;
+    content: "<music>";
+    font-family: "La Belle Aurore", cursive;
     color: #00ff7f;
     font-size: 18px;
     position: absolute;
@@ -40,8 +40,8 @@ const Box = styled.div`
   }
 
   &:after {
-    content: '<music/>';
-    font-family: 'La Belle Aurore', cursive;
+    content: "<music/>";
+    font-family: "La Belle Aurore", cursive;
     color: #00ff7f;
     font-size: 18px;
     line-height: 20px;
@@ -50,7 +50,7 @@ const Box = styled.div`
     bottom: -20px;
     opacity: 0.9;
   }
-`
+`;
 
 const play = keyframes`
 0%{
@@ -62,30 +62,30 @@ const play = keyframes`
 100%{
     transform:scaleY(1);
 }
-`
+`;
 const Line = styled.span`
   background: #00ff7f;
   border: 1px solid;
 
   animation: ${play} 1s ease infinite;
-  animation-play-state: ${(props) => (props.click ? 'running' : 'paused')};
+  animation-play-state: ${(props) => (props.click ? "running" : "paused")};
   height: 1rem;
   width: 2px;
   margin: 0 0.1rem;
-`
+`;
 const SoundBar = () => {
-  const ref = useRef(null)
-  const [click, setClick] = useState(false)
+  const ref = useRef(null);
+  const [click, setClick] = useState(false);
 
   const handleClick = () => {
-    setClick(!click)
+    setClick(!click);
 
     if (!click) {
-      ref.current.play()
+      ref.current.play();
     } else {
-      ref.current.pause()
+      ref.current.pause();
     }
-  }
+  };
   return (
     <Box onClick={() => handleClick()}>
       <Line click={click} />
@@ -95,7 +95,7 @@ const SoundBar = () => {
       <Line click={click} />
       <audio src={music} ref={ref} loop /> &nbsp;
     </Box>
-  )
-}
+  );
+};
 
-export default SoundBar
+export default SoundBar;
