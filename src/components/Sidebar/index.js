@@ -1,5 +1,4 @@
 import "./index.scss";
-import LogoS from "../../assets/images/logo-s.png";
 import codechefLogo from "../../assets/images/codechef.png";
 import LogoSubtitle from "../../assets/images/buggy.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";

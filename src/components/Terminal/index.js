@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 
 const Box = styled.div`
@@ -23,7 +23,6 @@ const Box = styled.div`
 `;
 
 const Terminal = () => {
-  const ref = useRef(null);
   const [click, setClick] = useState(false);
 
   const handleClick = () => {
