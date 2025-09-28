@@ -118,7 +118,7 @@ export default function NepaliDateConverter() {
     if (!parsed) {
       setStatus({
         type: "error",
-        text: "Invalid AD format — use DD/MM/YYYY or YYYY-MM-DD",
+        text: "Invalid AD format — use dd/mm/yyyy",
       });
       return;
     }
@@ -145,7 +145,7 @@ export default function NepaliDateConverter() {
     if (!parsed) {
       setStatus({
         type: "error",
-        text: "Invalid BS format — use DD/MM/YYYY or YYYY-MM-DD",
+        text: "Invalid BS format — use dd/mm/yyyy",
       });
       return;
     }
@@ -195,6 +195,9 @@ export default function NepaliDateConverter() {
         <p className="text-sm text-slate-500 mt-1">
           Type a date and conversion happens instantly
         </p>
+        <p className="text-xs text-slate-400 mt-1">
+          Supported ranges: AD ≈ 1943 onwards • BS ≈ 2000 onwards
+        </p>
       </header>
 
       <label className="block text-sm font-semibold text-slate-700">
@@ -204,13 +207,10 @@ export default function NepaliDateConverter() {
         ref={adRef}
         value={ad}
         onChange={handleAdChange}
-        placeholder="14/04/1943 or 1943-04-14"
+        placeholder="dd/mm/yyyy"
         aria-label="AD date input"
         className="w-full mt-2 p-3 rounded-lg border border-slate-200 focus:border-indigo-500 focus:shadow-md"
       />
-      <p className="text-xs text-slate-400 italic mt-1">
-        Supports DD/MM/YYYY, MM/DD/YYYY, YYYY-MM-DD
-      </p>
 
       <label className="block text-sm font-semibold text-slate-700 mt-4">
         🏔️ BS (Nepali date)
@@ -219,12 +219,16 @@ export default function NepaliDateConverter() {
         ref={bsRef}
         value={bs}
         onChange={handleBsChange}
-        placeholder="01/01/2058 or 2058-01-01"
+        placeholder="dd/mm/yyyy"
         aria-label="BS date input"
         className="w-full mt-2 p-3 rounded-lg border border-slate-200 focus:border-indigo-500 focus:shadow-md"
       />
       <p className="text-xs text-slate-400 italic mt-1">
-        Supports DD/MM/YYYY, YYYY-MM-DD
+        Supported from ranges: AD ≈ 1943 onwards • BS ≈ 2000 onwards
+      </p>
+      <p className="text-xs text-slate-400 italic mt-1">
+        Supported: dd/mm/yyyy, dd.mm.yyyy, dd-mm-yyyy, ddmmyyyy • Not supported:
+        yyyymmdd
       </p>
 
       <div className="mt-4 h-12 flex items-center">
