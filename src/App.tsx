@@ -11,6 +11,37 @@ export default function NepaliDateConverter() {
   const adRef = useRef<HTMLInputElement | null>(null);
   const bsRef = useRef<HTMLInputElement | null>(null);
 
+  //add nepali in nepali also
+  const nepaliMonths = [
+    "Baishakh/बैशाख",
+    "Jestha/जेठ",
+    "Ashadh/आषाढ",
+    "Shrawan/श्रावण",
+    "Bhadra/भदौ",
+    "Ashwin/आश्विन",
+    "Kartik/कार्तिक",
+    "Mangsir/मंसिर",
+    "Poush/पुष",
+    "Magh/माघ",
+    "Falgun/फाल्गुन",
+    "Chaitra/चैत्र",
+  ];
+
+  const englishMonths = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
   function debounce<T extends (...args: any[]) => void>(fn: T, ms = 300) {
     let t: ReturnType<typeof setTimeout>;
     return (...args: Parameters<T>) => {
@@ -29,7 +60,7 @@ export default function NepaliDateConverter() {
 
   function isValidAdDate({ year, month, day }: DateObj): boolean {
     if (month < 1 || month > 12) return false;
-    const daysInMonth = new Date(year, month, 0).getDate(); // auto handles leap year
+    const daysInMonth = new Date(year, month, 0).getDate();
     return day >= 1 && day <= daysInMonth;
   }
 
@@ -51,11 +82,9 @@ export default function NepaliDateConverter() {
         B = Number(b),
         Y = Number(y);
 
-      // Try DD/MM/YYYY
       let d1 = { day: A, month: B, year: Y };
       if (isValidAdDate(d1)) return d1;
 
-      // Try MM/DD/YYYY (fallback if swapped)
       let d2 = { day: B, month: A, year: Y };
       if (isValidAdDate(d2)) return d2;
 
@@ -73,7 +102,7 @@ export default function NepaliDateConverter() {
     if (ymd) {
       const [, y, m, d] = ymd.map(Number);
       try {
-        new NepaliDate(y, m - 1, d); // throws if invalid
+        new NepaliDate(y, m - 1, d);
         return { year: y, month: m, day: d };
       } catch {
         return null;
@@ -95,32 +124,20 @@ export default function NepaliDateConverter() {
   }
 
   function convertAdToBsObj({ year, month, day }: DateObj): DateObj {
-    try {
-      const jsDate = new Date(year, month - 1, day);
-      const nd = new NepaliDate(jsDate);
-      const bsObj = nd.getBS();
-      return {
-        year: bsObj.year,
-        month: (bsObj.month ?? 0) + 1,
-        day: bsObj.date,
-      };
-    } catch {
-      throw new Error("Conversion failed — date may be out of supported range");
-    }
+    const jsDate = new Date(year, month - 1, day);
+    const nd = new NepaliDate(jsDate);
+    const bsObj = nd.getBS();
+    return { year: bsObj.year, month: (bsObj.month ?? 0) + 1, day: bsObj.date };
   }
 
   function convertBsToAdObj({ year, month, day }: DateObj): DateObj {
-    try {
-      const nd = new NepaliDate(year, month - 1, day);
-      const jsDate = nd.toJsDate();
-      return {
-        year: jsDate.getFullYear(),
-        month: jsDate.getMonth() + 1,
-        day: jsDate.getDate(),
-      };
-    } catch {
-      throw new Error("Conversion failed — date may be out of supported range");
-    }
+    const nd = new NepaliDate(year, month - 1, day);
+    const jsDate = nd.toJsDate();
+    return {
+      year: jsDate.getFullYear(),
+      month: jsDate.getMonth() + 1,
+      day: jsDate.getDate(),
+    };
   }
 
   function fmt(d: DateObj | null): string {
@@ -140,10 +157,7 @@ export default function NepaliDateConverter() {
     }
     const parsed = parseAdInput(val);
     if (!parsed) {
-      setStatus({
-        type: "error",
-        text: "Invalid AD format — use dd/mm/yyyy",
-      });
+      setStatus({ type: "error", text: "Invalid AD format — use dd/mm/yyyy" });
       return;
     }
     try {
@@ -167,10 +181,7 @@ export default function NepaliDateConverter() {
     }
     const parsed = parseBsInput(val);
     if (!parsed) {
-      setStatus({
-        type: "error",
-        text: "Invalid BS format — use dd/mm/yyyy",
-      });
+      setStatus({ type: "error", text: "Invalid BS format — use dd/mm/yyyy" });
       return;
     }
     try {
@@ -214,7 +225,7 @@ export default function NepaliDateConverter() {
     <div className="max-w-md mx-auto p-6 bg-white/90 rounded-2xl shadow-lg border border-white/20">
       <header className="text-center mb-4">
         <h2 className="text-2xl font-bold text-slate-800">
-          English ↔ Nepali -date converter
+          English ↔ Nepali Date Converter
         </h2>
         <p className="text-sm text-slate-500 mt-1">
           Type a date and conversion happens instantly
@@ -271,6 +282,31 @@ export default function NepaliDateConverter() {
           supported: yyyymmdd
         </p>
       </footer>
+
+      {/* Month Info Box */}
+      <div className="mt-6 p-4 bg-slate-100 rounded-xl shadow-inner">
+        <h3 className="text-sm font-semibold text-slate-700 mb-2">
+          Month Reference
+        </h3>
+        <div className="grid grid-cols-2 gap-4 text-xs text-slate-600">
+          <div>
+            <p className="font-semibold mb-1">Nepali (BS)</p>
+            {nepaliMonths.map((m, i) => (
+              <div key={i}>
+                {String(i + 1).padStart(2, "0")} – {m}
+              </div>
+            ))}
+          </div>
+          <div>
+            <p className="font-semibold mb-1">English (AD)</p>
+            {englishMonths.map((m, i) => (
+              <div key={i}>
+                {String(i + 1).padStart(2, "0")} – {m}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
