@@ -77,7 +77,7 @@ export default function NepaliDateConverter() {
       const bsObj = nd.getBS();
       return {
         year: bsObj.year,
-        month: (bsObj.month ?? bsObj.monthIndex ?? 0) + 1,
+        month: (bsObj.month ?? 0) + 1,
         day: bsObj.date,
       };
     } catch {
