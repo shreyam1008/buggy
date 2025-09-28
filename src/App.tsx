@@ -27,6 +27,12 @@ export default function NepaliDateConverter() {
     return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
   }
 
+  function isValidAdDate({ year, month, day }: DateObj): boolean {
+    if (month < 1 || month > 12) return false;
+    const daysInMonth = new Date(year, month, 0).getDate(); // auto handles leap year
+    return day >= 1 && day <= daysInMonth;
+  }
+
   function parseAdInput(input: string): DateObj | null {
     if (!input) return null;
     const s = input.trim().replace(/[\.\-\s]/g, "/");
@@ -34,7 +40,8 @@ export default function NepaliDateConverter() {
     const ymd = s.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
     if (ymd) {
       const [, y, m, d] = ymd.map(Number);
-      return { year: y, month: m, day: d };
+      const date = { year: y, month: m, day: d };
+      return isValidAdDate(date) ? date : null;
     }
 
     const dmy = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
@@ -43,9 +50,16 @@ export default function NepaliDateConverter() {
       let A = Number(a),
         B = Number(b),
         Y = Number(y);
-      if (A > 12) return { day: A, month: B, year: Y };
-      if (B > 12) return { day: B, month: A, year: Y };
-      return { day: A, month: B, year: Y };
+
+      // Try DD/MM/YYYY
+      let d1 = { day: A, month: B, year: Y };
+      if (isValidAdDate(d1)) return d1;
+
+      // Try MM/DD/YYYY (fallback if swapped)
+      let d2 = { day: B, month: A, year: Y };
+      if (isValidAdDate(d2)) return d2;
+
+      return null;
     }
 
     return null;
@@ -58,13 +72,23 @@ export default function NepaliDateConverter() {
     const ymd = s.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
     if (ymd) {
       const [, y, m, d] = ymd.map(Number);
-      return { year: y, month: m, day: d };
+      try {
+        new NepaliDate(y, m - 1, d); // throws if invalid
+        return { year: y, month: m, day: d };
+      } catch {
+        return null;
+      }
     }
 
     const dmy = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
     if (dmy) {
       const [, d, m, y] = dmy.map(Number);
-      return { year: y, month: m, day: d };
+      try {
+        new NepaliDate(y, m - 1, d);
+        return { year: y, month: m, day: d };
+      } catch {
+        return null;
+      }
     }
 
     return null;
@@ -190,7 +214,7 @@ export default function NepaliDateConverter() {
     <div className="max-w-md mx-auto p-6 bg-white/90 rounded-2xl shadow-lg border border-white/20">
       <header className="text-center mb-4">
         <h2 className="text-2xl font-bold text-slate-800">
-          🗓️ English ↔ Nepali
+          English ↔ Nepali -date converter
         </h2>
         <p className="text-sm text-slate-500 mt-1">
           Type a date and conversion happens instantly
@@ -201,7 +225,7 @@ export default function NepaliDateConverter() {
       </header>
 
       <label className="block text-sm font-semibold text-slate-700">
-        📅 AD (English date)
+        AD (English date)
       </label>
       <input
         ref={adRef}
@@ -213,7 +237,7 @@ export default function NepaliDateConverter() {
       />
 
       <label className="block text-sm font-semibold text-slate-700 mt-4">
-        🏔️ BS (Nepali date)
+        BS (Nepali date)
       </label>
       <input
         ref={bsRef}
@@ -223,13 +247,6 @@ export default function NepaliDateConverter() {
         aria-label="BS date input"
         className="w-full mt-2 p-3 rounded-lg border border-slate-200 focus:border-indigo-500 focus:shadow-md"
       />
-      <p className="text-xs text-slate-400 italic mt-1">
-        Supported from ranges: AD ≈ 1943 onwards • BS ≈ 2000 onwards
-      </p>
-      <p className="text-xs text-slate-400 italic mt-1">
-        Supported: dd/mm/yyyy, dd.mm.yyyy, dd-mm-yyyy, ddmmyyyy • Not supported:
-        yyyymmdd
-      </p>
 
       <div className="mt-4 h-12 flex items-center">
         <div
@@ -245,8 +262,14 @@ export default function NepaliDateConverter() {
 
       <footer className="mt-4 text-xs text-slate-500">
         Tip: Press <kbd className="bg-slate-100 px-2 rounded">Esc</kbd> to clear
-        inputs • Make sure you installed{" "}
-        <code className="text-xs">nepali-date-converter</code>
+        inputs
+        <p className="text-xs text-slate-400 italic mt-1">
+          Supported from ranges: AD ≈ 1943 onwards • BS ≈ 2000 onwards
+        </p>
+        <p className="text-xs text-slate-400 italic mt-1">
+          Supported: dd/mm/yyyy, dd.mm.yyyy, dd-mm-yyyy, ddmmyyyy • Not
+          supported: yyyymmdd
+        </p>
       </footer>
     </div>
   );
