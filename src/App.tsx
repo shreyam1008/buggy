@@ -50,13 +50,14 @@ export default function NepaliDateConverter() {
     };
   }
 
-  function autoFormat(value: string): string {
-    const digits = value.replace(/\D/g, "").slice(0, 8);
-    if (!digits) return "";
-    if (digits.length <= 2) return digits;
-    if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
-    return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
-  }
+function autoFormat(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, 8);
+  if (!digits) return "";
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 4) return `${digits.slice(0, 2)}-${digits.slice(2)}`;
+  return `${digits.slice(0, 2)}-${digits.slice(2, 4)}-${digits.slice(4)}`;
+}
+
 
   function isValidAdDate({ year, month, day }: DateObj): boolean {
     if (month < 1 || month > 12) return false;
@@ -66,7 +67,8 @@ export default function NepaliDateConverter() {
 
   function parseAdInput(input: string): DateObj | null {
     if (!input) return null;
-    const s = input.trim().replace(/[\.\-\s]/g, "/");
+    const s = input.trim().replace(/[\./\s]/g, "-");
+
 
     const ymd = s.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
     if (ymd) {
@@ -96,7 +98,8 @@ export default function NepaliDateConverter() {
 
   function parseBsInput(input: string): DateObj | null {
     if (!input) return null;
-    const s = input.trim().replace(/[\.\-\s]/g, "/");
+    const s = input.trim().replace(/[\./\s]/g, "-");
+
 
     const ymd = s.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
     if (ymd) {
@@ -140,13 +143,14 @@ export default function NepaliDateConverter() {
     };
   }
 
-  function fmt(d: DateObj | null): string {
-    if (!d) return "";
-    return `${String(d.day).padStart(2, "0")}-${String(d.month).padStart(
-      2,
-      "0"
-    )}-${d.year}`;
-  }
+function fmt(d: DateObj | null): string {
+  if (!d) return "";
+  return `${String(d.day).padStart(2, "0")}-${String(d.month).padStart(
+    2,
+    "0"
+  )}-${d.year}`;
+}
+
 
   const onAdInput = debounce((val: string) => {
     setStatus({ type: "info", text: "Converting AD → BS…" });
