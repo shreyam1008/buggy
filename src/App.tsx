@@ -70,14 +70,16 @@ function autoFormat(value: string): string {
     const s = input.trim().replace(/[\./\s]/g, "-");
 
 
-    const ymd = s.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
+   const ymd = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+
     if (ymd) {
       const [, y, m, d] = ymd.map(Number);
       const date = { year: y, month: m, day: d };
       return isValidAdDate(date) ? date : null;
     }
 
-    const dmy = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    const dmy = s.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+
     if (dmy) {
       let [_, a, b, y] = dmy;
       let A = Number(a),
@@ -101,7 +103,7 @@ function autoFormat(value: string): string {
     const s = input.trim().replace(/[\./\s]/g, "-");
 
 
-    const ymd = s.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
+const ymd = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
     if (ymd) {
       const [, y, m, d] = ymd.map(Number);
       try {
@@ -112,7 +114,7 @@ function autoFormat(value: string): string {
       }
     }
 
-    const dmy = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+const dmy = s.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
     if (dmy) {
       const [, d, m, y] = dmy.map(Number);
       try {
