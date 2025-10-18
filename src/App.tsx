@@ -142,10 +142,10 @@ export default function NepaliDateConverter() {
 
   function fmt(d: DateObj | null): string {
     if (!d) return "";
-    return `${String(d.day).padStart(2, "0")}/${String(d.month).padStart(
+    return `${String(d.day).padStart(2, "0")}-${String(d.month).padStart(
       2,
       "0"
-    )}/${d.year}`;
+    )}-${d.year}`;
   }
 
   const onAdInput = debounce((val: string) => {
@@ -238,26 +238,60 @@ export default function NepaliDateConverter() {
       <label className="block text-sm font-semibold text-slate-700">
         AD (English date)
       </label>
-      <input
-        ref={adRef}
-        value={ad}
-        onChange={handleAdChange}
-        placeholder="dd/mm/yyyy"
-        aria-label="AD date input"
-        className="w-full mt-2 p-3 rounded-lg border border-slate-200 focus:border-indigo-500 focus:shadow-md"
-      />
+      <label className="block text-sm font-semibold text-slate-700">
+  AD (English date)
+</label>
+<div className="flex gap-2 mt-2">
+  <input
+    ref={adRef}
+    value={ad}
+    onChange={handleAdChange}
+    placeholder="dd-mm-yyyy"
+    aria-label="AD date input"
+    className="flex-1 p-3 rounded-lg border border-slate-200 focus:border-indigo-500 focus:shadow-md"
+  />
+  <button
+    onClick={() => {
+      if (ad) {
+        navigator.clipboard.writeText(ad);
+        setStatus({ type: "success", text: "Copied AD date!" });
+      }
+    }}
+    className="px-3 py-2 bg-slate-200 rounded-lg hover:bg-slate-300 text-sm"
+  >
+    📋
+  </button>
+</div>
+
 
       <label className="block text-sm font-semibold text-slate-700 mt-4">
         BS (Nepali date)
       </label>
-      <input
-        ref={bsRef}
-        value={bs}
-        onChange={handleBsChange}
-        placeholder="dd/mm/yyyy"
-        aria-label="BS date input"
-        className="w-full mt-2 p-3 rounded-lg border border-slate-200 focus:border-indigo-500 focus:shadow-md"
-      />
+      <label className="block text-sm font-semibold text-slate-700 mt-4">
+  BS (Nepali date)
+</label>
+<div className="flex gap-2 mt-2">
+  <input
+    ref={bsRef}
+    value={bs}
+    onChange={handleBsChange}
+    placeholder="dd-mm-yyyy"
+    aria-label="BS date input"
+    className="flex-1 p-3 rounded-lg border border-slate-200 focus:border-indigo-500 focus:shadow-md"
+  />
+  <button
+    onClick={() => {
+      if (bs) {
+        navigator.clipboard.writeText(bs);
+        setStatus({ type: "success", text: "Copied BS date!" });
+      }
+    }}
+    className="px-3 py-2 bg-slate-200 rounded-lg hover:bg-slate-300 text-sm"
+  >
+    📋
+  </button>
+</div>
+
 
       <div className="mt-4 h-12 flex items-center">
         <div
