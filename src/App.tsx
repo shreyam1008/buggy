@@ -235,9 +235,7 @@ export default function NepaliDateConverter() {
         </p>
       </header>
 
-      <label className="block text-sm font-semibold text-slate-700">
-        AD (English date)
-      </label>
+    
       <label className="block text-sm font-semibold text-slate-700">
   AD (English date)
 </label>
@@ -264,9 +262,7 @@ export default function NepaliDateConverter() {
 </div>
 
 
-      <label className="block text-sm font-semibold text-slate-700 mt-4">
-        BS (Nepali date)
-      </label>
+    
       <label className="block text-sm font-semibold text-slate-700 mt-4">
   BS (Nepali date)
 </label>
