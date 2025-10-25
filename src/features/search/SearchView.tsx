@@ -6,7 +6,6 @@ import { Button, Card, Select } from '../../components/ui';
 import { mockAPI } from '../../services/api';
 import { fuzzyMatch } from '../../utils/fuzzySearch';
 import { NATIONALITIES } from '../../config/constants';
-import type { Visit } from '../../types';
 
 export function SearchView() {
   const navigate = useNavigate();
@@ -19,6 +18,7 @@ export function SearchView() {
 
   // Search filters
   const [nameQuery, setNameQuery] = useState('');
+  const [selectedNames, setSelectedNames] = useState<string[]>([]);
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
   const [generalQuery, setGeneralQuery] = useState('');
   const [formCStatus, setFormCStatus] = useState('');
@@ -26,6 +26,49 @@ export function SearchView() {
   // Sorting
   const [sortField, setSortField] = useState<string>('arrivalDateTime');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
+  // Handle name input with comma detection
+  const handleNameInput = (value: string) => {
+    setNameQuery(value);
+    
+    // Check if user typed a comma
+    if (value.includes(',')) {
+      const names = value.split(',').map(n => n.trim()).filter(n => n.length > 0);
+      
+      // Add new names that aren't already selected
+      const newNames = names.filter(name => 
+        !selectedNames.some(existing => existing.toLowerCase() === name.toLowerCase())
+      );
+      
+      if (newNames.length > 0) {
+        setSelectedNames([...selectedNames, ...newNames]);
+        setNameQuery(''); // Clear input after adding
+      }
+    }
+  };
+
+  // Handle Enter key to add current name as tag
+  const handleNameKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && nameQuery.trim()) {
+      const name = nameQuery.trim();
+      if (!selectedNames.some(n => n.toLowerCase() === name.toLowerCase())) {
+        setSelectedNames([...selectedNames, name]);
+        setNameQuery('');
+      }
+      e.preventDefault();
+    }
+  };
+
+  // Remove name from selection
+  const removeName = (name: string) => {
+    setSelectedNames(selectedNames.filter(n => n !== name));
+  };
+
+  // Clear all names
+  const clearAllNames = () => {
+    setSelectedNames([]);
+    setNameQuery('');
+  };
 
   // Add country to selection
   const addCountry = (country: string) => {
@@ -50,11 +93,22 @@ export function SearchView() {
     
     let filtered = [...residents];
 
-    // Name search (fuzzy)
-    if (nameQuery.trim()) {
+    // Name search - either from input or from selected names
+    if (nameQuery.trim() || selectedNames.length > 0) {
       filtered = filtered.filter(r => {
         const fullName = `${r.person?.givenName || ''} ${r.person?.familyName || ''}`.toLowerCase();
-        return fuzzyMatch(fullName, nameQuery);
+        
+        // If typing in input, use fuzzy search on that
+        if (nameQuery.trim()) {
+          return fuzzyMatch(fullName, nameQuery);
+        }
+        
+        // If have selected name tags, match against any of them
+        if (selectedNames.length > 0) {
+          return selectedNames.some(name => fuzzyMatch(fullName, name));
+        }
+        
+        return false;
       });
     }
 
@@ -121,10 +175,11 @@ export function SearchView() {
     });
 
     return filtered;
-  }, [residents, nameQuery, selectedCountries, generalQuery, formCStatus, sortField, sortOrder]);
+  }, [residents, nameQuery, selectedNames, selectedCountries, generalQuery, formCStatus, sortField, sortOrder]);
 
   const clearAllFilters = () => {
     setNameQuery('');
+    setSelectedNames([]);
     setSelectedCountries([]);
     setGeneralQuery('');
     setFormCStatus('');
@@ -155,21 +210,54 @@ export function SearchView() {
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Search Filters</h2>
         
         <div className="space-y-4">
-          {/* Name Search */}
+          {/* Name Search with Multi-Select */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Search by Name (Fuzzy Search)
+              Search by Name (Fuzzy Search - Multiple Names)
             </label>
-            <input
-              type="text"
-              placeholder="Type name... (e.g., 'john', 'jhn', 'jon')"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={nameQuery}
-              onChange={(e) => setNameQuery(e.target.value)}
-            />
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Type name and press Enter or use comma... (e.g., 'john, smith, raj')"
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={nameQuery}
+                onChange={(e) => handleNameInput(e.target.value)}
+                onKeyPress={handleNameKeyPress}
+              />
+              {selectedNames.length > 0 && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={clearAllNames}
+                >
+                  Clear All
+                </Button>
+              )}
+            </div>
             <p className="text-xs text-gray-500 mt-1">
-              Fuzzy search allows approximate matching - finds results even with typos
+              💡 <strong>Pro tip:</strong> Type multiple names separated by commas (e.g., "John, Smith, Raj") or press Enter after each name. Fuzzy search works with typos!
             </p>
+            
+            {/* Selected Names Tags */}
+            {selectedNames.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-3">
+                {selectedNames.map((name) => (
+                  <span
+                    key={name}
+                    className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium"
+                  >
+                    {name}
+                    <button
+                      onClick={() => removeName(name)}
+                      className="hover:bg-green-200 rounded-full p-0.5 transition-colors"
+                      title={`Remove ${name}`}
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Country Multi-Select */}

@@ -31,13 +31,16 @@ The Form-C Management System streamlines the process of registering visitors, tr
 ### 🔍 Advanced Search & Filter
 - **Three Separate Inputs**: Dedicated fields for name, countries, and general search
 - **Fuzzy Search**: Tolerates typos - finds "John" even if you type "Jhn" or "Jon"
+- **Multi-Name Selection**: Type multiple names separated by commas or press Enter
 - **Multi-Country Selection**: Select multiple countries with visual tag boxes
-- **Tag Management**: Each country shown as a tag with X button to remove
-- **Clear All Options**: Quick buttons to clear countries or all filters
+- **Tag Management**: Each name/country shown as a tag with X button to remove
+- **Clear All Options**: Quick buttons to clear names, countries or all filters
 - **Sortable Columns**: Click headers to sort by any field
 - **Real-Time Results**: Instant filtering as you type
 - **Full Table View**: Shows all residents by default, no search needed
 - **Results Counter**: Shows filtered results vs total (e.g., "45 of 120")
+- **Comma Detection**: Automatically creates tags when you type commas
+- **Enter Key Support**: Press Enter to add current name as a tag
 
 ### 📈 Dashboard
 - **Live Statistics**: Current occupancy, pending Form-C, drafts
@@ -219,16 +222,26 @@ src/
 ### Searching for Devotees
 
 1. Navigate to **"Search"** page
-2. **Name Search**: Type name (fuzzy search tolerates typos)
+2. **Name Search (Multiple Names)**:
+   - Type a name and press **Enter** to add it as a tag
+   - Or type multiple names separated by **commas** (e.g., "John, Smith, Raj")
+   - Each name appears as a **green tag** with X button
+   - Fuzzy search tolerates typos on each name
+   - Click "Clear All" to remove all name tags
 3. **Country Filter**: 
    - Select countries from dropdown
-   - Tags appear with X button to remove
+   - Tags appear as **blue tags** with X button to remove
    - Click "Clear All" to remove all countries
 4. **General Search**: Type ID, contact, email, or purpose
 5. **Form-C Filter**: Use dropdown to filter by status
 6. Click column headers to sort results
-7. Click "Clear All Filters" to reset
+7. Click "Clear All Filters" to reset everything
 8. Click devotee name or ID to view profile
+
+**Example Multi-Name Search**:
+- Type: `John, Smith` → Creates 2 tags, finds anyone named John OR Smith
+- Type: `Raj` + Enter → Adds Raj as 3rd tag
+- Result: Shows all people matching John OR Smith OR Raj
 
 ### Duplicate Detection System
 
@@ -300,12 +313,17 @@ Edit `src/services/mockData.ts` to customize generated data.
 - **Real-Time**: Updates instantly as you type
 - **Performance**: Handles 1000+ records smoothly
 
-### Multi-Country Selection
-- **Tag-Based UI**: Each selected country appears as a blue tag
+### Multi-Name & Multi-Country Selection
+- **Tag-Based UI**: Each selected name/country appears as a colored tag (green for names, blue for countries)
 - **Individual Removal**: X button on each tag
-- **Bulk Clear**: "Clear All" button for all countries
-- **Dropdown Integration**: Select from full country list
-- **No Duplicates**: Can't select same country twice
+- **Bulk Clear**: "Clear All" button for each category
+- **Multiple Input Methods**:
+  - **Comma Detection**: Type "John, Smith, Raj" and tags are auto-created
+  - **Enter Key**: Press Enter after typing each name
+  - **Dropdown (Countries)**: Select from full country list
+- **No Duplicates**: Can't select same name/country twice (case-insensitive)
+- **Fuzzy Matching**: Each name tag uses fuzzy search independently
+- **OR Logic**: Shows results matching ANY of the selected names
 - **Visual Feedback**: Selected countries removed from dropdown
 
 ### Duplicate Detection System
@@ -472,24 +490,28 @@ Built with modern web technologies and best practices for ashram management need
 
 ---
 
-## 📝 Recent Updates (v2.0.0)
+## 📝 Recent Updates (v2.1.0)
 
 ### New Features
-- ✅ **Enhanced Search**: Three-input system with fuzzy search and multi-country selection
+- ✅ **Multi-Name Search**: Search multiple names at once using commas or Enter key
+- ✅ **Enhanced Search**: Three-input system with fuzzy search and multi-selection
 - ✅ **Duplicate Detection**: Three-level warning system prevents duplicate entries
 - ✅ **Dashboard Improvements**: Statistics with clickable filters and Quick Action shortcuts
 - ✅ **localStorage Warnings**: Clear notices about draft storage limitations
 - ✅ **Real-Time Validation**: Inline warnings appear as you type
-- ✅ **Tag-Based UI**: Visual country tags with individual removal buttons
+- ✅ **Tag-Based UI**: Visual name/country tags with individual removal buttons
+- ✅ **Comma Detection**: Automatically creates name tags when typing commas
+- ✅ **Enter Key Support**: Quick tag creation with Enter key
 
 ### Improvements
-- Better search experience with typo tolerance
+- Better search experience with typo tolerance and multiple names
 - Smarter duplicate prevention with flexible approval levels
 - Enhanced dashboard with interactive statistics
 - Clearer data storage warnings for users
+- Faster multi-person search with tag system
 
 ---
 
-**Version**: 2.0.0  
+**Version**: 2.1.0  
 **Last Updated**: January 2025  
 **Status**: Production Ready
