@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { 
   ChevronRight, 
   ChevronDown, 
@@ -9,13 +9,15 @@ import {
   Trash2,
   CheckCircle,
   AlertCircle,
-  Calendar
+  Calendar,
+  AlertTriangle,
+  XCircle
 } from 'lucide-react';
-import { Button, Card, Input, Select, BSDatePicker } from '../../components/ui';
+import { Button, Card, Input, Select, BSDatePicker, Modal } from '../../components/ui';
 import { PhotoUploadEditor } from '../../components/features';
 import { mockAPI } from '../../services/api';
 import { NATIONALITIES, PURPOSES, LOCATIONS, GENDER_OPTIONS } from '../../config/constants';
-import type { CompressedImage } from '../../types';
+import type { CompressedImage, Person } from '../../types';
 
 const DRAFT_KEY = 'devotee_form_draft';
 
@@ -85,6 +87,24 @@ export function AddDevoteeEnhanced() {
   const [showBSPickerDOB, setShowBSPickerDOB] = useState(false);
   const [showBSPickerExpiry, setShowBSPickerExpiry] = useState(false);
 
+  // Duplicate detection state
+  const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
+  const [duplicateMatches, setDuplicateMatches] = useState<{
+    nameMatches: Person[];
+    nameNationalityMatches: Person[];
+    identityMatches: Person[];
+  }>({ nameMatches: [], nameNationalityMatches: [], identityMatches: [] });
+  const [confirmSubmit, setConfirmSubmit] = useState(false);
+
+  // Fetch all persons for duplicate checking
+  const { data: allPersons } = useQuery({
+    queryKey: ['allPersons'],
+    queryFn: async () => {
+      const visits = await mockAPI.getAllVisits();
+      return visits.map(v => v.person).filter(Boolean) as Person[];
+    },
+  });
+
   // Calculate age from DOB
   const calculatedAge = useMemo(() => {
     if (!formData.dob) return null;
@@ -103,6 +123,35 @@ export function AddDevoteeEnhanced() {
 
   // Check if Nepali
   const isNepali = formData.nationality === 'Nepal';
+
+  // Duplicate detection logic
+  const duplicateChecks = useMemo(() => {
+    if (!allPersons || !formData.givenName || !formData.familyName) {
+      return { nameMatches: [], nameNationalityMatches: [], identityMatches: [] };
+    }
+
+    const givenNameLower = formData.givenName.toLowerCase().trim();
+    const familyNameLower = formData.familyName.toLowerCase().trim();
+    const idNumber = formData.identities[0]?.idNumber?.toLowerCase().trim();
+
+    // Check for same name
+    const nameMatches = allPersons.filter(p => 
+      p.givenName.toLowerCase().trim() === givenNameLower &&
+      p.familyName.toLowerCase().trim() === familyNameLower
+    );
+
+    // Check for same name + same nationality (stricter)
+    const nameNationalityMatches = nameMatches.filter(p => 
+      p.nationality === formData.nationality
+    );
+
+    // Check for same identity number (super strict)
+    const identityMatches = idNumber ? allPersons.filter(p =>
+      p.identities?.some(id => id.idNumber.toLowerCase().trim() === idNumber)
+    ) : [];
+
+    return { nameMatches, nameNationalityMatches, identityMatches };
+  }, [allPersons, formData.givenName, formData.familyName, formData.nationality, formData.identities]);
 
   // Load draft on mount
   useEffect(() => {
@@ -291,9 +340,50 @@ export function AddDevoteeEnhanced() {
   const canSubmit = sections.filter(s => s.id !== 'photo').every(s => s.isComplete);
 
   const handleSubmit = () => {
-    if (canSubmit) {
-      createMutation.mutate(formData);
+    if (!canSubmit) return;
+
+    // Check for duplicates
+    const hasNameMatches = duplicateChecks.nameMatches.length > 0;
+    const hasNameNationalityMatches = duplicateChecks.nameNationalityMatches.length > 0;
+    const hasIdentityMatches = duplicateChecks.identityMatches.length > 0;
+
+    // If there are identity matches (super strict), block submission completely
+    if (hasIdentityMatches) {
+      setDuplicateMatches(duplicateChecks);
+      setShowDuplicateWarning(true);
+      return;
     }
+
+    // If there are name+nationality matches, show warning and require confirmation
+    if (hasNameNationalityMatches && !confirmSubmit) {
+      setDuplicateMatches(duplicateChecks);
+      setShowDuplicateWarning(true);
+      return;
+    }
+
+    // If only name matches (different nationality), show gentle warning but allow
+    if (hasNameMatches && !hasNameNationalityMatches && !confirmSubmit) {
+      setDuplicateMatches(duplicateChecks);
+      setShowDuplicateWarning(true);
+      return;
+    }
+
+    // Proceed with submission
+    createMutation.mutate(formData);
+  };
+
+  const handleConfirmSubmit = () => {
+    setConfirmSubmit(true);
+    setShowDuplicateWarning(false);
+    // Re-trigger submit with confirmation flag
+    setTimeout(() => {
+      createMutation.mutate(formData);
+    }, 100);
+  };
+
+  const handleCancelSubmit = () => {
+    setShowDuplicateWarning(false);
+    setConfirmSubmit(false);
   };
 
   const renderSectionHeader = (section: typeof sections[0]) => (
@@ -411,6 +501,54 @@ export function AddDevoteeEnhanced() {
         {renderSectionHeader(sections[0])}
         {expandedSections.has('basic') && (
           <div className="p-4 border-t space-y-4">
+            {/* Inline Duplicate Warnings */}
+            {duplicateChecks.identityMatches.length > 0 && (
+              <div className="p-4 bg-red-50 border-2 border-red-500 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <XCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-bold text-red-900">
+                      ⛔ Identity Number Already Exists
+                    </p>
+                    <p className="text-xs text-red-800 mt-1">
+                      Someone with ID number "{formData.identities[0]?.idNumber}" is already registered.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {duplicateChecks.identityMatches.length === 0 && duplicateChecks.nameNationalityMatches.length > 0 && (
+              <div className="p-4 bg-orange-50 border-2 border-orange-400 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-bold text-orange-900">
+                      ⚠️ Same Name + Nationality Found
+                    </p>
+                    <p className="text-xs text-orange-800 mt-1">
+                      {duplicateChecks.nameNationalityMatches.length} person(s) with name "{formData.givenName} {formData.familyName}" from {formData.nationality} already exist(s).
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {duplicateChecks.identityMatches.length === 0 && 
+             duplicateChecks.nameNationalityMatches.length === 0 && 
+             duplicateChecks.nameMatches.length > 0 && (
+              <div className="p-3 bg-blue-50 border border-blue-300 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-medium text-blue-900">
+                      ℹ️ Similar name found (different nationality)
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
                 label="Given Name *"
@@ -753,6 +891,150 @@ export function AddDevoteeEnhanced() {
         title="Enter ID Expiry Date (BS)"
         initialADDate={formData.identities[0].expiryDate}
       />
+
+      {/* Duplicate Warning Modal */}
+      <Modal
+        isOpen={showDuplicateWarning}
+        onClose={handleCancelSubmit}
+        title="⚠️ Potential Duplicate Detected"
+      >
+        <div className="p-6">
+          {/* Identity Match - BLOCKING */}
+          {duplicateMatches.identityMatches.length > 0 && (
+            <div className="mb-6">
+              <div className="flex items-start gap-3 p-4 bg-red-50 border-2 border-red-500 rounded-lg mb-4">
+                <XCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="text-lg font-bold text-red-900">Cannot Add - Identity Number Already Exists</h3>
+                  <p className="text-sm text-red-800 mt-1">
+                    <strong>SUPER STRICT CHECK:</strong> Someone with the same identity document number is already in the system. This is not allowed.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <p className="text-sm font-semibold text-gray-900">Existing person(s) with same ID number:</p>
+                {duplicateMatches.identityMatches.map((person) => (
+                  <div key={person.id} className="p-4 bg-gray-50 border border-red-300 rounded-lg">
+                    <p className="font-semibold text-gray-900">
+                      {person.givenName} {person.familyName}
+                    </p>
+                    <p className="text-sm text-gray-600">Nationality: {person.nationality}</p>
+                    <p className="text-sm text-gray-600">
+                      ID: {person.identities?.[0]?.type} - {person.identities?.[0]?.idNumber}
+                    </p>
+                    <p className="text-sm text-gray-600">Contact: {person.contact}</p>
+                    <p className="text-xs text-red-600 mt-2 font-medium">
+                      ⚠️ This person is already registered. Please verify the ID number.
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-6 flex justify-end">
+                <Button onClick={handleCancelSubmit} variant="secondary">
+                  Go Back and Check
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Name + Nationality Match - REQUIRES APPROVAL */}
+          {duplicateMatches.identityMatches.length === 0 && duplicateMatches.nameNationalityMatches.length > 0 && (
+            <div className="mb-6">
+              <div className="flex items-start gap-3 p-4 bg-orange-50 border-2 border-orange-500 rounded-lg mb-4">
+                <AlertTriangle className="w-6 h-6 text-orange-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="text-lg font-bold text-orange-900">Warning: Same Name & Nationality</h3>
+                  <p className="text-sm text-orange-800 mt-1">
+                    <strong>STRICT CHECK:</strong> Someone with the exact same name AND nationality exists in the system.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <p className="text-sm font-semibold text-gray-900">Existing person(s):</p>
+                {duplicateMatches.nameNationalityMatches.map((person) => (
+                  <div key={person.id} className="p-4 bg-gray-50 border border-orange-300 rounded-lg">
+                    <p className="font-semibold text-gray-900">
+                      {person.givenName} {person.familyName}
+                    </p>
+                    <p className="text-sm text-gray-600">Nationality: {person.nationality}</p>
+                    <p className="text-sm text-gray-600">DOB: {person.dob}</p>
+                    <p className="text-sm text-gray-600">Contact: {person.contact}</p>
+                    <p className="text-sm text-gray-600">
+                      ID: {person.identities?.[0]?.type} - {person.identities?.[0]?.idNumber}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-4 p-4 bg-yellow-50 border border-yellow-300 rounded-lg">
+                <p className="text-sm text-yellow-900 font-medium">
+                  ⚠️ Please verify this is a different person before proceeding.
+                </p>
+                <p className="text-xs text-yellow-800 mt-1">
+                  Check the identity document number, date of birth, and contact information to confirm.
+                </p>
+              </div>
+
+              <div className="mt-6 flex justify-end gap-3">
+                <Button onClick={handleCancelSubmit} variant="secondary">
+                  Cancel - Review Details
+                </Button>
+                <Button onClick={handleConfirmSubmit} variant="primary">
+                  Confirm - Add Anyway
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Name Only Match - GENTLE WARNING */}
+          {duplicateMatches.identityMatches.length === 0 && 
+           duplicateMatches.nameNationalityMatches.length === 0 && 
+           duplicateMatches.nameMatches.length > 0 && (
+            <div className="mb-6">
+              <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-300 rounded-lg mb-4">
+                <AlertCircle className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="text-lg font-bold text-blue-900">Notice: Similar Name Found</h3>
+                  <p className="text-sm text-blue-800 mt-1">
+                    Someone with a similar name (but different nationality) exists in the system.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <p className="text-sm font-semibold text-gray-900">Existing person(s):</p>
+                {duplicateMatches.nameMatches.map((person) => (
+                  <div key={person.id} className="p-4 bg-gray-50 border border-blue-200 rounded-lg">
+                    <p className="font-semibold text-gray-900">
+                      {person.givenName} {person.familyName}
+                    </p>
+                    <p className="text-sm text-gray-600">Nationality: {person.nationality}</p>
+                    <p className="text-sm text-gray-600">DOB: {person.dob}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-900">
+                  ℹ️ This is likely a different person since the nationality is different. You can proceed.
+                </p>
+              </div>
+
+              <div className="mt-6 flex justify-end gap-3">
+                <Button onClick={handleCancelSubmit} variant="secondary">
+                  Cancel
+                </Button>
+                <Button onClick={handleConfirmSubmit} variant="primary">
+                  Continue Adding
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 }
