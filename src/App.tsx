@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './config/queryClient';
 import { Layout } from './components/layout';
+import { ScrollToTop } from './components/ScrollToTop';
 import { Dashboard } from './features/dashboard';
 import { AddDevoteeEnhanced } from './features/devotee';
 import { BulkEntryImproved } from './features/bulk-entry';
@@ -15,6 +16,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <ScrollToTop />
         <Layout>
           <Routes>
             <Route path="/" element={<Dashboard />} />
