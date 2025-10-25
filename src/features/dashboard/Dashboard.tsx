@@ -12,6 +12,11 @@ import {
   RefreshCw,
   ChevronRight,
   ArrowUpDown,
+  Search as SearchIcon,
+  UserPlus,
+  Upload,
+  Wrench,
+  BarChart3,
 } from 'lucide-react';
 import { Button, Card, StatCard, Select, Modal, Input } from '../../components/ui';
 import { mockAPI } from '../../services/api';
@@ -171,9 +176,204 @@ export function Dashboard() {
         </div>
       </div>
 
+      {/* Quick Shortcuts */}
+      <Card className="p-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <button
+            onClick={() => navigate('/add-devotee')}
+            className="flex flex-col items-center gap-3 p-4 rounded-lg border-2 border-dashed border-gray-300 hover:border-blue-500 hover:bg-blue-50 transition-all"
+          >
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <UserPlus className="w-6 h-6 text-blue-600" />
+            </div>
+            <span className="text-sm font-medium text-gray-700">Add Devotee</span>
+          </button>
+          
+          <button
+            onClick={() => navigate('/bulk-entry')}
+            className="flex flex-col items-center gap-3 p-4 rounded-lg border-2 border-dashed border-gray-300 hover:border-purple-500 hover:bg-purple-50 transition-all"
+          >
+            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+              <Upload className="w-6 h-6 text-purple-600" />
+            </div>
+            <span className="text-sm font-medium text-gray-700">Bulk Entry</span>
+          </button>
+          
+          <button
+            onClick={() => navigate('/search')}
+            className="flex flex-col items-center gap-3 p-4 rounded-lg border-2 border-dashed border-gray-300 hover:border-green-500 hover:bg-green-50 transition-all"
+          >
+            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <SearchIcon className="w-6 h-6 text-green-600" />
+            </div>
+            <span className="text-sm font-medium text-gray-700">Search</span>
+          </button>
+          
+          <button
+            onClick={() => navigate('/tools')}
+            className="flex flex-col items-center gap-3 p-4 rounded-lg border-2 border-dashed border-gray-300 hover:border-orange-500 hover:bg-orange-50 transition-all"
+          >
+            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+              <Wrench className="w-6 h-6 text-orange-600" />
+            </div>
+            <span className="text-sm font-medium text-gray-700">Tools</span>
+          </button>
+        </div>
+      </Card>
+
+      {/* Statistics Dashboard */}
+      {residents && residents.length > 0 && (
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+                <BarChart3 className="w-6 h-6 text-indigo-600" />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">Statistics & Insights</h2>
+                <p className="text-sm text-gray-600">Quick analytics overview</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Nationality Breakdown */}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">Top Nationalities</h3>
+              <div className="space-y-2">
+                {Object.entries(
+                  residents.reduce((acc: Record<string, number>, r) => {
+                    const nat = r.person?.nationality || 'Unknown';
+                    acc[nat] = (acc[nat] || 0) + 1;
+                    return acc;
+                  }, {})
+                )
+                  .sort(([, a], [, b]) => b - a)
+                  .slice(0, 5)
+                  .map(([nationality, count]) => (
+                    <div key={nationality} className="flex items-center justify-between">
+                      <button
+                        onClick={() => setFilters({ ...filters, nationality })}
+                        className="text-sm text-gray-700 hover:text-blue-600"
+                      >
+                        {nationality}
+                      </button>
+                      <div className="flex items-center gap-2">
+                        <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-indigo-500"
+                            style={{ width: `${(count / residents.length) * 100}%` }}
+                          />
+                        </div>
+                        <span className="text-sm font-medium text-gray-900 w-12 text-right">{count}</span>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+
+            {/* Purpose of Visit */}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">Purpose of Visit</h3>
+              <div className="space-y-2">
+                {Object.entries(
+                  residents.reduce((acc: Record<string, number>, r) => {
+                    const purpose = r.purpose || 'Unknown';
+                    acc[purpose] = (acc[purpose] || 0) + 1;
+                    return acc;
+                  }, {})
+                )
+                  .sort(([, a], [, b]) => b - a)
+                  .slice(0, 5)
+                  .map(([purpose, count]) => (
+                    <div key={purpose} className="flex items-center justify-between">
+                      <span className="text-sm text-gray-700">{purpose}</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-purple-500"
+                            style={{ width: `${(count / residents.length) * 100}%` }}
+                          />
+                        </div>
+                        <span className="text-sm font-medium text-gray-900 w-12 text-right">{count}</span>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+
+            {/* Average Stay Duration */}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">Average Stay Duration</h3>
+              <div className="text-center py-4">
+                <p className="text-4xl font-bold text-indigo-600">
+                  {Math.round(
+                    residents.reduce((acc, r) => {
+                      const arrival = new Date(r.arrivalDateTime);
+                      const departure = r.plannedDeparture ? new Date(r.plannedDeparture) : new Date();
+                      const days = Math.ceil((departure.getTime() - arrival.getTime()) / (1000 * 60 * 60 * 24));
+                      return acc + days;
+                    }, 0) / residents.length
+                  )}
+                </p>
+                <p className="text-sm text-gray-600 mt-1">days</p>
+              </div>
+            </div>
+
+            {/* Form-C Status */}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">Form-C Status</h3>
+              <div className="space-y-2">
+                {Object.entries(
+                  residents.reduce((acc: Record<string, number>, r) => {
+                    const status = (r as any).formCStatus || 'Unknown';
+                    acc[status] = (acc[status] || 0) + 1;
+                    return acc;
+                  }, {})
+                )
+                  .map(([status, count]) => (
+                    <div key={status} className="flex items-center justify-between">
+                      <button
+                        onClick={() => setFilters({ ...filters, formCStatus: status })}
+                        className="text-sm text-gray-700 capitalize hover:text-blue-600"
+                      >
+                        {status}
+                      </button>
+                      <div className="flex items-center gap-2">
+                        <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full ${
+                              status === 'Submitted' ? 'bg-green-500' :
+                              status === 'Pending' ? 'bg-yellow-500' :
+                              'bg-red-500'
+                            }`}
+                            style={{ width: `${(count / residents.length) * 100}%` }}
+                          />
+                        </div>
+                        <span className="text-sm font-medium text-gray-900 w-12 text-right">{count}</span>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 text-center">
+            <Button
+              variant="secondary"
+              onClick={() => navigate('/search')}
+            >
+              <SearchIcon className="w-4 h-4 mr-2" />
+              View All Residents in Search
+            </Button>
+          </div>
+        </Card>
+      )}
+
       <Card className="p-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-          <h2 className="text-xl font-semibold">Current Residents</h2>
+          <h2 className="text-xl font-semibold">Recent Arrivals (Last 10)</h2>
           <div className="flex gap-2">
             <Button
               variant="ghost"
@@ -324,7 +524,7 @@ export function Dashboard() {
               </tr>
             </thead>
             <tbody className="divide-y">
-              {filteredResidents.slice(0, 50).map((r) => (
+              {filteredResidents.slice(0, 10).map((r) => (
                 <tr key={r.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3">
                     <button

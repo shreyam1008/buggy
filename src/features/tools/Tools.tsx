@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronRight, Calendar, ArrowLeftRight, Copy, Check, Image, BarChart3, Download, Upload, FileDown, Trash2 } from 'lucide-react';
+import { ChevronRight, Calendar, ArrowLeftRight, Copy, Check, Image, Download, Upload, FileDown, Trash2 } from 'lucide-react';
 import { Card, Button } from '../../components/ui';
 import { mockAPI } from '../../services/api';
 import { compressImage } from '../../utils/imageCompression';
@@ -29,13 +29,11 @@ export function Tools() {
   const [compressing, setCompressing] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
 
-  // Statistics state
+  // Export state
   const { data: residents } = useQuery({
     queryKey: ['residents'],
     queryFn: () => mockAPI.getCurrentResidents(),
   });
-
-  // Export state
   const [exportStatus, setExportStatus] = useState('');
 
   const formatBSInput = (value: string) => {
@@ -431,135 +429,6 @@ export function Tools() {
         </div>
       </Card>
 
-      {/* Statistics Dashboard */}
-      <Card className="p-6 mt-8">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
-            <BarChart3 className="w-6 h-6 text-indigo-600" />
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">Statistics Dashboard</h2>
-            <p className="text-sm text-gray-600">Quick insights and analytics</p>
-          </div>
-        </div>
-
-        {residents && residents.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Nationality Breakdown */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Nationality Breakdown</h3>
-              <div className="space-y-2">
-                {Object.entries(
-                  residents.reduce((acc: Record<string, number>, r) => {
-                    const nat = r.person?.nationality || 'Unknown';
-                    acc[nat] = (acc[nat] || 0) + 1;
-                    return acc;
-                  }, {})
-                )
-                  .sort(([, a], [, b]) => b - a)
-                  .slice(0, 5)
-                  .map(([nationality, count]) => (
-                    <div key={nationality} className="flex items-center justify-between">
-                      <span className="text-sm text-gray-700">{nationality}</span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-indigo-500"
-                            style={{ width: `${(count / residents.length) * 100}%` }}
-                          />
-                        </div>
-                        <span className="text-sm font-medium text-gray-900 w-12 text-right">{count}</span>
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            </div>
-
-            {/* Purpose of Visit */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Purpose of Visit</h3>
-              <div className="space-y-2">
-                {Object.entries(
-                  residents.reduce((acc: Record<string, number>, r) => {
-                    const purpose = r.purpose || 'Unknown';
-                    acc[purpose] = (acc[purpose] || 0) + 1;
-                    return acc;
-                  }, {})
-                )
-                  .sort(([, a], [, b]) => b - a)
-                  .map(([purpose, count]) => (
-                    <div key={purpose} className="flex items-center justify-between">
-                      <span className="text-sm text-gray-700">{purpose}</span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-purple-500"
-                            style={{ width: `${(count / residents.length) * 100}%` }}
-                          />
-                        </div>
-                        <span className="text-sm font-medium text-gray-900 w-12 text-right">{count}</span>
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            </div>
-
-            {/* Average Stay Duration */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Average Stay Duration</h3>
-              <div className="text-center py-4">
-                <p className="text-4xl font-bold text-indigo-600">
-                  {Math.round(
-                    residents.reduce((acc, r) => {
-                      const arrival = new Date(r.arrivalDateTime);
-                      const departure = r.plannedDeparture ? new Date(r.plannedDeparture) : new Date();
-                      const days = Math.ceil((departure.getTime() - arrival.getTime()) / (1000 * 60 * 60 * 24));
-                      return acc + days;
-                    }, 0) / residents.length
-                  )}
-                </p>
-                <p className="text-sm text-gray-600 mt-1">days</p>
-              </div>
-            </div>
-
-            {/* Form-C Status */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Form-C Status</h3>
-              <div className="space-y-2">
-                {Object.entries(
-                  residents.reduce((acc: Record<string, number>, r) => {
-                    const status = (r as any).formCStatus || 'Unknown';
-                    acc[status] = (acc[status] || 0) + 1;
-                    return acc;
-                  }, {})
-                )
-                  .map(([status, count]) => (
-                    <div key={status} className="flex items-center justify-between">
-                      <span className="text-sm text-gray-700 capitalize">{status}</span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full ${
-                              status === 'submitted' ? 'bg-green-500' :
-                              status === 'pending' ? 'bg-yellow-500' :
-                              'bg-red-500'
-                            }`}
-                            style={{ width: `${(count / residents.length) * 100}%` }}
-                          />
-                        </div>
-                        <span className="text-sm font-medium text-gray-900 w-12 text-right">{count}</span>
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="text-center py-8 text-gray-500">
-            <p>No data available. Add some devotees first.</p>
-          </div>
-        )}
-      </Card>
 
       {/* Data Export Tool */}
       <Card className="p-6 mt-8">

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileEdit, Trash2, Clock, User } from 'lucide-react';
+import { FileEdit, Trash2, Clock, User, AlertCircle } from 'lucide-react';
 import { Button, Card } from '../../components/ui';
 import type { Draft } from '../../types';
 
@@ -38,6 +38,21 @@ export function Drafts() {
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Draft Entries</h1>
         <p className="text-gray-600 mt-2">Resume incomplete devotee entries</p>
+      </div>
+
+      {/* localStorage Warning */}
+      <div className="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4">
+        <div className="flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <h3 className="text-sm font-semibold text-yellow-800">Local Storage Notice</h3>
+            <p className="text-sm text-yellow-700 mt-1">
+              <strong>Important:</strong> Drafts are saved on this device only (browser localStorage). 
+              They will <strong>NOT</strong> be available on other computers or browsers. 
+              Clear your browser data or use incognito mode may delete these drafts.
+            </p>
+          </div>
+        </div>
       </div>
 
       {drafts.length === 0 ? (
