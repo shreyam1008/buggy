@@ -7,7 +7,8 @@ import {
   Search, 
   FileEdit, 
   LogOut,
-  Upload
+  Upload,
+  Wrench
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -24,6 +25,7 @@ export function Layout({ children }: LayoutProps) {
     { path: '/search', icon: Search, label: 'Search' },
     { path: '/drafts', icon: FileEdit, label: 'Drafts' },
     { path: '/exits', icon: LogOut, label: 'Exits' },
+    { path: '/tools', icon: Wrench, label: 'Tools' },
   ];
 
   const isActive = (path: string) => {
