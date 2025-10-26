@@ -29,10 +29,28 @@ export let currentUser: User = {
   },
 };
 
+// Utility to simulate network errors (for testing)
+const simulateNetworkError = (shouldError = false) => {
+  if (shouldError && Math.random() < 0.1) { // 10% chance of error
+    throw new Error('Network connection error. Please check your internet connection.');
+  }
+};
+
+// Utility to add timeout to promises
+const withTimeout = <T>(promise: Promise<T>, timeoutMs = 10000): Promise<T> => {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error('Request timeout. Please try again.')), timeoutMs)
+    ),
+  ]);
+};
+
 // Mock API functions
 export const mockAPI = {
   async getDashboardStats(): Promise<DashboardStats> {
     await new Promise((resolve) => setTimeout(resolve, 300));
+    simulateNetworkError(false);
     const currentVisits = mockDB.visits.filter((v) => !v.actualDeparture);
     const pendingFormC = currentVisits.filter(
       (v) =>

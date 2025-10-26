@@ -1,6 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
+import { useToast } from '../../hooks/useToast';
 import { 
   ChevronRight, 
   ChevronDown, 
@@ -13,13 +14,14 @@ import {
   AlertTriangle,
   XCircle
 } from 'lucide-react';
-import { Button, Card, Input, Select, BSDatePicker, Modal } from '../../components/ui';
+import { Button, Card, Input, Select, BSDatePicker, Modal, LoadingOverlay } from '../../components/ui';
 import { PhotoUploadEditor } from '../../components/features';
 import { mockAPI } from '../../services/api';
+import { draftService } from '../../utils/localStorage';
 import { NATIONALITIES, PURPOSES, LOCATIONS, GENDER_OPTIONS } from '../../config/constants';
-import type { CompressedImage, Person } from '../../types';
+import type { CompressedImage, Person, Draft } from '../../types';
 
-const DRAFT_KEY = 'devotee_form_draft';
+const AUTOSAVE_INTERVAL = 15000; // 15 seconds
 
 // Extended ID types
 const EXTENDED_ID_TYPES = [
@@ -34,9 +36,16 @@ const EXTENDED_ID_TYPES = [
 
 export function AddDevoteeEnhanced() {
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
+  const toast = useToast();
   
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['basic']));
+  const [currentDraftId, setCurrentDraftId] = useState<string | null>(null);
+  const [showDraftsModal, setShowDraftsModal] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasShownRestoreToast = useRef(false);
   const [formData, setFormData] = useState<any>({
     // Basic Details
     givenName: '',
@@ -83,7 +92,7 @@ export function AddDevoteeEnhanced() {
 
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoSize, setPhotoSize] = useState(0);
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [lastAutosaved, setLastAutosaved] = useState<Date | null>(null);
   const [showBSPickerDOB, setShowBSPickerDOB] = useState(false);
   const [showBSPickerExpiry, setShowBSPickerExpiry] = useState(false);
 
@@ -97,12 +106,13 @@ export function AddDevoteeEnhanced() {
   const [confirmSubmit, setConfirmSubmit] = useState(false);
 
   // Fetch all persons for duplicate checking
-  const { data: allPersons } = useQuery({
+  const { data: allPersons, isLoading: isLoadingPersons } = useQuery({
     queryKey: ['allPersons'],
     queryFn: async () => {
       const visits = await mockAPI.getAllVisits();
       return visits.map(v => v.person).filter(Boolean) as Person[];
     },
+    staleTime: 30000, // Cache for 30 seconds
   });
 
   // Calculate age from DOB
@@ -153,30 +163,92 @@ export function AddDevoteeEnhanced() {
     return { nameMatches, nameNationalityMatches, identityMatches };
   }, [allPersons, formData.givenName, formData.familyName, formData.nationality, formData.identities]);
 
-  // Load draft on mount
+  // Load autosave on mount or draft from navigation state
   useEffect(() => {
-    const savedDraft = localStorage.getItem(DRAFT_KEY);
-    if (savedDraft) {
-      try {
-        const draft = JSON.parse(savedDraft);
-        setFormData(draft.formData);
+    // Only run once on mount
+    if (hasShownRestoreToast.current) return;
+    hasShownRestoreToast.current = true;
+    
+    // Check if we're loading a specific draft from navigation state
+    const draftId = (location.state as any)?.draftId;
+    if (draftId) {
+      const draft = draftService.getDraft(draftId);
+      if (draft) {
+        setCurrentDraftId(draft.id);
+        setFormData({
+          givenName: draft.givenName || '',
+          familyName: draft.familyName || '',
+          dob: draft.dob || '',
+          gender: draft.gender || 'Male',
+          nationality: draft.nationality || 'Nepal',
+          addressStreet: draft.addressStreet || '',
+          addressCity: draft.addressCity || '',
+          addressState: draft.addressState || '',
+          addressCountry: draft.addressCountry || 'Nepal',
+          contact: draft.contact || '',
+          email: draft.email || '',
+          identities: draft.identities || [{ type: 'passport', idNumber: '', issuingCountry: 'Nepal', expiryDate: '' }],
+          visaNumber: draft.visaNumber || '',
+          visaType: draft.visaType || '',
+          visaIssueDate: draft.visaIssueDate || '',
+          visaExpiryDate: draft.visaExpiryDate || '',
+          arrivalDateTime: draft.arrivalDateTime || new Date().toISOString().slice(0, 16),
+          arrivalLocation: draft.arrivalLocation || LOCATIONS[0],
+          temporaryAddress: draft.temporaryAddress || '',
+          plannedDeparture: draft.plannedDeparture || '',
+          purpose: draft.purpose || PURPOSES[0],
+          host: draft.host || 'Ashram Administration',
+          photo: null,
+        });
         if (draft.photoPreview) {
           setPhotoPreview(draft.photoPreview);
           setPhotoSize(draft.photoSize || 0);
         }
-        setLastSaved(new Date(draft.savedAt));
-      } catch (e) {
-        console.error('Failed to load draft:', e);
+        toast.info('Draft Loaded', `Loaded draft for ${draft.givenName || 'unnamed person'}`);
+        return;
       }
     }
+    
+    // Otherwise, load autosave if available
+    const autosave = draftService.getAutosave();
+    if (autosave) {
+      setFormData(autosave.formData);
+      if (autosave.photoPreview) {
+        setPhotoPreview(autosave.photoPreview);
+        setPhotoSize(autosave.photoSize || 0);
+      }
+      setLastAutosaved(new Date(autosave.savedAt));
+      toast.info('Autosave Restored', 'Your previous work has been restored');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Auto-save draft every 30 seconds
+  // Auto-save to localStorage every 15 seconds
   useEffect(() => {
-    const interval = setInterval(() => {
-      saveDraft();
-    }, 30000);
-    return () => clearInterval(interval);
+    if (autosaveTimerRef.current) {
+      clearTimeout(autosaveTimerRef.current);
+    }
+    
+    autosaveTimerRef.current = setTimeout(() => {
+      draftService.saveAutosave(formData, photoPreview || undefined, photoSize);
+      setLastAutosaved(new Date());
+    }, AUTOSAVE_INTERVAL);
+    
+    return () => {
+      if (autosaveTimerRef.current) {
+        clearTimeout(autosaveTimerRef.current);
+      }
+    };
+  }, [formData, photoPreview, photoSize]);
+  
+  // Save autosave on unmount (navigation away)
+  useEffect(() => {
+    return () => {
+      // Only autosave if there's actual data
+      if (formData.givenName || formData.familyName || formData.contact) {
+        draftService.saveAutosave(formData, photoPreview || undefined, photoSize);
+      }
+    };
   }, [formData, photoPreview, photoSize]);
 
   // Auto-set visa defaults for Nepali
@@ -201,21 +273,33 @@ export function AddDevoteeEnhanced() {
     }
   };
 
-  const saveDraft = () => {
-    const draft = {
-      formData,
-      photoPreview,
-      photoSize,
-      savedAt: new Date().toISOString(),
-    };
-    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-    setLastSaved(new Date());
-  };
-
-  const clearDraft = () => {
-    localStorage.removeItem(DRAFT_KEY);
-    setLastSaved(null);
-  };
+  // Save to drafts list (explicit user action)
+  const handleSaveToDraft = useCallback(async () => {
+    setIsSavingDraft(true);
+    try {
+      const draftData: Partial<Draft> = {
+        ...(currentDraftId ? { id: currentDraftId } : {}),
+        ...formData,
+        photoPreview: photoPreview || undefined,
+        photoSize,
+        status: 'incomplete',
+      };
+      
+      const savedDraft = draftService.saveDraft(draftData);
+      setCurrentDraftId(savedDraft.id);
+      toast.success('Saved to Drafts', `Draft saved for ${formData.givenName || 'unnamed person'}`);
+    } catch (error) {
+      toast.error('Failed to Save Draft', 'Please try again');
+    } finally {
+      setIsSavingDraft(false);
+    }
+  }, [formData, photoPreview, photoSize, currentDraftId, toast]);
+  
+  // Clear autosave (when form is submitted)
+  const clearAutosave = useCallback(() => {
+    draftService.clearAutosave();
+    setLastAutosaved(null);
+  }, []);
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -262,10 +346,18 @@ export function AddDevoteeEnhanced() {
 
       return { person, visit };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries();
-      clearDraft();
+      clearAutosave();
+      // If this was from a draft, delete the draft
+      if (currentDraftId) {
+        draftService.deleteDraft(currentDraftId);
+      }
+      toast.success('Devotee Added Successfully', `${data.person.givenName} ${data.person.familyName} has been registered`);
       navigate('/');
+    },
+    onError: (error: any) => {
+      toast.error('Failed to Save', error.message || 'An error occurred while saving. Please try again.');
     },
   });
 
@@ -351,6 +443,7 @@ export function AddDevoteeEnhanced() {
     if (hasIdentityMatches) {
       setDuplicateMatches(duplicateChecks);
       setShowDuplicateWarning(true);
+      toast.error('Identity Number Exists', 'This ID number is already registered in the system');
       return;
     }
 
@@ -358,6 +451,7 @@ export function AddDevoteeEnhanced() {
     if (hasNameNationalityMatches && !confirmSubmit) {
       setDuplicateMatches(duplicateChecks);
       setShowDuplicateWarning(true);
+      toast.warning('Duplicate Detected', 'Same name and nationality found. Please verify.');
       return;
     }
 
@@ -365,6 +459,7 @@ export function AddDevoteeEnhanced() {
     if (hasNameMatches && !hasNameNationalityMatches && !confirmSubmit) {
       setDuplicateMatches(duplicateChecks);
       setShowDuplicateWarning(true);
+      toast.info('Similar Name Found', 'Someone with a similar name (different nationality) exists');
       return;
     }
 
@@ -422,9 +517,9 @@ export function AddDevoteeEnhanced() {
             <h1 className="text-3xl font-bold text-gray-900">Add New Devotee</h1>
             <p className="text-gray-600 mt-2">Fill in any order. All sections auto-save.</p>
           </div>
-          {lastSaved && (
+          {lastAutosaved && (
             <div className="text-sm text-gray-500">
-              Last saved: {lastSaved.toLocaleTimeString()}
+              Auto-saved: {lastAutosaved.toLocaleTimeString()}
             </div>
           )}
         </div>
@@ -450,9 +545,25 @@ export function AddDevoteeEnhanced() {
             </div>
           </div>
           <div className="flex gap-2">
-            <Button variant="ghost" size="sm" onClick={saveDraft}>
-              <Save className="w-4 h-4 mr-2" />
-              Save Draft
+            <Button 
+              variant="primary" 
+              size="sm" 
+              onClick={handleSaveToDraft}
+              disabled={isSavingDraft}
+            >
+              {isSavingDraft ? (
+                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4 mr-2" />
+              )}
+              Save to Draft
+            </Button>
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              onClick={() => setShowDraftsModal(true)}
+            >
+              Pull from Draft
             </Button>
             <Button
               variant="ghost"
@@ -485,7 +596,8 @@ export function AddDevoteeEnhanced() {
                     photo: null,
                   });
                   setPhotoPreview(null);
-                  clearDraft();
+                  clearAutosave();
+                  setCurrentDraftId(null);
                 }
               }}
             >
@@ -1035,6 +1147,130 @@ export function AddDevoteeEnhanced() {
           )}
         </div>
       </Modal>
+
+      {/* Pull from Draft Modal */}
+      <Modal
+        isOpen={showDraftsModal}
+        onClose={() => setShowDraftsModal(false)}
+        title="📋 Pull from Drafts"
+      >
+        <div className="p-6">
+          <PullFromDraftContent
+            onSelectDraft={(draft) => {
+              navigate('/add-devotee', { state: { draftId: draft.id } });
+              window.location.reload(); // Force reload to apply draft
+            }}
+            onClose={() => setShowDraftsModal(false)}
+          />
+        </div>
+      </Modal>
+
+      {/* Loading Overlays */}
+      <LoadingOverlay 
+        isLoading={isLoadingPersons} 
+        message="Loading duplicate check data..." 
+      />
+      <LoadingOverlay 
+        isLoading={createMutation.isPending} 
+        message="Saving devotee..." 
+      />
+    </div>
+  );
+}
+
+// Pull from Draft Modal Content Component
+function PullFromDraftContent({ onSelectDraft, onClose }: { 
+  onSelectDraft: (draft: Draft) => void; 
+  onClose: () => void;
+}) {
+  const [drafts, setDrafts] = useState<Draft[]>([]);
+  const toast = useToast();
+
+  useEffect(() => {
+    setDrafts(draftService.getDrafts());
+  }, []);
+
+  const handleDelete = (draftId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirm('Delete this draft?')) {
+      draftService.deleteDraft(draftId);
+      setDrafts(draftService.getDrafts());
+      toast.success('Draft Deleted', 'Draft has been removed');
+    }
+  };
+
+  if (drafts.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <Save className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+        <h3 className="text-lg font-semibold text-gray-700 mb-2">No Drafts Available</h3>
+        <p className="text-gray-500 mb-6">
+          Save drafts using the "Save to Draft" button to access them here.
+        </p>
+        <Button onClick={onClose} variant="secondary">
+          Close
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <p className="text-sm text-gray-600 mb-4">
+        Select a draft to load into the form. Your current progress will be replaced.
+      </p>
+      <div className="space-y-3 max-h-96 overflow-y-auto">
+        {drafts.map((draft) => (
+          <div
+            key={draft.id}
+            className="p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors cursor-pointer"
+            onClick={() => onSelectDraft(draft)}
+          >
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <h3 className="font-semibold text-gray-900">
+                  {draft.givenName || 'Unnamed'} {draft.familyName || ''}
+                  {!draft.givenName && !draft.familyName && '(Empty Draft)'}
+                </h3>
+                <div className="mt-2 space-y-1">
+                  {draft.nationality && (
+                    <p className="text-sm text-gray-600">
+                      <span className="font-medium">Nationality:</span> {draft.nationality}
+                    </p>
+                  )}
+                  {draft.contact && (
+                    <p className="text-sm text-gray-600">
+                      <span className="font-medium">Contact:</span> {draft.contact}
+                    </p>
+                  )}
+                  {draft.identities?.[0]?.idNumber && (
+                    <p className="text-sm text-gray-600">
+                      <span className="font-medium">ID:</span> {draft.identities[0].type} - {draft.identities[0].idNumber}
+                    </p>
+                  )}
+                  <p className="text-xs text-gray-500 mt-2">
+                    Saved: {new Date(draft.savedAt).toLocaleString()}
+                  </p>
+                  <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium mt-1 ${
+                    draft.status === 'pending_approval' 
+                      ? 'bg-yellow-100 text-yellow-800' 
+                      : 'bg-gray-100 text-gray-800'
+                  }`}>
+                    {draft.status === 'pending_approval' ? 'Pending Approval' : 'Incomplete'}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={(e) => handleDelete(draft.id, e)}
+                className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+                title="Delete draft"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

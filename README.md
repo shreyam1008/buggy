@@ -184,6 +184,61 @@ src/
 - **ESLint** - Code linting
 - **TypeScript ESLint** - TypeScript-specific linting
 
+## 📊 Data Flow Diagram
+
+```
+User Opens "Add Devotee" Form
+      ↓
+Auto-save starts (every 15 seconds) → localStorage
+      ↓
+User fills sections in any order
+      ↓
+System checks for duplicates in real-time
+      ↓
+[Optional] Click "Save to Draft" → Drafts list → localStorage
+      ↓
+Navigate to another page? → Auto-save on unmount → localStorage
+      ↓
+Return to form? → Auto-restore from localStorage
+      ↓
+[Optional] "Pull from Draft" → Load saved draft into form
+      ↓
+Complete all required fields → Green checkmarks appear
+      ↓
+Click "Submit Entry" → Final duplicate check runs
+      ↓
+Duplicates found?
+  ├─ Identity Match (RED) → Submission BLOCKED ❌
+  ├─ Name+Nationality Match (ORANGE) → Requires confirmation ⚠️
+  └─ Name Match (BLUE) → Can proceed ℹ️
+      ↓
+No duplicates OR User confirmed? → Save to Database ✅
+      ↓
+Draft automatically deleted (if loaded from draft)
+      ↓
+Clear autosave
+      ↓
+Success toast notification → Redirect to Dashboard
+```
+
+### Draft System Flow
+
+```
+localStorage Structure:
+├── formC_autosave (transient, auto-saved)
+│   ├── formData
+│   ├── photoPreview
+│   ├── photoSize
+│   └── savedAt
+│
+└── formC_drafts (persistent, user-saved)
+    ├── draft1 {id, status, ...allFields}
+    ├── draft2 {id, status, ...allFields}
+    └── draft3 {id, status, ...allFields}
+```
+
+---
+
 ## 📖 Usage Guide
 
 ### Adding a Single Devotee

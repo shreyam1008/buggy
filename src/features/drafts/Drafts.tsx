@@ -1,26 +1,111 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileEdit, Trash2, Clock, User, AlertCircle } from 'lucide-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { FileEdit, Trash2, Clock, User, AlertCircle, CheckCircle, Edit, RefreshCw } from 'lucide-react';
 import { Button, Card } from '../../components/ui';
+import { useToast } from '../../hooks/useToast';
+import { draftService } from '../../utils/localStorage';
+import { mockAPI } from '../../services/api';
 import type { Draft } from '../../types';
 
 export function Drafts() {
   const navigate = useNavigate();
-  const [drafts, setDrafts] = useState<Draft[]>(() => {
-    // Load drafts from localStorage
-    const stored = localStorage.getItem('devotee_form_drafts');
-    return stored ? JSON.parse(stored) : [];
-  });
+  const toast = useToast();
+  const queryClient = useQueryClient();
+  const [drafts, setDrafts] = useState<Draft[]>([]);
+  const [approvingDraftId, setApprovingDraftId] = useState<string | null>(null);
+
+  // Load drafts on mount
+  useEffect(() => {
+    setDrafts(draftService.getDrafts());
+  }, []);
 
   const deleteDraft = (id: string) => {
-    const updated = drafts.filter(d => d.id !== id);
-    setDrafts(updated);
-    localStorage.setItem('devotee_form_drafts', JSON.stringify(updated));
+    if (confirm('Delete this draft?')) {
+      draftService.deleteDraft(id);
+      setDrafts(draftService.getDrafts());
+      toast.success('Draft Deleted', 'Draft has been removed');
+    }
   };
 
-  const loadDraft = (draft: Draft) => {
-    localStorage.setItem('devotee_form_current_draft', JSON.stringify(draft));
-    navigate('/add-devotee');
+  const editDraft = (draft: Draft) => {
+    navigate('/add-devotee', { state: { draftId: draft.id } });
+  };
+  
+  // Approve and save draft mutation
+  const approveMutation = useMutation({
+    mutationFn: async (draft: Draft) => {
+      // Build permanent address
+      const permanentAddress = [
+        draft.addressStreet,
+        draft.addressCity,
+        draft.addressState,
+        draft.addressCountry
+      ].filter(Boolean).join(', ');
+
+      const person = await mockAPI.createPerson({
+        givenName: draft.givenName || '',
+        familyName: draft.familyName || '',
+        dob: draft.dob || '',
+        gender: draft.gender || 'Male',
+        nationality: draft.nationality || 'Nepal',
+        permanentAddress,
+        contact: draft.contact || '',
+        email: draft.email || '',
+        identities: draft.identities || [],
+      });
+
+      const visit = await mockAPI.createVisit({
+        personId: person.id,
+        arrivalDateTime: draft.arrivalDateTime || new Date().toISOString(),
+        arrivalLocation: draft.arrivalLocation || '',
+        temporaryAddress: draft.temporaryAddress || '',
+        plannedDeparture: draft.plannedDeparture || '',
+        purpose: draft.purpose || '',
+        host: draft.host || '',
+      });
+
+      if (draft.photoPreview) {
+        await mockAPI.createPhoto({
+          personId: person.id,
+          visitId: visit.id,
+          fileName: 'photo.jpg',
+          size: draft.photoSize || 0,
+          mime: 'image/jpeg',
+          thumbnailData: draft.photoPreview,
+        });
+      }
+
+      // Delete draft after successful save
+      draftService.deleteDraft(draft.id);
+      
+      return { person, visit };
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries();
+      setDrafts(draftService.getDrafts());
+      setApprovingDraftId(null);
+      toast.success('Draft Approved & Saved', `${data.person.givenName} ${data.person.familyName} has been added to the database`);
+    },
+    onError: (error: any) => {
+      setApprovingDraftId(null);
+      toast.error('Failed to Approve Draft', error.message || 'Please try again');
+    },
+  });
+  
+  const approveDraft = (draft: Draft) => {
+    // Validate required fields
+    if (!draft.givenName || !draft.familyName || !draft.dob || !draft.contact || 
+        !draft.identities?.[0]?.idNumber || !draft.arrivalDateTime || !draft.temporaryAddress) {
+      toast.warning('Incomplete Draft', 'Please complete all required fields before approving');
+      navigate('/add-devotee', { state: { draftId: draft.id } });
+      return;
+    }
+    
+    if (confirm(`Approve and save ${draft.givenName} ${draft.familyName} to the database?`)) {
+      setApprovingDraftId(draft.id);
+      approveMutation.mutate(draft);
+    }
   };
 
   const formatDate = (dateStr: string) => {
@@ -103,13 +188,30 @@ export function Drafts() {
                 </div>
               </div>
 
-              <Button
-                variant="secondary"
-                className="w-full"
-                onClick={() => loadDraft(draft)}
-              >
-                Continue Editing
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="secondary"
+                  className="flex-1"
+                  onClick={() => editDraft(draft)}
+                  disabled={approvingDraftId === draft.id}
+                >
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit
+                </Button>
+                <Button
+                  variant="primary"
+                  className="flex-1"
+                  onClick={() => approveDraft(draft)}
+                  disabled={approvingDraftId === draft.id}
+                >
+                  {approvingDraftId === draft.id ? (
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                  )}
+                  Approve & Save
+                </Button>
+              </div>
             </Card>
           ))}
         </div>

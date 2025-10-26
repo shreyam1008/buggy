@@ -83,6 +83,38 @@ export interface User {
 export interface Draft {
   id: string;
   savedAt: string;
+  status: 'incomplete' | 'pending_approval';
+  // Basic Details
+  givenName?: string;
+  familyName?: string;
+  dob?: string;
+  gender?: 'Male' | 'Female' | 'Other';
+  nationality?: string;
+  // Address
+  addressStreet?: string;
+  addressCity?: string;
+  addressState?: string;
+  addressCountry?: string;
+  // Contact
+  contact?: string;
+  email?: string;
+  // Identity
+  identities?: Identity[];
+  // Visa
+  visaNumber?: string;
+  visaType?: string;
+  visaIssueDate?: string;
+  visaExpiryDate?: string;
+  // Visit
+  arrivalDateTime?: string;
+  arrivalLocation?: string;
+  temporaryAddress?: string;
+  plannedDeparture?: string;
+  purpose?: string;
+  host?: string;
+  // Photo
+  photoPreview?: string;
+  photoSize?: number;
   [key: string]: any;
 }
 
