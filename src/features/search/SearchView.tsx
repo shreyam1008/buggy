@@ -10,18 +10,21 @@ import { NATIONALITIES } from '../../config/constants';
 export function SearchView() {
   const navigate = useNavigate();
   
-  // Fetch all residents
-  const { data: residents, isLoading } = useQuery({
-    queryKey: ['currentResidents'],
-    queryFn: () => mockAPI.getCurrentResidents(),
-  });
-
-  // Search filters
+  // Search filters - DECLARE FIRST
   const [nameQuery, setNameQuery] = useState('');
   const [selectedNames, setSelectedNames] = useState<string[]>([]);
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
   const [generalQuery, setGeneralQuery] = useState('');
   const [formCStatus, setFormCStatus] = useState('');
+
+  // Fetch all visits (Development: loads all data)
+  const { data: visits = [], isLoading } = useQuery({
+    queryKey: ['allVisits'],
+    queryFn: mockAPI.getAllVisits,
+  });
+  
+  // Map visits to residents with all needed data
+  const residents = visits;
   
   // Sorting
   const [sortField, setSortField] = useState<string>('arrivalDateTime');
@@ -89,7 +92,7 @@ export function SearchView() {
 
   // Filtered and sorted residents
   const filteredResidents = useMemo(() => {
-    if (!residents) return [];
+    if (!residents || residents.length === 0) return [];
     
     let filtered = [...residents];
 

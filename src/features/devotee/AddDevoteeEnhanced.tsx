@@ -105,14 +105,14 @@ export function AddDevoteeEnhanced() {
   }>({ nameMatches: [], nameNationalityMatches: [], identityMatches: [] });
   const [confirmSubmit, setConfirmSubmit] = useState(false);
 
-  // Fetch all persons for duplicate checking
-  const { data: allPersons, isLoading: isLoadingPersons } = useQuery({
+  // Fetch all persons for duplicate checking (Development only - see PRODUCTION_IMPLEMENTATION_GUIDE.md)
+  const { data: allPersons } = useQuery({
     queryKey: ['allPersons'],
     queryFn: async () => {
       const visits = await mockAPI.getAllVisits();
       return visits.map(v => v.person).filter(Boolean) as Person[];
     },
-    staleTime: 30000, // Cache for 30 seconds
+    staleTime: 30000,
   });
 
   // Calculate age from DOB
@@ -134,7 +134,7 @@ export function AddDevoteeEnhanced() {
   // Check if Nepali
   const isNepali = formData.nationality === 'Nepal';
 
-  // Duplicate detection logic
+  // Duplicate detection logic (Development - see PRODUCTION_IMPLEMENTATION_GUIDE.md for real implementation)
   const duplicateChecks = useMemo(() => {
     if (!allPersons || !formData.givenName || !formData.familyName) {
       return { nameMatches: [], nameNationalityMatches: [], identityMatches: [] };
@@ -142,20 +142,20 @@ export function AddDevoteeEnhanced() {
 
     const givenNameLower = formData.givenName.toLowerCase().trim();
     const familyNameLower = formData.familyName.toLowerCase().trim();
-    const idNumber = formData.identities[0]?.idNumber?.toLowerCase().trim();
 
-    // Check for same name
     const nameMatches = allPersons.filter(p => 
       p.givenName.toLowerCase().trim() === givenNameLower &&
-      p.familyName.toLowerCase().trim() === familyNameLower
+      p.familyName.toLowerCase().trim() === familyNameLower &&
+      p.nationality !== formData.nationality
     );
 
-    // Check for same name + same nationality (stricter)
-    const nameNationalityMatches = nameMatches.filter(p => 
+    const nameNationalityMatches = allPersons.filter(p =>
+      p.givenName.toLowerCase().trim() === givenNameLower &&
+      p.familyName.toLowerCase().trim() === familyNameLower &&
       p.nationality === formData.nationality
     );
 
-    // Check for same identity number (super strict)
+    const idNumber = formData.identities?.[0]?.idNumber?.toLowerCase().trim();
     const identityMatches = idNumber ? allPersons.filter(p =>
       p.identities?.some(id => id.idNumber.toLowerCase().trim() === idNumber)
     ) : [];
@@ -1165,11 +1165,7 @@ export function AddDevoteeEnhanced() {
         </div>
       </Modal>
 
-      {/* Loading Overlays */}
-      <LoadingOverlay 
-        isLoading={isLoadingPersons} 
-        message="Loading duplicate check data..." 
-      />
+      {/* Loading Overlay */}
       <LoadingOverlay 
         isLoading={createMutation.isPending} 
         message="Saving devotee..." 
