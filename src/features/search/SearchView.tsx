@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Search, RefreshCw, ChevronRight, X, ArrowUpDown } from 'lucide-react';
 import { Button, Card, Select } from '../../components/ui';
 import { mockAPI } from '../../services/api';
-import { fuzzyMatch } from '../../utils/fuzzySearch';
+import { fuzzyMatch, exactMatch } from '../../utils/fuzzySearch';
 import { NATIONALITIES } from '../../config/constants';
 
 export function SearchView() {
@@ -16,6 +16,7 @@ export function SearchView() {
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
   const [generalQuery, setGeneralQuery] = useState('');
   const [formCStatus, setFormCStatus] = useState('');
+  const [isFuzzySearch, setIsFuzzySearch] = useState(false); // Default is OFF (exact search)
 
   // Fetch all visits (Development: loads all data)
   const { data: visits = [], isLoading } = useQuery({
@@ -100,18 +101,19 @@ export function SearchView() {
     if (nameQuery.trim() || selectedNames.length > 0) {
       filtered = filtered.filter(r => {
         const fullName = `${r.person?.givenName || ''} ${r.person?.familyName || ''}`.toLowerCase();
+        const matchFn = isFuzzySearch ? fuzzyMatch : exactMatch;
         
-        // If typing in input, use fuzzy search on that
+        // Collect all names to search: selected names + any typed in input
+        const allSearchNames = [...selectedNames];
+        
+        // If user is typing, parse comma-separated names from input
         if (nameQuery.trim()) {
-          return fuzzyMatch(fullName, nameQuery);
+          const typedNames = nameQuery.split(',').map(n => n.trim()).filter(n => n.length > 0);
+          allSearchNames.push(...typedNames);
         }
         
-        // If have selected name tags, match against any of them
-        if (selectedNames.length > 0) {
-          return selectedNames.some(name => fuzzyMatch(fullName, name));
-        }
-        
-        return false;
+        // Match if fullName matches ANY of the search names
+        return allSearchNames.some(name => matchFn(fullName, name));
       });
     }
 
@@ -122,9 +124,10 @@ export function SearchView() {
       );
     }
 
-    // General search (fuzzy - ID, contact, email, etc.)
+    // General search (ID, contact, email, etc.)
     if (generalQuery.trim()) {
       filtered = filtered.filter(r => {
+        const matchFn = isFuzzySearch ? fuzzyMatch : exactMatch;
         const searchFields = [
           r.person?.id || '',
           r.person?.contact || '',
@@ -134,7 +137,7 @@ export function SearchView() {
           r.arrivalLocation || '',
         ].map(f => f.toLowerCase());
         
-        return searchFields.some(field => fuzzyMatch(field, generalQuery));
+        return searchFields.some(field => matchFn(field, generalQuery));
       });
     }
 
@@ -178,7 +181,7 @@ export function SearchView() {
     });
 
     return filtered;
-  }, [residents, nameQuery, selectedNames, selectedCountries, generalQuery, formCStatus, sortField, sortOrder]);
+  }, [residents, nameQuery, selectedNames, selectedCountries, generalQuery, formCStatus, sortField, sortOrder, isFuzzySearch]);
 
   const clearAllFilters = () => {
     setNameQuery('');
@@ -215,9 +218,28 @@ export function SearchView() {
         <div className="space-y-4">
           {/* Name Search with Multi-Select */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Search by Name (Fuzzy Search - Multiple Names)
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Search by Name (Multiple Names)
+              </label>
+              <button
+                onClick={() => setIsFuzzySearch(!isFuzzySearch)}
+                className={`flex items-center gap-2 px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                  isFuzzySearch
+                    ? 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                <div className={`relative w-9 h-5 rounded-full transition-colors ${
+                  isFuzzySearch ? 'bg-purple-500' : 'bg-gray-400'
+                }`}>
+                  <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
+                    isFuzzySearch ? 'translate-x-4' : 'translate-x-0'
+                  }`} />
+                </div>
+                <span>Fuzzy Search {isFuzzySearch ? 'ON' : 'OFF'}</span>
+              </button>
+            </div>
             <div className="flex gap-2">
               <input
                 type="text"
@@ -238,7 +260,7 @@ export function SearchView() {
               )}
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              💡 <strong>Pro tip:</strong> Type multiple names separated by commas (e.g., "John, Smith, Raj") or press Enter after each name. Fuzzy search works with typos!
+              💡 <strong>Pro tip:</strong> Type multiple names separated by commas (e.g., "John, Smith, Raj") or press Enter after each name. {isFuzzySearch ? 'Fuzzy search works with typos!' : 'Exact search is enabled.'}
             </p>
             
             {/* Selected Names Tags */}

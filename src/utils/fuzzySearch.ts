@@ -1,3 +1,13 @@
+// Exact match implementation
+export function exactMatch(text: string, query: string): boolean {
+  if (!query) return true;
+  
+  const textLower = text.toLowerCase();
+  const queryLower = query.toLowerCase();
+  
+  return textLower.includes(queryLower);
+}
+
 // Simple fuzzy search implementation
 export function fuzzyMatch(text: string, query: string): boolean {
   if (!query) return true;
