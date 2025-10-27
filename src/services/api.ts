@@ -12,6 +12,8 @@ import type {
   User,
 } from '../types';
 import { generateDummyData } from './mockData';
+import { delay } from '../utils/async';
+import { getCurrentDateISO, extractDateFromISO } from '../utils/dateUtils';
 
 // Mock database
 let mockDB = generateDummyData(100);
@@ -36,32 +38,23 @@ const simulateNetworkError = (shouldError = false) => {
   }
 };
 
-// Utility to add timeout to promises
-const withTimeout = <T>(promise: Promise<T>, timeoutMs = 10000): Promise<T> => {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error('Request timeout. Please try again.')), timeoutMs)
-    ),
-  ]);
-};
 
 // Mock API functions
 export const mockAPI = {
   async getDashboardStats(): Promise<DashboardStats> {
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    await delay(300);
     simulateNetworkError(false);
     const currentVisits = mockDB.visits.filter((v) => !v.actualDeparture);
     const pendingFormC = currentVisits.filter(
       (v) =>
         !mockDB.formCSubmissions.find((fc) => fc.visitId === v.id && fc.submitted)
     );
-    const today = new Date().toISOString().split('T')[0];
+    const today = getCurrentDateISO();
     const todayArrivals = mockDB.visits.filter(
-      (v) => v.arrivalDateTime.split('T')[0] === today
+      (v) => extractDateFromISO(v.arrivalDateTime) === today
     );
     const todayDepartures = mockDB.visits.filter(
-      (v) => v.plannedDeparture?.split('T')[0] === today && !v.actualDeparture
+      (v) => v.plannedDeparture && extractDateFromISO(v.plannedDeparture) === today && !v.actualDeparture
     );
 
     return {
@@ -76,7 +69,7 @@ export const mockAPI = {
   async getCurrentResidents(
     filters: { nationality?: string; formCStatus?: string } = {}
   ): Promise<Visit[]> {
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await delay(200);
     let residents = mockDB.visits
       .filter((v) => !v.actualDeparture)
       .map((v) => ({
@@ -102,7 +95,7 @@ export const mockAPI = {
   },
 
   async getAllVisits(): Promise<Visit[]> {
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await delay(200);
     return mockDB.visits.map((v) => ({
       ...v,
       person: mockDB.persons.find((p) => p.id === v.personId),
@@ -115,7 +108,7 @@ export const mockAPI = {
   },
 
   async searchPersons(query: string): Promise<Person[]> {
-    await new Promise((resolve) => setTimeout(resolve, 150));
+    await delay(150);
     const lowerQuery = query.toLowerCase();
     return mockDB.persons.filter(
       (p) =>
@@ -129,7 +122,7 @@ export const mockAPI = {
   },
 
   async getPerson(id: string): Promise<Person> {
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await delay(100);
     const person = mockDB.persons.find((p) => p.id === id);
     if (!person) throw new Error('Person not found');
     
@@ -144,7 +137,7 @@ export const mockAPI = {
   },
 
   async createPerson(data: Omit<Person, 'id'>): Promise<Person> {
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await delay(200);
     const newPerson: Person = {
       id: `P${String(mockDB.persons.length + 1).padStart(4, '0')}`,
       ...data,
@@ -154,7 +147,7 @@ export const mockAPI = {
   },
 
   async createVisit(data: Omit<Visit, 'id'>): Promise<Visit> {
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await delay(200);
     const newVisit: Visit = {
       id: `V${String(mockDB.visits.length + 1).padStart(4, '0')}`,
       ...data,
@@ -164,7 +157,7 @@ export const mockAPI = {
   },
 
   async createPhoto(data: Omit<Photo, 'id'>): Promise<Photo> {
-    await new Promise((resolve) => setTimeout(resolve, 150));
+    await delay(150);
     const newPhoto: Photo = {
       id: `PH${String(mockDB.photos.length + 1).padStart(4, '0')}`,
       ...data,
@@ -174,7 +167,7 @@ export const mockAPI = {
   },
 
   async updateVisit(id: string, data: Partial<Visit>): Promise<Visit> {
-    await new Promise((resolve) => setTimeout(resolve, 150));
+    await delay(150);
     const index = mockDB.visits.findIndex((v) => v.id === id);
     if (index !== -1) {
       mockDB.visits[index] = { ...mockDB.visits[index], ...data };
@@ -187,7 +180,7 @@ export const mockAPI = {
     visitId: string,
     govIdNumber: string
   ): Promise<FormCSubmission> {
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    await delay(300);
     const newFormC: FormCSubmission = {
       id: `FC${String(mockDB.formCSubmissions.length + 1).padStart(4, '0')}`,
       visitId,
@@ -201,7 +194,7 @@ export const mockAPI = {
   },
 
   async saveDraft(data: any): Promise<Draft> {
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await delay(100);
     const draft: Draft = {
       id: `D${String(drafts.length + 1).padStart(4, '0')}`,
       ...data,
@@ -212,17 +205,17 @@ export const mockAPI = {
   },
 
   async getDrafts(): Promise<Draft[]> {
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await delay(100);
     return drafts;
   },
 
   async deleteDraft(id: string): Promise<void> {
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await delay(100);
     drafts = drafts.filter((d) => d.id !== id);
   },
 
   async generateMoreData(count: number): Promise<{ message: string }> {
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await delay(500);
     const newData = generateDummyData(count);
     mockDB.persons.push(...newData.persons);
     mockDB.visits.push(...newData.visits);

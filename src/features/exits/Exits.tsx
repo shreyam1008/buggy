@@ -5,11 +5,12 @@ import { LogOut, Calendar, AlertCircle, CheckCircle } from 'lucide-react';
 import { Button, Card, Input } from '../../components/ui';
 import { mockAPI } from '../../services/api';
 import type { Visit } from '../../types';
+import { getCurrentDateISO, getTomorrowDateISO, extractDateFromISO } from '../../utils/dateUtils';
 
 export function Exits() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(getCurrentDateISO());
 
   const { data: visits = [] } = useQuery({
     queryKey: ['visits'],
@@ -31,21 +32,21 @@ export function Exits() {
   const activeVisits = visits.filter((v) => !v.actualDeparture);
 
   // Group by departure dates
-  const today = new Date().toISOString().split('T')[0];
-  const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+  const today = getCurrentDateISO();
+  const tomorrow = getTomorrowDateISO();
 
   const departingToday = activeVisits.filter(
-    (v) => v.plannedDeparture?.split('T')[0] === today
+    (v) => v.plannedDeparture && extractDateFromISO(v.plannedDeparture) === today
   );
   const departingTomorrow = activeVisits.filter(
-    (v) => v.plannedDeparture?.split('T')[0] === tomorrow
+    (v) => v.plannedDeparture && extractDateFromISO(v.plannedDeparture) === tomorrow
   );
   const departingSelected = activeVisits.filter(
-    (v) => v.plannedDeparture?.split('T')[0] === selectedDate
+    (v) => v.plannedDeparture && extractDateFromISO(v.plannedDeparture) === selectedDate
   );
 
   const overdue = activeVisits.filter((v) => {
-    const planned = v.plannedDeparture?.split('T')[0];
+    const planned = v.plannedDeparture ? extractDateFromISO(v.plannedDeparture) : null;
     return planned && planned < today;
   });
 

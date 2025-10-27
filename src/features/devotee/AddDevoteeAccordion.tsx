@@ -14,6 +14,7 @@ import { PhotoUploadEditor } from '../../components/features';
 import { mockAPI } from '../../services/api';
 import { NATIONALITIES, PURPOSES, LOCATIONS, ID_TYPES, GENDER_OPTIONS } from '../../config/constants';
 import type { CompressedImage } from '../../types';
+import { getCurrentDateTimeLocal } from '../../utils/dateUtils';
 
 interface AddDevoteeAccordionProps {
   onNavigate: (view: string) => void;
@@ -39,7 +40,7 @@ export function AddDevoteeAccordion({ onNavigate }: AddDevoteeAccordionProps) {
     contact: '',
     email: '',
     identities: [{ type: 'passport', idNumber: '', issuingCountry: 'Nepal', expiryDate: '' }],
-    arrivalDateTime: new Date().toISOString().slice(0, 16),
+    arrivalDateTime: getCurrentDateTimeLocal(),
     arrivalLocation: LOCATIONS[0],
     temporaryAddress: '',
     plannedDeparture: '',

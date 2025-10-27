@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { Modal } from './Modal';
 import { Button } from './Button';
 import { Copy, Check } from 'lucide-react';
-import NepaliDate from 'nepali-date-converter';
+import { parseDateInput, formatDateInput, isValidBSDate, convertBStoAD, convertADISOtoBS, formatDateToReadable } from '../../utils/dateUtils';
+import { copyToClipboardWithState } from '../../utils/clipboard';
 
 interface BSDatePickerProps {
   isOpen: boolean;
@@ -22,12 +23,13 @@ export function BSDatePicker({ isOpen, onClose, onDateSelect, title = 'Select BS
   useEffect(() => {
     if (isOpen && initialADDate) {
       try {
-        const adDate = new Date(initialADDate);
-        const nepaliDate = new NepaliDate(adDate);
-        const day = nepaliDate.getDate().toString().padStart(2, '0');
-        const month = (nepaliDate.getMonth() + 1).toString().padStart(2, '0');
-        const year = nepaliDate.getYear().toString();
-        setBsInput(`${day}-${month}-${year}`);
+        const bsDate = convertADISOtoBS(initialADDate);
+        if (bsDate) {
+          setBsInput(bsDate);
+        } else {
+          setBsInput('');
+          setConvertedAD('');
+        }
       } catch (e) {
         setBsInput('');
         setConvertedAD('');
@@ -35,53 +37,20 @@ export function BSDatePicker({ isOpen, onClose, onDateSelect, title = 'Select BS
     }
   }, [isOpen, initialADDate]);
 
-  const parseBSDate = (input: string) => {
-    const cleaned = input.replace(/\D/g, '');
-    if (cleaned.length >= 8) {
-      const day = parseInt(cleaned.substring(0, 2));
-      const month = parseInt(cleaned.substring(2, 4));
-      const year = parseInt(cleaned.substring(4, 8));
-      return { day, month, year };
-    }
-    return null;
-  };
-
-  const formatBSInput = (value: string) => {
-    const cleaned = value.replace(/\D/g, '');
-    let formatted = '';
-    
-    if (cleaned.length > 0) {
-      formatted = cleaned.substring(0, 2);
-      if (cleaned.length > 2) {
-        formatted += '-' + cleaned.substring(2, 4);
-      }
-      if (cleaned.length > 4) {
-        formatted += '-' + cleaned.substring(4, 8);
-      }
-    }
-    
-    return formatted;
-  };
-
-  const convertBStoAD = (day: number, month: number, year: number) => {
-    try {
-      setError('');
-      const nepaliDate = new NepaliDate(year, month - 1, day);
-      const adDate = nepaliDate.toJsDate();
-      const formatted = adDate.toISOString().split('T')[0];
-      setConvertedAD(formatted);
-    } catch (e) {
-      setError('Invalid BS date');
-      setConvertedAD('');
-    }
-  };
 
   useEffect(() => {
-    const parsed = parseBSDate(bsInput);
+    const parsed = parseDateInput(bsInput);
     if (parsed) {
       const { day, month, year } = parsed;
-      if (year >= 1970 && year <= 2100 && month >= 1 && month <= 12 && day >= 1 && day <= 32) {
-        convertBStoAD(day, month, year);
+      if (isValidBSDate(parsed)) {
+        const adDate = convertBStoAD(day, month, year);
+        if (adDate) {
+          setError('');
+          setConvertedAD(adDate);
+        } else {
+          setError('Invalid BS date');
+          setConvertedAD('');
+        }
       } else {
         setError('Date out of range (1970-2100 BS)');
         setConvertedAD('');
@@ -100,15 +69,13 @@ export function BSDatePicker({ isOpen, onClose, onDateSelect, title = 'Select BS
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatBSInput(e.target.value);
+    const formatted = formatDateInput(e.target.value);
     setBsInput(formatted);
   };
 
   const handleCopy = async () => {
     if (convertedAD) {
-      await navigator.clipboard.writeText(convertedAD);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      await copyToClipboardWithState(convertedAD, setCopied);
     }
   };
 
@@ -143,7 +110,7 @@ export function BSDatePicker({ isOpen, onClose, onDateSelect, title = 'Select BS
                   <span className="font-medium">BS:</span> {bsInput}
                 </p>
                 <p className="text-sm text-gray-700 mt-1">
-                  <span className="font-medium">AD:</span> {new Date(convertedAD).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                  <span className="font-medium">AD:</span> {formatDateToReadable(convertedAD)}
                 </p>
               </div>
               <button

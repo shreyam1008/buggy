@@ -20,6 +20,7 @@ import { mockAPI } from '../../services/api';
 import { draftService } from '../../utils/localStorage';
 import { NATIONALITIES, PURPOSES, LOCATIONS, GENDER_OPTIONS } from '../../config/constants';
 import type { CompressedImage, Person, Draft } from '../../types';
+import { getCurrentDateTimeLocal } from '../../utils/dateUtils';
 
 const AUTOSAVE_INTERVAL = 15000; // 15 seconds
 
@@ -79,7 +80,7 @@ export function AddDevoteeEnhanced() {
     visaExpiryDate: '',
     
     // Visit Details
-    arrivalDateTime: new Date().toISOString().slice(0, 16),
+    arrivalDateTime: getCurrentDateTimeLocal(),
     arrivalLocation: LOCATIONS[0],
     temporaryAddress: '',
     plannedDeparture: '',
@@ -192,7 +193,7 @@ export function AddDevoteeEnhanced() {
           visaType: draft.visaType || '',
           visaIssueDate: draft.visaIssueDate || '',
           visaExpiryDate: draft.visaExpiryDate || '',
-          arrivalDateTime: draft.arrivalDateTime || new Date().toISOString().slice(0, 16),
+          arrivalDateTime: draft.arrivalDateTime || getCurrentDateTimeLocal(),
           arrivalLocation: draft.arrivalLocation || LOCATIONS[0],
           temporaryAddress: draft.temporaryAddress || '',
           plannedDeparture: draft.plannedDeparture || '',
@@ -587,7 +588,7 @@ export function AddDevoteeEnhanced() {
                     visaType: '',
                     visaIssueDate: '',
                     visaExpiryDate: '',
-                    arrivalDateTime: new Date().toISOString().slice(0, 16),
+                    arrivalDateTime: getCurrentDateTimeLocal(),
                     arrivalLocation: LOCATIONS[0],
                     temporaryAddress: '',
                     plannedDeparture: '',

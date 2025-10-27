@@ -6,7 +6,7 @@ import { ScrollToTop } from './components/ScrollToTop';
 import { ToastProvider } from './hooks/useToast';
 import { Dashboard } from './features/dashboard';
 import { AddDevoteeEnhanced } from './features/devotee';
-import { BulkEntryImproved } from './features/bulk-entry';
+import { BulkEntry } from './features/bulk-entry';
 import { PersonProfile } from './features/person-profile';
 import { SearchView } from './features/search';
 import { Drafts } from './features/drafts';
@@ -23,7 +23,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/add-devotee" element={<AddDevoteeEnhanced />} />
-              <Route path="/bulk-entry" element={<BulkEntryImproved />} />
+              <Route path="/bulk-entry" element={<BulkEntry />} />
               <Route path="/search" element={<SearchView />} />
               <Route path="/person/:personId" element={<PersonProfile />} />
               <Route path="/drafts" element={<Drafts />} />

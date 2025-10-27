@@ -6,7 +6,8 @@ import { Card, Button } from '../../components/ui';
 import { mockAPI } from '../../services/api';
 import { compressImage } from '../../utils/imageCompression';
 import type { CompressedImage } from '../../types';
-import NepaliDate from 'nepali-date-converter';
+import { parseDateInput, formatDateInput, isValidBSDate, isValidADDate, convertBStoAD, convertADtoBS, formatDateToReadable } from '../../utils/dateUtils';
+import { copyToClipboardWithState } from '../../utils/clipboard';
 import * as XLSX from 'xlsx';
 
 export function Tools() {
@@ -36,81 +37,17 @@ export function Tools() {
   });
   const [exportStatus, setExportStatus] = useState('');
 
-  const formatBSInput = (value: string) => {
-    const cleaned = value.replace(/\D/g, '');
-    let formatted = '';
-    
-    if (cleaned.length > 0) {
-      formatted = cleaned.substring(0, 2);
-      if (cleaned.length > 2) {
-        formatted += '-' + cleaned.substring(2, 4);
-      }
-      if (cleaned.length > 4) {
-        formatted += '-' + cleaned.substring(4, 8);
-      }
-    }
-    
-    return formatted;
-  };
-
-  const parseBSDate = (input: string) => {
-    const digits = input.replace(/\D/g, '');
-    
-    if (digits.length >= 8) {
-      return {
-        day: parseInt(digits.substring(0, 2)),
-        month: parseInt(digits.substring(2, 4)),
-        year: parseInt(digits.substring(4, 8))
-      };
-    }
-    return null;
-  };
-
-  const formatADInput = (value: string) => {
-    const cleaned = value.replace(/\D/g, '');
-    let formatted = '';
-    
-    if (cleaned.length > 0) {
-      formatted = cleaned.substring(0, 2);
-      if (cleaned.length > 2) {
-        formatted += '-' + cleaned.substring(2, 4);
-      }
-      if (cleaned.length > 4) {
-        formatted += '-' + cleaned.substring(4, 8);
-      }
-    }
-    
-    return formatted;
-  };
-
-  const parseADDate = (input: string) => {
-    const digits = input.replace(/\D/g, '');
-    
-    if (digits.length >= 8) {
-      return {
-        day: parseInt(digits.substring(0, 2)),
-        month: parseInt(digits.substring(2, 4)),
-        year: parseInt(digits.substring(4, 8))
-      };
-    }
-    return null;
-  };
 
   useEffect(() => {
     if (bsInput.trim()) {
-      const parsed = parseBSDate(bsInput);
-      if (parsed && parsed.year >= 1970 && parsed.year <= 2100 && parsed.month >= 1 && parsed.month <= 12 && parsed.day >= 1 && parsed.day <= 32) {
-        try {
+      const parsed = parseDateInput(bsInput);
+      if (parsed && isValidBSDate(parsed)) {
+        const adDateISO = convertBStoAD(parsed.day, parsed.month, parsed.year);
+        if (adDateISO) {
           setBsError('');
-          const nepaliDate = new NepaliDate(parsed.year, parsed.month - 1, parsed.day);
-          const adDate = nepaliDate.toJsDate();
-          const formatted = adDate.toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-          });
-          setBsResult(`${formatted} (${adDate.toISOString().split('T')[0]})`);
-        } catch (e) {
+          const formatted = formatDateToReadable(adDateISO);
+          setBsResult(`${formatted} (${adDateISO})`);
+        } else {
           setBsError('Invalid BS date');
           setBsResult('');
         }
@@ -126,17 +63,13 @@ export function Tools() {
 
   useEffect(() => {
     if (adInput.trim()) {
-      const parsed = parseADDate(adInput);
-      if (parsed && parsed.year >= 1900 && parsed.year <= 2100 && parsed.month >= 1 && parsed.month <= 12 && parsed.day >= 1 && parsed.day <= 31) {
-        try {
+      const parsed = parseDateInput(adInput);
+      if (parsed && isValidADDate(parsed)) {
+        const bsDate = convertADtoBS(parsed.day, parsed.month, parsed.year);
+        if (bsDate) {
           setAdError('');
-          const adDate = new Date(parsed.year, parsed.month - 1, parsed.day);
-          const nepaliDate = new NepaliDate(adDate);
-          const bsYear = nepaliDate.getYear();
-          const bsMonth = (nepaliDate.getMonth() + 1).toString().padStart(2, '0');
-          const bsDay = nepaliDate.getDate().toString().padStart(2, '0');
-          setAdResult(`${bsDay}-${bsMonth}-${bsYear}`);
-        } catch (e) {
+          setAdResult(bsDate);
+        } else {
           setAdError('Invalid AD date');
           setAdResult('');
         }
@@ -184,7 +117,7 @@ export function Tools() {
                 type="text"
                 placeholder="DD-MM-YYYY"
                 value={bsInput}
-                onChange={(e) => setBsInput(formatBSInput(e.target.value))}
+                onChange={(e) => setBsInput(formatDateInput(e.target.value))}
                 maxLength={10}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg font-mono"
               />
@@ -210,9 +143,7 @@ export function Tools() {
                     onClick={async () => {
                       const adDate = bsResult.match(/\((.*?)\)/)?.[1];
                       if (adDate) {
-                        await navigator.clipboard.writeText(adDate);
-                        setBsCopied(true);
-                        setTimeout(() => setBsCopied(false), 2000);
+                        await copyToClipboardWithState(adDate, setBsCopied);
                       }
                     }}
                     className="p-2 hover:bg-green-100 rounded-lg transition-colors ml-2"
@@ -255,7 +186,7 @@ export function Tools() {
                 type="text"
                 placeholder="DD-MM-YYYY"
                 value={adInput}
-                onChange={(e) => setAdInput(formatADInput(e.target.value))}
+                onChange={(e) => setAdInput(formatDateInput(e.target.value))}
                 maxLength={10}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-lg font-mono"
               />
@@ -279,9 +210,7 @@ export function Tools() {
                   </div>
                   <button
                     onClick={async () => {
-                      await navigator.clipboard.writeText(adResult);
-                      setAdCopied(true);
-                      setTimeout(() => setAdCopied(false), 2000);
+                      await copyToClipboardWithState(adResult, setAdCopied);
                     }}
                     className="p-2 hover:bg-purple-100 rounded-lg transition-colors ml-2"
                     title="Copy BS date"
