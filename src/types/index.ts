@@ -5,20 +5,44 @@
 export interface Identity {
   type: 'passport' | 'citizenship' | 'voterid' | 'driver';
   idNumber: string;
+  placeOfIssueCity: string;
   issuingCountry: string;
+  dateOfIssue: string;
   expiryDate: string;
 }
 
+
+
 export interface Person {
   id: string;
+  // personal details
   givenName: string;
   familyName: string;
-  dob: string;
   gender: 'Male' | 'Female' | 'Other';
+  dob: string;
   nationality: string;
+
+  // permanent address
+   // Permanent Address
+  permanentAddressStreet: string;
+  permanentAddressCity: string;
+  permanentAddressState?: string;
+  permanentAddressPostalCode?: string;
+  permanentAddressCountry: string;
+
+  //remove this later, and its use#remove
   permanentAddress: string;
+
+  
+  // Contact information
+  // contact residing country
+  contactResidingCountry: string;  // required
+  contactIndia?: string;
+  email?: string;
+  // #remove-the single contact
   contact: string;
-  email: string;
+  
+
   notes?: string;
   identities: Identity[];
   visits?: Visit[];
