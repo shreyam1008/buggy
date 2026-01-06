@@ -11,6 +11,10 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       includeAssets: ["krishna.png", "icon-192x192.png", "icon-512x512.png"],
+      // Enable service worker in development for testing
+      devOptions: {
+        enabled: true,
+      },
       manifest: {
         name: "Date Converter Radhey",
         short_name: "DateConverter",
@@ -40,7 +44,11 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        // Cache ALL static assets for offline use
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2,json}"],
+        // Ensure navigation requests fall back to index.html (SPA support)
+        navigateFallback: "index.html",
+        navigateFallbackDenylist: [/^\/api/],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -49,6 +57,20 @@ export default defineConfig({
               cacheName: "google-fonts-cache",
               expiration: {
                 maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "google-fonts-webfonts",
+              expiration: {
+                maxEntries: 30,
                 maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
               },
               cacheableResponse: {
