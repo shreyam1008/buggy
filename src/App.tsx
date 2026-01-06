@@ -231,7 +231,7 @@ function fmt(d: DateObj | null): string {
     <div className="max-w-md mx-auto p-6 bg-white/90 rounded-2xl shadow-lg border border-white/20">
       <header className="text-center mb-4">
         <h2 className="text-2xl font-bold text-slate-800">
-          English ↔ Nepali Date Converter
+          English ↔ Nepali Date Converter v2
         </h2>
         <p className="text-sm text-slate-500 mt-1">
           Type a date and conversion happens instantly
