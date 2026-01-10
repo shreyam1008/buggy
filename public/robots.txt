@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /private/
+Disallow: /admin/
+Disallow: /api/
+# Block all subdomains from being indexed
+Disallow: /subdomain/
+Disallow: /*.shreyam1008.com.np/
+
+Sitemap: https://shreyam1008.com.np/sitemap.xml
