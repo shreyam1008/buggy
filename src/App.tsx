@@ -1,5 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import NepaliDate from "nepali-date-converter";
+import { Copy, Calendar, Globe, ShieldCheck, Check } from "lucide-react";
+import { RadhaKrishnaIcon, FloatingBackground } from "./components/Icons";
+import "./styles.css";
 
 type DateObj = { year: number; month: number; day: number };
 type Status = { type: "info" | "success" | "error"; text: string };
@@ -8,38 +11,20 @@ export default function NepaliDateConverter() {
   const [ad, setAd] = useState<string>("");
   const [bs, setBs] = useState<string>("");
   const [status, setStatus] = useState<Status>({ type: "info", text: "Ready" });
+  const [copiedAd, setCopiedAd] = useState(false);
+  const [copiedBs, setCopiedBs] = useState(false);
   const adRef = useRef<HTMLInputElement | null>(null);
   const bsRef = useRef<HTMLInputElement | null>(null);
 
-  //add nepali in nepali also
   const nepaliMonths = [
-    "Baishakh/बैशाख",
-    "Jestha/जेठ",
-    "Ashadh/आषाढ",
-    "Shrawan/श्रावण",
-    "Bhadra/भदौ",
-    "Ashwin/आश्विन",
-    "Kartik/कार्तिक",
-    "Mangsir/मंसिर",
-    "Poush/पुष",
-    "Magh/माघ",
-    "Falgun/फाल्गुन",
-    "Chaitra/चैत्र",
+    "Baishakh/बैशाख", "Jestha/जेठ", "Ashadh/आषाढ", "Shrawan/श्रावण",
+    "Bhadra/भदौ", "Ashwin/आश्विन", "Kartik/कार्तिक", "Mangsir/मंसिर",
+    "Poush/पुष", "Magh/माघ", "Falgun/फाल्गुन", "Chaitra/चैत्र",
   ];
 
   const englishMonths = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
   ];
 
   function debounce<T extends (...args: any[]) => void>(fn: T, ms = 300) {
@@ -50,14 +35,13 @@ export default function NepaliDateConverter() {
     };
   }
 
-function autoFormat(value: string): string {
-  const digits = value.replace(/\D/g, "").slice(0, 8);
-  if (!digits) return "";
-  if (digits.length <= 2) return digits;
-  if (digits.length <= 4) return `${digits.slice(0, 2)}-${digits.slice(2)}`;
-  return `${digits.slice(0, 2)}-${digits.slice(2, 4)}-${digits.slice(4)}`;
-}
-
+  function autoFormat(value: string): string {
+    const digits = value.replace(/\D/g, "").slice(0, 8);
+    if (!digits) return "";
+    if (digits.length <= 2) return digits;
+    if (digits.length <= 4) return `${digits.slice(0, 2)}-${digits.slice(2)}`;
+    return `${digits.slice(0, 2)}-${digits.slice(2, 4)}-${digits.slice(4)}`;
+  }
 
   function isValidAdDate({ year, month, day }: DateObj): boolean {
     if (month < 1 || month > 12) return false;
@@ -69,9 +53,7 @@ function autoFormat(value: string): string {
     if (!input) return null;
     const s = input.trim().replace(/[\./\s]/g, "-");
 
-
-   const ymd = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
-
+    const ymd = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
     if (ymd) {
       const [, y, m, d] = ymd.map(Number);
       const date = { year: y, month: m, day: d };
@@ -79,22 +61,15 @@ function autoFormat(value: string): string {
     }
 
     const dmy = s.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
-
     if (dmy) {
       let [_, a, b, y] = dmy;
-      let A = Number(a),
-        B = Number(b),
-        Y = Number(y);
-
+      let A = Number(a), B = Number(b), Y = Number(y);
       let d1 = { day: A, month: B, year: Y };
       if (isValidAdDate(d1)) return d1;
-
       let d2 = { day: B, month: A, year: Y };
       if (isValidAdDate(d2)) return d2;
-
       return null;
     }
-
     return null;
   }
 
@@ -102,29 +77,23 @@ function autoFormat(value: string): string {
     if (!input) return null;
     const s = input.trim().replace(/[\./\s]/g, "-");
 
-
-const ymd = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    const ymd = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
     if (ymd) {
       const [, y, m, d] = ymd.map(Number);
       try {
         new NepaliDate(y, m - 1, d);
         return { year: y, month: m, day: d };
-      } catch {
-        return null;
-      }
+      } catch { return null; }
     }
 
-const dmy = s.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+    const dmy = s.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
     if (dmy) {
       const [, d, m, y] = dmy.map(Number);
       try {
         new NepaliDate(y, m - 1, d);
         return { year: y, month: m, day: d };
-      } catch {
-        return null;
-      }
+      } catch { return null; }
     }
-
     return null;
   }
 
@@ -145,14 +114,10 @@ const dmy = s.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
     };
   }
 
-function fmt(d: DateObj | null): string {
-  if (!d) return "";
-  return `${String(d.day).padStart(2, "0")}-${String(d.month).padStart(
-    2,
-    "0"
-  )}-${d.year}`;
-}
-
+  function fmt(d: DateObj | null): string {
+    if (!d) return "";
+    return `${String(d.day).padStart(2, "0")}-${String(d.month).padStart(2, "0")}-${d.year}`;
+  }
 
   const onAdInput = debounce((val: string) => {
     setStatus({ type: "info", text: "Converting AD → BS…" });
@@ -169,10 +134,7 @@ function fmt(d: DateObj | null): string {
     try {
       const converted = convertAdToBsObj(parsed);
       setBs(fmt(converted));
-      setStatus({
-        type: "success",
-        text: `${fmt(parsed)} AD → ${fmt(converted)} BS`,
-      });
+      setStatus({ type: "success", text: `${fmt(parsed)} AD → ${fmt(converted)} BS` });
     } catch (e: any) {
       setStatus({ type: "error", text: e.message });
     }
@@ -193,10 +155,7 @@ function fmt(d: DateObj | null): string {
     try {
       const converted = convertBsToAdObj(parsed);
       setAd(fmt(converted));
-      setStatus({
-        type: "success",
-        text: `${fmt(parsed)} BS → ${fmt(converted)} AD`,
-      });
+      setStatus({ type: "success", text: `${fmt(parsed)} BS → ${fmt(converted)} AD` });
     } catch (e: any) {
       setStatus({ type: "error", text: e.message });
     }
@@ -227,121 +186,106 @@ function fmt(d: DateObj | null): string {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  const copyToClipboard = (text: string, setCopied: (v: boolean) => void) => {
+    if (text) {
+      navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
   return (
-    <div className="max-w-md mx-auto p-6 bg-white/90 rounded-2xl shadow-lg border border-white/20">
-      <header className="text-center mb-4">
-        <h2 className="text-2xl font-bold text-slate-800">
-          English ↔ Nepali Date Converter v2
-        </h2>
-        <p className="text-sm text-slate-500 mt-1">
-          Type a date and conversion happens instantly
-        </p>
-        <p className="text-xs text-slate-400 mt-1">
-          Supported ranges: AD ≈ 1943 onwards • BS ≈ 2000 onwards
-        </p>
-      </header>
+    <div className="app-container">
+      <FloatingBackground />
+      <div className="glass-card">
+        <header className="mb-6 flex flex-col items-center">
+          <div className="icon-spin mb-4" style={{filter: 'drop-shadow(0 0 10px var(--primary-color))'}}>
+            <RadhaKrishnaIcon size={48} color="var(--primary-color)" />
+          </div>
+          <h1 className="title" style={{marginBottom: '0.5rem', fontSize: '2rem'}}>Nepali Date Converter</h1>
+          <p className="text-center" style={{color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem'}}>English (AD) ↔ Nepali (BS) • Miti Pariwartan</p>
+        </header>
 
-    
-      <label className="block text-sm font-semibold text-slate-700">
-  AD (English date)
-</label>
-<div className="flex gap-2 mt-2">
-  <input
-    ref={adRef}
-    value={ad}
-    onChange={handleAdChange}
-    placeholder="dd-mm-yyyy"
-    aria-label="AD date input"
-    className="flex-1 p-3 rounded-lg border border-slate-200 focus:border-indigo-500 focus:shadow-md"
-  />
-  <button
-    onClick={() => {
-      if (ad) {
-        navigator.clipboard.writeText(ad);
-        setStatus({ type: "success", text: "Copied AD date!" });
-      }
-    }}
-    className="px-3 py-2 bg-slate-200 rounded-lg hover:bg-slate-300 text-sm"
-  >
-    📋
-  </button>
-</div>
+        <div className="input-group">
+          <label className="label">AD (English Date)</label>
+          <div style={{display: 'flex', gap: '8px'}}>
+            <input
+              ref={adRef}
+              value={ad}
+              onChange={handleAdChange}
+              placeholder="dd-mm-yyyy"
+              className="date-input"
+            />
+            <button
+              onClick={() => copyToClipboard(ad, setCopiedAd)}
+              className="btn-icon"
+              title="Copy AD Date"
+            >
+              {copiedAd ? <Check size={20} /> : <Copy size={20} />}
+            </button>
+          </div>
+        </div>
 
+        <div className="input-group">
+          <label className="label">BS (Nepali Date)</label>
+          <div style={{display: 'flex', gap: '8px'}}>
+            <input
+              ref={bsRef}
+              value={bs}
+              onChange={handleBsChange}
+              placeholder="dd-mm-yyyy"
+              className="date-input"
+            />
+            <button
+              onClick={() => copyToClipboard(bs, setCopiedBs)}
+              className="btn-icon"
+              title="Copy BS Date"
+            >
+              {copiedBs ? <Check size={20} /> : <Copy size={20} />}
+            </button>
+          </div>
+        </div>
 
-    
-      <label className="block text-sm font-semibold text-slate-700 mt-4">
-  BS (Nepali date)
-</label>
-<div className="flex gap-2 mt-2">
-  <input
-    ref={bsRef}
-    value={bs}
-    onChange={handleBsChange}
-    placeholder="dd-mm-yyyy"
-    aria-label="BS date input"
-    className="flex-1 p-3 rounded-lg border border-slate-200 focus:border-indigo-500 focus:shadow-md"
-  />
-  <button
-    onClick={() => {
-      if (bs) {
-        navigator.clipboard.writeText(bs);
-        setStatus({ type: "success", text: "Copied BS date!" });
-      }
-    }}
-    className="px-3 py-2 bg-slate-200 rounded-lg hover:bg-slate-300 text-sm"
-  >
-    📋
-  </button>
-</div>
-
-
-      <div className="mt-4 h-12 flex items-center">
-        <div
-          className={`w-full rounded-lg px-3 py-2 text-sm font-medium ${
-            status.type === "error" ? "bg-red-500 text-white" : ""
-          } ${status.type === "success" ? "bg-emerald-500 text-white" : ""} ${
-            status.type === "info" ? "bg-sky-400 text-white" : ""
-          }`}
-        >
+        <div className={`status-box ${
+          status.type === 'error' ? 'status-error' : 
+          status.type === 'success' ? 'status-success' : 'status-info'
+        }`}>
           {status.text}
         </div>
-      </div>
 
-      <footer className="mt-4 text-xs text-slate-500">
-        Tip: Press <kbd className="bg-slate-100 px-2 rounded">Esc</kbd> to clear
-        inputs
-        <p className="text-xs text-slate-400 italic mt-1">
-          Supported from ranges: AD ≈ 1943 onwards • BS ≈ 2000 onwards
-        </p>
-        <p className="text-xs text-slate-400 italic mt-1">
-          Supported: dd/mm/yyyy, dd.mm.yyyy, dd-mm-yyyy, ddmmyyyy • Not
-          supported: yyyymmdd
-        </p>
-      </footer>
-
-      {/* Month Info Box */}
-      <div className="mt-6 p-4 bg-slate-100 rounded-xl shadow-inner">
-        <h3 className="text-sm font-semibold text-slate-700 mb-2">
-          Month Reference
-        </h3>
-        <div className="grid grid-cols-2 gap-4 text-xs text-slate-600">
-          <div>
-            <p className="font-semibold mb-1">Nepali (BS)</p>
-            {nepaliMonths.map((m, i) => (
-              <div key={i}>
-                {String(i + 1).padStart(2, "0")} – {m}
-              </div>
-            ))}
-          </div>
-          <div>
-            <p className="font-semibold mb-1">English (AD)</p>
-            {englishMonths.map((m, i) => (
-              <div key={i}>
-                {String(i + 1).padStart(2, "0")} – {m}
-              </div>
-            ))}
+        <div style={{marginTop: '2rem', padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '12px'}}>
+          <h3 style={{display:'flex', alignItems:'center', gap: '6px', fontSize:'0.9rem', marginBottom:'1rem', color:'var(--accent-color)'}}>
+            <Calendar size={16} /> Month Reference
+          </h3>
+          <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', fontSize: '0.8rem', color: 'rgba(255,255,255,0.7)'}}>
+            <div>
+              <strong style={{display:'block', marginBottom:'0.5rem', color:'white'}}>Nepali (BS)</strong>
+              {nepaliMonths.map((m, i) => (
+                <div key={i} style={{marginBottom:'2px'}}>{String(i + 1).padStart(2, "0")} – {m}</div>
+              ))}
+            </div>
+            <div>
+              <strong style={{display:'block', marginBottom:'0.5rem', color:'white'}}>English (AD)</strong>
+              {englishMonths.map((m, i) => (
+                <div key={i} style={{marginBottom:'2px'}}>{String(i + 1).padStart(2, "0")} – {m}</div>
+              ))}
+            </div>
           </div>
         </div>
+
+        {/* Footer with visible SEO Links */}
+        <div className="footer-seo" style={{marginTop: '3rem'}}>
+             <div style={{display: 'flex', justifyContent: 'center', gap: '1.5rem', marginBottom: '1.5rem', flexWrap: 'wrap'}}>
+                <div style={{display:'flex', alignItems:'center', gap:'0.5rem'}}><Globe size={16} color="#6366f1"/> Universal</div>
+                <div style={{display:'flex', alignItems:'center', gap:'0.5rem'}}><ShieldCheck size={16} color="#ec4899"/> Private</div>
+                <div style={{display:'flex', alignItems:'center', gap:'0.5rem'}}><Calendar size={16} color="#8b5cf6"/> Accurate</div>
+             </div>
+             
+             <p style={{fontSize: '0.8rem', opacity: 0.5}}>
+                Related: <a href="#">Nepali Date Converter</a>, <a href="#">Miti Paribartan</a>, <a href="#">Hamro Patro Date</a>.
+             </p>
+        </div>
+
       </div>
     </div>
   );
