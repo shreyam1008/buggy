@@ -1,5 +1,5 @@
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Stars } from '@react-three/drei';
+import { OrbitControls, Stars, Stats } from '@react-three/drei';
 import { Galaxy } from './Galaxy';
 import { Suspense } from 'react';
 
@@ -27,6 +27,9 @@ export default function Scene() {
             minDistance={2}
             maxDistance={15}
           />
+
+          {/* Performance Stats Overlay */}
+          <Stats showPanel={0} className="stats-panel" />
         </Suspense>
       </Canvas>
     </div>

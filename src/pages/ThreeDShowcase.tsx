@@ -1,6 +1,6 @@
 import { Suspense, lazy } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, Zap, MousePointer2 } from 'lucide-react';
+import { Sparkles, Zap, MousePointer2, Move3d } from 'lucide-react';
 
 // Lazy load the 3D scene to avoid bloating the main bundle
 const Scene = lazy(() => import('../components/3d/Scene'));
@@ -62,41 +62,63 @@ export default function ThreeDShowcase() {
         </div>
       </div>
 
-      {/* Tech Info */}
+      {/* Performance Analysis */}
       <div className="card" style={{ marginBottom: '1.5rem' }}>
         <div className="card-header">
-          <h3 className="card-title"><Zap size={18} style={{ marginRight: '0.5rem', display: 'inline' }} />Showcase Technology</h3>
+          <h3 className="card-title"><Zap size={18} style={{ marginRight: '0.5rem', display: 'inline' }} />Under the Hood: CPU vs GPU</h3>
         </div>
         <div className="card-content">
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-            {[
-              { name: 'React Three Fiber', desc: 'Declarative Three.js for React', status: 'Core' },
-              { name: 'Procedural Particles', desc: '20,000+ individual points calculated on CPU', status: 'Visuals' },
-              { name: 'Buffer Geometry', desc: 'High-performance GPU rendering', status: 'Performance' },
-              { name: 'Post-processing', desc: 'Bloom and color grading (simulated)', status: 'Effects' },
-            ].map((tech, i) => (
-              <motion.div
-                key={i}
-                style={{
-                  padding: '1rem',
-                  background: 'rgba(255,255,255,0.03)',
-                  borderRadius: '12px',
-                }}
-                whileHover={{ scale: 1.02, background: 'rgba(255,255,255,0.05)' }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                  <h4 style={{ color: 'white', fontSize: '0.95rem' }}>{tech.name}</h4>
-                  <span className="tag" style={{ 
-                    background: 'rgba(99, 102, 241, 0.2)',
-                    color: '#a5b4fc',
-                    fontSize: '0.7rem',
-                  }}>
-                    {tech.status}
-                  </span>
+          
+          <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+            <h4 style={{ color: '#6ee7b7', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span className="pulsing-dot" style={{ width: 8, height: 8, background: '#6ee7b7', borderRadius: '50%', display: 'inline-block' }} />
+              Live Stats Enabled
+            </h4>
+            <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.8)' }}>
+              Check the <strong>FPS counter</strong> in the top-left of the galaxy view. 
+              <br/>
+              <strong>60 FPS</strong> = Butter Smooth (GPU handling the load).
+            </p>
+          </div>
+
+          <div className="comparison-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            {/* CPU Column */}
+            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(99, 102, 241, 0.2)' }}>
+                  <Move3d size={20} color="#818cf8" />
                 </div>
-                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.8rem' }}>{tech.desc}</p>
-              </motion.div>
-            ))}
+                <div>
+                  <h4 style={{ fontSize: '1rem', fontWeight: 600 }}>CPU (The Brain)</h4>
+                  <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)' }}>JavaScript Main Thread</span>
+                </div>
+              </div>
+              <ul style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', paddingLeft: '1.2rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <li>Calculates <strong>20,000 positions</strong> ONCE on load (Math.sin/cos).</li>
+                <li>Updates scene time every frame.</li>
+                <li><strong>Load:</strong> Very Low (~1-2%).</li>
+                <li><strong>Role:</strong> "The Architect" - Plans the structure.</li>
+              </ul>
+            </div>
+
+            {/* GPU Column */}
+            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(236, 72, 153, 0.2)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(236, 72, 153, 0.2)' }}>
+                  <Sparkles size={20} color="#f472b6" />
+                </div>
+                <div>
+                  <h4 style={{ fontSize: '1rem', fontWeight: 600 }}>GPU (The Muscle)</h4>
+                  <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)' }}>WebGL / Graphics Card</span>
+                </div>
+              </div>
+              <ul style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', paddingLeft: '1.2rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <li>Draws <strong>20,000 points</strong> 60 times per second.</li>
+                <li>Calculates color blending & transparency per pixel.</li>
+                <li>Handles 3D perspective & rotation math.</li>
+                <li><strong>Role:</strong> "The Artist" - Paints the pixels.</li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
