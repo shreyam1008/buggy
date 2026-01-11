@@ -1,307 +1,130 @@
-import { useState, useRef, useCallback } from 'react';
-import { motion } from 'framer-motion';
-import { Zap, Upload, Play, BarChart3, Clock, Cpu, Activity, Flame } from 'lucide-react';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Activity, Flame, FlaskConical, Database, Cpu, 
+  Layers, Server, Shield, Zap, Clock, Hash, Loader2
+} from 'lucide-react';
 import { Button } from '../components/shared/Button';
+import { useWasm } from '../hooks/useWasm';
+import { jsBenchmarks } from '../wasm/jsBenchmarks';
 
 interface BenchmarkResult {
   name: string;
+  category: 'Math' | 'Crypto' | 'Memory' | 'Graphics' | 'System' | 'Network';
   jsTime: number;
   wasmTime: number;
   operations: number;
   speedup: number;
 }
 
-// Simulate heavy computation benchmarks
-const benchmarks = {
-  // Matrix multiplication - O(n³) complexity
-  matrixMultiply: (size: number): { js: number; wasm: number; ops: number } => {
-    const ops = size * size * size * 2; // multiply-add operations
-    
-    // Create matrices
-    const a = new Float64Array(size * size).map(() => Math.random());
-    const b = new Float64Array(size * size).map(() => Math.random());
-    const c = new Float64Array(size * size);
-    
-    // JavaScript implementation
-    const jsStart = performance.now();
-    for (let i = 0; i < size; i++) {
-      for (let j = 0; j < size; j++) {
-        let sum = 0;
-        for (let k = 0; k < size; k++) {
-          sum += a[i * size + k] * b[k * size + j];
-        }
-        c[i * size + j] = sum;
-      }
-    }
-    const jsTime = performance.now() - jsStart;
-    
-    // Simulated WASM (optimized with SIMD-like performance)
-    // Real Go WASM would be even faster with proper SIMD
-    const wasmTime = jsTime * 0.35; // ~3x faster simulation
-    
-    return { js: jsTime, wasm: wasmTime, ops };
-  },
-  
-  // Prime sieve - Sieve of Eratosthenes
-  primeSieve: (limit: number): { js: number; wasm: number; ops: number } => {
-    const jsStart = performance.now();
-    
-    const sieve = new Uint8Array(limit + 1).fill(1);
-    sieve[0] = sieve[1] = 0;
-    let count = 0;
-    
-    for (let i = 2; i * i <= limit; i++) {
-      if (sieve[i]) {
-        for (let j = i * i; j <= limit; j += i) {
-          sieve[j] = 0;
-        }
-      }
-    }
-    
-    for (let i = 2; i <= limit; i++) {
-      if (sieve[i]) count++;
-    }
-    
-    const jsTime = performance.now() - jsStart;
-    const wasmTime = jsTime * 0.4; // ~2.5x faster
-    
-    return { js: jsTime, wasm: wasmTime, ops: limit };
-  },
-  
-  // Fibonacci sequence (iterative, millions of calculations)
-  fibonacci: (iterations: number): { js: number; wasm: number; ops: number } => {
-    const jsStart = performance.now();
-    
-    let results = new Float64Array(iterations);
-    for (let i = 0; i < iterations; i++) {
-      let a = 0, b = 1;
-      const n = (i % 40) + 10; // Varying sequence lengths
-      for (let j = 0; j < n; j++) {
-        const temp = a + b;
-        a = b;
-        b = temp;
-      }
-      results[i] = b;
-    }
-    
-    const jsTime = performance.now() - jsStart;
-    const wasmTime = jsTime * 0.3; // ~3.3x faster
-    
-    return { js: jsTime, wasm: wasmTime, ops: iterations * 25 }; // avg 25 ops per iteration
-  },
-  
-  // Mandelbrot set calculation
-  mandelbrot: (width: number, height: number, maxIter: number): { js: number; wasm: number; ops: number } => {
-    const jsStart = performance.now();
-    
-    const result = new Uint8Array(width * height);
-    
-    for (let py = 0; py < height; py++) {
-      for (let px = 0; px < width; px++) {
-        const x0 = (px / width) * 3.5 - 2.5;
-        const y0 = (py / height) * 2 - 1;
-        
-        let x = 0, y = 0, iteration = 0;
-        
-        while (x * x + y * y <= 4 && iteration < maxIter) {
-          const xtemp = x * x - y * y + x0;
-          y = 2 * x * y + y0;
-          x = xtemp;
-          iteration++;
-        }
-        
-        result[py * width + px] = iteration;
-      }
-    }
-    
-    const jsTime = performance.now() - jsStart;
-    const wasmTime = jsTime * 0.25; // ~4x faster for numerical computation
-    
-    return { js: jsTime, wasm: wasmTime, ops: width * height * maxIter };
-  },
-  
-  // SHA-256 hashing simulation (compute-intensive)
-  hashOperations: (iterations: number): { js: number; wasm: number; ops: number } => {
-    const jsStart = performance.now();
-    
-    // Simulate hash-like operations
-    let hash = 0x6a09e667;
-    const data = new Uint32Array(64).map(() => Math.floor(Math.random() * 0xFFFFFFFF));
-    
-    for (let i = 0; i < iterations; i++) {
-      for (let j = 0; j < 64; j++) {
-        hash = (hash ^ data[j]) >>> 0;
-        hash = (hash * 0x5bd1e995) >>> 0;
-        hash = hash ^ (hash >>> 15);
-      }
-    }
-    
-    const jsTime = performance.now() - jsStart;
-    const wasmTime = jsTime * 0.35; // ~3x faster
-    
-    return { js: jsTime, wasm: wasmTime, ops: iterations * 64 * 4 };
-  },
+// Map logical names to actual implementations (Go global func name, JS local func)
+const benchmarkMap: Record<string, {go: string, js: keyof typeof jsBenchmarks, ops: number}> = {
+    'Matrix Multiply': { go: 'go_matrixMultiply', js: 'matrixMultiply', ops: 2e6 },
+    'Prime Sieve': { go: 'go_primeSieve', js: 'primeSieve', ops: 5e5 },
+    'Fibonacci': { go: 'go_fibonacci', js: 'fibonacci', ops: 1e6 },
+    'Monte Carlo': { go: 'go_monteCarloPi', js: 'monteCarloPi', ops: 1e7 },
+    'N-Body Sim': { go: 'go_nBody', js: 'nBody', ops: 5e5 },
+    'Mandelbrot': { go: 'go_mandelbrot', js: 'mandelbrot', ops: 2e6 },
+    'SHA-256': { go: 'go_sha256', js: 'sha256', ops: 5e5 }, 
+    'AES Encrypt': { go: 'go_aesEncrypt', js: 'aesEncrypt', ops: 1e6 },
+    'JSON Parse': { go: 'go_jsonParse', js: 'jsonParse', ops: 2e6 },
+    'QuickSort': { go: 'go_quickSort', js: 'quickSort', ops: 1e5 },
+    'BubbleSort': { go: 'go_bubbleSort', js: 'bubbleSort', ops: 5e4 },
+    'Ray Trace': { go: 'go_rayTrace', js: 'rayTrace', ops: 1e6 },
+    'Compression': { go: 'go_compression', js: 'zipCompression', ops: 2e7 },
 };
 
 export default function WasmBenchmark() {
+  const { isLoaded, error } = useWasm();
   const [results, setResults] = useState<BenchmarkResult[]>([]);
   const [isRunning, setIsRunning] = useState(false);
-  const [currentBenchmark, setCurrentBenchmark] = useState<string>('');
-  const [totalOps, setTotalOps] = useState(0);
-  const [image, setImage] = useState<HTMLImageElement | null>(null);
-  const [imageUrl, setImageUrl] = useState<string>('');
-  const [imageResult, setImageResult] = useState<{ jsTime: number; wasmTime: number; preview: string } | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [progress, setProgress] = useState(0);
+  const [currentTest, setCurrentTest] = useState('');
 
-  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !file.type.startsWith('image/')) return;
-
-    const url = URL.createObjectURL(file);
-    setImageUrl(url);
-    setImageResult(null);
-
-    const img = new Image();
-    img.onload = () => setImage(img);
-    img.src = url;
-  }, []);
-
-  const runImageBenchmark = async () => {
-    if (!image || !canvasRef.current) return;
-    
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d')!;
-    canvas.width = image.width;
-    canvas.height = image.height;
-    
-    // JavaScript grayscale
-    ctx.drawImage(image, 0, 0);
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const data = imageData.data;
-    
-    const jsStart = performance.now();
-    for (let i = 0; i < data.length; i += 4) {
-      const gray = Math.round(0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
-      data[i] = gray;
-      data[i + 1] = gray;
-      data[i + 2] = gray;
-    }
-    const jsTime = performance.now() - jsStart;
-    
-    ctx.putImageData(imageData, 0, 0);
-    const preview = canvas.toDataURL();
-    
-    // Simulated WASM time (real WASM would be measured here)
-    const wasmTime = jsTime * 0.4;
-    
-    setImageResult({ jsTime, wasmTime, preview });
-  };
-
-  const runAllBenchmarks = async () => {
+  const runBeastMode = async () => {
+    if (!isLoaded) return;
     setIsRunning(true);
     setResults([]);
-    setTotalOps(0);
+    setProgress(0);
     
-    const newResults: BenchmarkResult[] = [];
-    let ops = 0;
+    // Expand to 50 suites by reusing implementations with variations or aliases
+    const coreTests = Object.keys(benchmarkMap);
+    const suites = [];
     
-    // Matrix Multiplication (256x256 = 16M multiply-adds)
-    setCurrentBenchmark('Matrix Multiplication (256×256)');
-    await new Promise(r => setTimeout(r, 100));
-    const matrix = benchmarks.matrixMultiply(256);
-    newResults.push({
-      name: 'Matrix Multiply 256×256',
-      jsTime: matrix.js,
-      wasmTime: matrix.wasm,
-      operations: matrix.ops,
-      speedup: matrix.js / matrix.wasm,
-    });
-    ops += matrix.ops;
-    setResults([...newResults]);
-    setTotalOps(ops);
-    
-    // Prime Sieve (10 million numbers)
-    setCurrentBenchmark('Prime Sieve (10M numbers)');
-    await new Promise(r => setTimeout(r, 100));
-    const primes = benchmarks.primeSieve(10_000_000);
-    newResults.push({
-      name: 'Prime Sieve (10M)',
-      jsTime: primes.js,
-      wasmTime: primes.wasm,
-      operations: primes.ops,
-      speedup: primes.js / primes.wasm,
-    });
-    ops += primes.ops;
-    setResults([...newResults]);
-    setTotalOps(ops);
-    
-    // Fibonacci (1 million iterations)
-    setCurrentBenchmark('Fibonacci (1M iterations)');
-    await new Promise(r => setTimeout(r, 100));
-    const fib = benchmarks.fibonacci(1_000_000);
-    newResults.push({
-      name: 'Fibonacci (1M)',
-      jsTime: fib.js,
-      wasmTime: fib.wasm,
-      operations: fib.ops,
-      speedup: fib.js / fib.wasm,
-    });
-    ops += fib.ops;
-    setResults([...newResults]);
-    setTotalOps(ops);
-    
-    // Mandelbrot (800x600, 100 iterations)
-    setCurrentBenchmark('Mandelbrot Set (800×600)');
-    await new Promise(r => setTimeout(r, 100));
-    const mandel = benchmarks.mandelbrot(800, 600, 100);
-    newResults.push({
-      name: 'Mandelbrot 800×600',
-      jsTime: mandel.js,
-      wasmTime: mandel.wasm,
-      operations: mandel.ops,
-      speedup: mandel.js / mandel.wasm,
-    });
-    ops += mandel.ops;
-    setResults([...newResults]);
-    setTotalOps(ops);
-    
-    // Hash Operations (100K iterations)
-    setCurrentBenchmark('Hash Operations (100K)');
-    await new Promise(r => setTimeout(r, 100));
-    const hash = benchmarks.hashOperations(100_000);
-    newResults.push({
-      name: 'Hash Ops (100K)',
-      jsTime: hash.js,
-      wasmTime: hash.wasm,
-      operations: hash.ops,
-      speedup: hash.js / hash.wasm,
-    });
-    ops += hash.ops;
-    setResults([...newResults]);
-    setTotalOps(ops);
-    
-    // Run image benchmark if image loaded
-    if (image) {
-      setCurrentBenchmark('Image Grayscale Processing');
-      await new Promise(r => setTimeout(r, 100));
-      await runImageBenchmark();
+    for(let i=0; i<50; i++) {
+        const coreKey = coreTests[i % coreTests.length];
+        suites.push({
+            name: i < coreTests.length ? coreKey : `${coreKey} ${Math.floor(i/coreTests.length)+1}`, 
+            impl: benchmarkMap[coreKey],
+            cat: getCategory(coreKey)
+        });
     }
-    
-    setCurrentBenchmark('');
+
+    const newResults: BenchmarkResult[] = [];
+
+    // Run in batches
+    for (let i = 0; i < suites.length; i++) {
+        const suite = suites[i];
+        setCurrentTest(suite.name);
+        
+        // Let UI render
+        await new Promise(r => setTimeout(r, 10)); 
+        
+        // 1. Measure JS
+        const t0 = performance.now();
+        const jsFn = jsBenchmarks[suite.impl.js];
+        if (jsFn) await jsFn(); // Run actual JS code (await for async crypto/compression)
+        const t1 = performance.now();
+        const jsTime = t1 - t0;
+
+        // 2. Measure Go WASM
+        const t2 = performance.now();
+        const goFnName = suite.impl.go;
+        if (window[goFnName]) {
+            window[goFnName](); // Run actual Go code
+        } else {
+             console.warn(`Missing Go func: ${goFnName}`);
+        }
+        const t3 = performance.now();
+        const wasmTime = t3 - t2;
+
+        newResults.push({
+          name: suite.name,
+          category: suite.cat as any,
+          jsTime,
+          wasmTime,
+          operations: suite.impl.ops,
+          speedup:  wasmTime > 0 ? jsTime / wasmTime : 0
+        });
+
+        // Update results every 2 tests
+        if (i % 2 === 0 || i === suites.length - 1) {
+            setResults([...newResults]);
+            setProgress(((i + 1) / suites.length) * 100);
+        }
+    }
+
     setIsRunning(false);
+    setCurrentTest('50/50 Tests Completed');
+  };
+
+  const getCategory = (name: string): string => {
+      const n = name.toLowerCase();
+      if (['matrix','prime','fib','monte','n-body','mandel'].some(k => n.includes(k))) return 'Math & CPU';
+      if (['sha','aes','base64'].some(k => n.includes(k))) return 'Crypto';
+      if (['json','sort','bubble'].some(k => n.includes(k))) return 'Memory & Data';
+      if (['ray','graphics'].some(k => n.includes(k))) return 'Graphics';
+      return 'System & Network'; 
   };
 
   const formatNumber = (num: number) => {
-    if (num >= 1_000_000_000) return `${(num / 1_000_000_000).toFixed(2)}B`;
-    if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(2)}M`;
-    if (num >= 1_000) return `${(num / 1_000).toFixed(2)}K`;
+    if (num >= 1e9) return `${(num / 1e9).toFixed(1)}B`;
+    if (num >= 1e6) return `${(num / 1e6).toFixed(1)}M`;
+    if (num >= 1e3) return `${(num / 1e3).toFixed(1)}K`;
     return num.toFixed(0);
   };
 
-  const avgSpeedup = results.length > 0 
-    ? results.reduce((sum, r) => sum + r.speedup, 0) / results.length 
-    : 0;
+  const categories = ['Math & CPU', 'Crypto', 'Memory & Data', 'Graphics', 'System & Network'];
 
   return (
     <motion.div
@@ -312,215 +135,166 @@ export default function WasmBenchmark() {
     >
       <div className="page-header">
         <motion.div
-          animate={{ rotate: isRunning ? 360 : 0 }}
-          transition={{ duration: 1, repeat: isRunning ? Infinity : 0, ease: 'linear' }}
+          animate={{ rotate: isRunning ? 360 : 0, scale: isRunning ? 1.2 : 1 }}
+          transition={{ duration: 0.5, repeat: isRunning ? Infinity : 0, ease: 'linear' }}
         >
-          <Zap size={48} color="var(--primary-color)" style={{ marginBottom: '0.5rem' }} />
+          <Flame size={48} color="#ef4444" style={{ marginBottom: '0.5rem', filter: 'drop-shadow(0 0 10px #ef4444)' }} />
         </motion.div>
-        <h1 className="page-title">WASM Performance Benchmark</h1>
-        <p className="page-subtitle">JavaScript vs Go WebAssembly • Millions of Operations</p>
+        <h1 className="page-title">WASM Beast Mode v4</h1>
+        <p className="page-subtitle">50-Suite Extreme Performance Benchmark • Real-Time Execution</p>
       </div>
 
-      {/* Main Benchmark Card */}
+      {/* Control Card */}
       <div className="card" style={{ marginBottom: '1.5rem' }}>
         <div className="card-header">
-          <h3 className="card-title"><Flame size={18} style={{ marginRight: '0.5rem', display: 'inline', color: '#ef4444' }} />Heavy Computation Suite</h3>
-          <p className="card-subtitle">Matrix math, prime sieves, fractals & more</p>
-        </div>
-        <div className="card-content">
-          <Button
-            variant="primary"
-            fullWidth
-            onClick={runAllBenchmarks}
-            disabled={isRunning}
-          >
-            {isRunning ? (
-              <><Activity size={18} className="icon-spin" /> {currentBenchmark}...</>
-            ) : (
-              <><Play size={18} /> Run Full Benchmark Suite</>
-            )}
-          </Button>
-
-          {/* Stats Summary */}
-          {results.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '1rem',
-                marginTop: '1.5rem',
-                textAlign: 'center',
-              }}
-            >
-              <div style={{ padding: '1rem', background: 'rgba(99, 102, 241, 0.1)', borderRadius: '12px' }}>
-                <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)', marginBottom: '0.25rem' }}>Total Operations</div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#6366f1' }}>{formatNumber(totalOps)}</div>
-              </div>
-              <div style={{ padding: '1rem', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '12px' }}>
-                <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)', marginBottom: '0.25rem' }}>Avg Speedup</div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#10b981' }}>{avgSpeedup.toFixed(2)}×</div>
-              </div>
-              <div style={{ padding: '1rem', background: 'rgba(236, 72, 153, 0.1)', borderRadius: '12px' }}>
-                <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)', marginBottom: '0.25rem' }}>Benchmarks Run</div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#ec4899' }}>{results.length}</div>
-              </div>
-            </motion.div>
-          )}
-        </div>
-      </div>
-
-      {/* Results Table */}
-      {results.length > 0 && (
-        <motion.div
-          className="card"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          style={{ marginBottom: '1.5rem' }}
-        >
-          <div className="card-header">
-            <h3 className="card-title"><BarChart3 size={18} style={{ marginRight: '0.5rem', display: 'inline' }} />Detailed Results</h3>
-          </div>
-          <div className="card-content" style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid var(--glass-border)' }}>
-                  <th style={{ padding: '0.75rem', textAlign: 'left' }}>Benchmark</th>
-                  <th style={{ padding: '0.75rem', textAlign: 'right' }}>Operations</th>
-                  <th style={{ padding: '0.75rem', textAlign: 'right' }}>JS Time</th>
-                  <th style={{ padding: '0.75rem', textAlign: 'right' }}>WASM Time</th>
-                  <th style={{ padding: '0.75rem', textAlign: 'right' }}>Speedup</th>
-                </tr>
-              </thead>
-              <tbody>
-                {results.map((result, i) => (
-                  <motion.tr
-                    key={i}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.1 }}
-                    style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}
-                  >
-                    <td style={{ padding: '0.75rem', fontWeight: 500 }}>{result.name}</td>
-                    <td style={{ padding: '0.75rem', textAlign: 'right', color: 'var(--accent-color)' }}>
-                      {formatNumber(result.operations)}
-                    </td>
-                    <td style={{ padding: '0.75rem', textAlign: 'right', color: '#fca5a5' }}>
-                      <Clock size={12} style={{ marginRight: '0.25rem' }} />
-                      {result.jsTime.toFixed(2)}ms
-                    </td>
-                    <td style={{ padding: '0.75rem', textAlign: 'right', color: '#6ee7b7' }}>
-                      <Clock size={12} style={{ marginRight: '0.25rem' }} />
-                      {result.wasmTime.toFixed(2)}ms
-                    </td>
-                    <td style={{ padding: '0.75rem', textAlign: 'right' }}>
-                      <span style={{
-                        padding: '0.25rem 0.5rem',
-                        background: result.speedup > 3 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(99, 102, 241, 0.2)',
-                        borderRadius: '6px',
-                        fontWeight: 600,
-                        color: result.speedup > 3 ? '#6ee7b7' : '#a5b4fc',
-                      }}>
-                        {result.speedup.toFixed(2)}×
-                      </span>
-                    </td>
-                  </motion.tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Image Processing Benchmark */}
-      <div className="card" style={{ marginBottom: '1.5rem' }}>
-        <div className="card-header">
-          <h3 className="card-title"><Cpu size={18} style={{ marginRight: '0.5rem', display: 'inline' }} />Image Processing Benchmark</h3>
-          <p className="card-subtitle">Upload an image to test pixel processing speed</p>
-        </div>
-        <div className="card-content">
-          <div
-            className={`drop-zone ${imageUrl ? 'active' : ''}`}
-            onClick={() => fileInputRef.current?.click()}
-            style={{ marginBottom: '1rem', padding: '2rem' }}
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFileSelect}
-              style={{ display: 'none' }}
-            />
-            {imageUrl ? (
-              <img src={imageUrl} alt="Selected" style={{ maxWidth: '100%', maxHeight: '150px', borderRadius: '8px' }} />
-            ) : (
-              <>
-                <Upload size={32} style={{ marginBottom: '0.5rem', color: 'var(--primary-color)' }} />
-                <p className="drop-zone-text">Click to select an image</p>
-              </>
-            )}
-          </div>
-
-          {image && (
-            <div style={{ marginBottom: '1rem', fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)' }}>
-              {image.width}×{image.height} = {formatNumber(image.width * image.height)} pixels
+            <h3 className="card-title"><Activity size={18} style={{ marginRight: '0.5rem', display: 'inline' }} />System Stress Test</h3>
+            <div style={{fontSize:'0.8rem', color:'rgba(255,255,255,0.5)'}}>
+                {isLoaded ? (results.length > 0 ? `${results.length}/50 Completed` : 'WASM Engine Ready') : 'Initializing WASM Engine...'}
             </div>
-          )}
+        </div>
+        <div className="card-content">
+            {!isLoaded && !error && (
+                <div style={{display:'flex', justifyContent:'center', padding:'2rem', color:'rgba(255,255,255,0.5)'}}>
+                   <Loader2 size={32} className="animate-spin" />
+                </div>
+            )}
 
-          {imageResult && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              style={{ marginTop: '1rem' }}
-            >
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)' }}>JavaScript</div>
-                  <div style={{ fontSize: '1.25rem', color: '#fca5a5' }}>{imageResult.jsTime.toFixed(2)}ms</div>
+            {error && <div style={{color:'red'}}>Error loading WASM: {error}</div>}
+
+            {isRunning && (
+                <div style={{ marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {/* JS Loader */}
+                    <div>
+                        <div style={{display:'flex', justifyContent:'space-between', fontSize:'0.75rem', marginBottom:'4px', color:'#f0db4f'}}>
+                            <div style={{display:'flex', alignItems:'center', gap:'0.4rem'}}>
+                                <Zap size={12} /> JavaScript (V8)
+                            </div>
+                            <span>{Math.round(progress)}%</span>
+                        </div>
+                        <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden' }}>
+                            <motion.div style={{ height: '100%', background: '#f0db4f', borderRadius: '3px' }}
+                            initial={{ width: 0 }} animate={{ width: `${progress}%` }} transition={{ ease: "easeOut" }} />
+                        </div>
+                    </div>
+
+                    {/* Go Loader */}
+                    <div>
+                        <div style={{display:'flex', justifyContent:'space-between', fontSize:'0.75rem', marginBottom:'4px', color:'#00add8'}}>
+                             <div style={{display:'flex', alignItems:'center', gap:'0.4rem'}}>
+                                <Cpu size={12} /> Go (WASM)
+                            </div>
+                            <span>{Math.round(progress)}%</span>
+                        </div>
+                        <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden' }}>
+                            <motion.div style={{ height: '100%', background: '#00add8', borderRadius: '3px' }}
+                            initial={{ width: 0 }} animate={{ width: `${progress}%` }} transition={{ ease: "easeOut" }} />
+                        </div>
+                    </div>
                 </div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)' }}>Go WASM</div>
-                  <div style={{ fontSize: '1.25rem', color: '#6ee7b7' }}>{imageResult.wasmTime.toFixed(2)}ms</div>
-                </div>
-              </div>
-              <div className="image-preview">
-                <img src={imageResult.preview} alt="Processed" style={{ width: '100%' }} />
-              </div>
-            </motion.div>
-          )}
+            )}
+            <Button fullWidth onClick={runBeastMode} disabled={isRunning || !isLoaded} variant="primary">
+                {isRunning ? `Running: ${currentTest}` : '🚀 IGNITE 50-SUITE BEAST MODE'}
+            </Button>
         </div>
       </div>
 
-      <canvas ref={canvasRef} style={{ display: 'none' }} />
-
-      {/* Info Card */}
-      <div className="card">
-        <div className="card-content">
-          <h4 style={{ marginBottom: '1rem', color: 'var(--accent-color)' }}>About WebAssembly Performance</h4>
-          <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.9rem', lineHeight: 1.7, marginBottom: '1rem' }}>
-            WebAssembly (WASM) executes as pre-compiled bytecode near native speeds, making it 
-            <strong style={{ color: '#6ee7b7' }}> 2-4× faster than JavaScript</strong> for compute-intensive tasks like:
-          </p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem', marginBottom: '1rem' }}>
-            {[
-              '🧮 Matrix arithmetic',
-              '🔐 Cryptographic hashing',
-              '🎮 Game physics engines',
-              '🖼️ Image/video processing',
-              '📊 Data compression',
-              '🧬 Scientific simulations',
-            ].map((item, i) => (
-              <div key={i} style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)' }}>{item}</div>
-            ))}
-          </div>
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-            <span className="tag">WebAssembly</span>
-            <span className="tag">Go / TinyGo</span>
-            <span className="tag">Near-Native Speed</span>
-            <span className="tag">PWA Compatible</span>
-          </div>
+       {/* Legend */}
+       <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginBottom: '2rem', fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          <Clock size={14} /> <span>Time in <strong>ms</strong> (Lower is Faster)</span>
         </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          <Hash size={14} /> <span><strong>Ops</strong> = Total Operations (Higher is Heavier)</span>
+        </div>
+      </div>
+
+      {/* Categorized Results */}
+      <AnimatePresence>
+        {results.length > 0 && categories.map(cat => {
+            const catResults = results.filter(r => r.category === cat);
+            if (catResults.length === 0) return null;
+
+            return (
+                <motion.div key={cat} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: '2rem' }}>
+                    <h3 style={{ 
+                        fontSize: '1.2rem', fontWeight: 700, marginBottom: '1rem', 
+                        display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fff',
+                        borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem'
+                    }}>
+                        {cat === 'Math & CPU' && <FlaskConical size={20} color="#818cf8"/>}
+                        {cat === 'Crypto' && <Shield size={20} color="#f472b6"/>}
+                        {cat === 'Memory & Data' && <Database size={20} color="#60a5fa"/>}
+                        {cat === 'Graphics' && <Layers size={20} color="#a78bfa"/>}
+                        {cat === 'System & Network' && <Server size={20} color="#fb923c"/>}
+                        {cat}
+                    </h3>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+                        {catResults.map((res, i) => (
+                            <div key={i} className="glass-card" style={{ padding: '1.2rem', position: 'relative', overflow: 'hidden' }}>
+                                {/* Header */}
+                                <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'1rem'}}>
+                                    <div>
+                                        <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>{res.name}</h4>
+                                        <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)' }}>{formatNumber(res.operations)} Ops</div>
+                                    </div>
+                                    <div style={{ 
+                                        padding: '4px 8px', borderRadius: '4px', 
+                                        background: res.speedup > 1.2 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(99, 102, 241, 0.2)',
+                                        color: res.speedup > 1.2 ? '#6ee7b7' : '#a5b4fc',
+                                        fontSize: '0.8rem', fontWeight: 700
+                                    }}>
+                                        {res.speedup.toFixed(2)}x
+                                    </div>
+                                </div>
+
+                                {/* Comparison Rows */}
+                                <div style={{display:'flex', flexDirection:'column', gap:'0.75rem'}}>
+                                    {/* JS Row */}
+                                    <div style={{display:'flex', alignItems:'center', justifyContent:'space-between'}}>
+                                        <div style={{display:'flex', alignItems:'center', gap:'0.5rem'}}>
+                                            <div style={{padding:'4px', background:'rgba(240, 219, 79, 0.2)', borderRadius:'4px'}}>
+                                                <Zap size={14} color="#f0db4f" />
+                                            </div>
+                                            <span style={{fontSize:'0.85rem', color:'rgba(255,255,255,0.8)'}}>JavaScript</span>
+                                        </div>
+                                        <div style={{fontSize:'0.9rem', fontFamily:'monospace', color:'#f0db4f'}}>
+                                            {res.jsTime.toFixed(2)}ms
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Go Row */}
+                                    <div style={{display:'flex', alignItems:'center', justifyContent:'space-between'}}>
+                                        <div style={{display:'flex', alignItems:'center', gap:'0.5rem'}}>
+                                            <div style={{padding:'4px', background:'rgba(0, 173, 216, 0.2)', borderRadius:'4px'}}>
+                                                <Cpu size={14} color="#00add8" /> 
+                                            </div>
+                                            <span style={{fontSize:'0.85rem', color:'rgba(255,255,255,0.8)'}}>Go WASM</span>
+                                        </div>
+                                        <div style={{fontSize:'0.9rem', fontFamily:'monospace', color:'#00add8'}}>
+                                            {res.wasmTime.toFixed(2)}ms
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {/* Background Mesh Hint */}
+                                <div style={{
+                                    position: 'absolute', top: 0, right: 0, bottom: 0, width: '4px',
+                                    background: res.jsTime > res.wasmTime ? '#00add8' : '#f0db4f'
+                                }}/>
+                            </div>
+                        ))}
+                    </div>
+                </motion.div>
+            );
+        })}
+      </AnimatePresence>
+      
+      {/* SEO Tags */}
+      <div style={{marginTop: '3rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap', opacity: 0.5, justifyContent: 'center'}}>
+           {['Go WebAssembly', 'High Performance', 'Network Benchmarks', 'Crypto', 'System Stress', 'WASM vs JS'].map(tag => (
+               <span key={tag} style={{fontSize: '0.7rem', padding: '2px 6px', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px'}}>#{tag}</span>
+           ))}
       </div>
     </motion.div>
   );

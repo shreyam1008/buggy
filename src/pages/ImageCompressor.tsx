@@ -161,8 +161,13 @@ export default function ImageConverter() {
 
   const handleCameraCapture = () => {
     if (fileInputRef.current) {
+      // Temporarily switch to camera capture mode
       fileInputRef.current.setAttribute('capture', 'environment');
       fileInputRef.current.click();
+      // Remove attribute after click to restore file picker behavior
+      setTimeout(() => {
+          fileInputRef.current?.removeAttribute('capture');
+      }, 500);
     }
   };
 
@@ -195,7 +200,12 @@ export default function ImageConverter() {
             className={`drop-zone ${originalImage ? 'active' : ''}`}
             onDrop={handleDrop}
             onDragOver={(e) => e.preventDefault()}
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => {
+                if(fileInputRef.current) {
+                    fileInputRef.current.removeAttribute('capture'); // Default: File Picker
+                    fileInputRef.current.click()
+                }
+            }}
           >
             <input
               ref={fileInputRef}
@@ -219,11 +229,11 @@ export default function ImageConverter() {
 
           {/* Quick Actions */}
           <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', justifyContent: 'center' }}>
-            <Button variant="secondary" onClick={handleCameraCapture}>
+            <Button variant="secondary" onClick={(e) => { e.stopPropagation(); handleCameraCapture(); }}>
               <Camera size={18} /> Camera
             </Button>
             {originalImage && (
-              <Button variant="ghost" onClick={reset}>
+              <Button variant="ghost" onClick={(e) => { e.stopPropagation(); reset(); }}>
                 <RefreshCw size={18} /> Reset
               </Button>
             )}
