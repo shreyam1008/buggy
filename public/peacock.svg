@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="peacock-body" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#059669"/>
+      <stop offset="100%" style="stop-color:#047857"/>
+    </linearGradient>
+    <radialGradient id="eye-center" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#1e40af"/>
+      <stop offset="50%" style="stop-color:#22c55e"/>
+      <stop offset="100%" style="stop-color:#fbbf24"/>
+    </radialGradient>
+  </defs>
+  
+  <!-- Peacock Feather (Mor Pankh) -->
+  <!-- Main feather shaft -->
+  <line x1="100" y1="180" x2="100" y2="20" stroke="#78350f" stroke-width="3"/>
+  
+  <!-- Barbules -->
+  <ellipse cx="100" cy="90" rx="45" ry="70" fill="url(#peacock-body)" opacity="0.9"/>
+  
+  <!-- Eye pattern -->
+  <ellipse cx="100" cy="70" rx="30" ry="40" fill="#22c55e"/>
+  <ellipse cx="100" cy="65" rx="20" ry="28" fill="#3b82f6"/>
+  <ellipse cx="100" cy="60" rx="12" ry="18" fill="url(#eye-center)"/>
+  <circle cx="100" cy="55" r="6" fill="#1e40af"/>
+  <circle cx="100" cy="53" r="3" fill="white" opacity="0.5"/>
+  
+  <!-- Decorative outer pattern -->
+  <ellipse cx="100" cy="90" rx="50" ry="75" fill="none" stroke="#fbbf24" stroke-width="2" stroke-dasharray="5,3"/>
+  
+  <!-- Barb tips -->
+  <g fill="#059669" opacity="0.7">
+    <ellipse cx="55" cy="85" rx="8" ry="15" transform="rotate(-30 55 85)"/>
+    <ellipse cx="145" cy="85" rx="8" ry="15" transform="rotate(30 145 85)"/>
+    <ellipse cx="60" cy="120" rx="7" ry="12" transform="rotate(-20 60 120)"/>
+    <ellipse cx="140" cy="120" rx="7" ry="12" transform="rotate(20 140 120)"/>
+  </g>
+</svg>

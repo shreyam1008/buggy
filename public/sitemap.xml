@@ -1,9 +1,76 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  
+  <!-- Home / Date Converter -->
   <url>
     <loc>https://shreyam1008.com.np/</loc>
-    <lastmod>2026-01-10</lastmod>
+    <lastmod>2026-01-11</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://shreyam1008.com.np/" />
+    <xhtml:link rel="alternate" hreflang="ne" href="https://shreyam1008.com.np/" />
+    <image:image>
+      <image:loc>https://shreyam1008.com.np/icon-512x512.png</image:loc>
+      <image:title>Radha Krishna Utilities Logo</image:title>
+    </image:image>
   </url>
+  
+  <!-- Image Converter -->
+  <url>
+    <loc>https://shreyam1008.com.np/image-compressor</loc>
+    <lastmod>2026-01-11</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <!-- PDF Merger -->
+  <url>
+    <loc>https://shreyam1008.com.np/pdf-merger</loc>
+    <lastmod>2026-01-11</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <!-- Notes App -->
+  <url>
+    <loc>https://shreyam1008.com.np/notes</loc>
+    <lastmod>2026-01-11</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- Bcrypt Generator -->
+  <url>
+    <loc>https://shreyam1008.com.np/bcrypt</loc>
+    <lastmod>2026-01-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <!-- WASM Benchmark -->
+  <url>
+    <loc>https://shreyam1008.com.np/wasm-benchmark</loc>
+    <lastmod>2026-01-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <!-- 3D Showcase -->
+  <url>
+    <loc>https://shreyam1008.com.np/3d-showcase</loc>
+    <lastmod>2026-01-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <!-- Radha Krishna Hub -->
+  <url>
+    <loc>https://shreyam1008.com.np/radha-krishna</loc>
+    <lastmod>2026-01-11</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
 </urlset>

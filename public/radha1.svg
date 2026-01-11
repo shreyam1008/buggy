@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="radha1-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ec4899"/>
+      <stop offset="100%" style="stop-color:#db2777"/>
+    </linearGradient>
+  </defs>
+  <!-- Radha Portrait - Simple Placeholder -->
+  <circle cx="100" cy="60" r="35" fill="url(#radha1-grad)"/>
+  <!-- Body/Saree -->
+  <ellipse cx="100" cy="145" rx="45" ry="55" fill="url(#radha1-grad)" opacity="0.9"/>
+  <!-- Hair decoration -->
+  <circle cx="75" cy="45" r="8" fill="#fbbf24"/>
+  <circle cx="125" cy="45" r="8" fill="#fbbf24"/>
+  <!-- Bindi -->
+  <circle cx="100" cy="50" r="4" fill="#ef4444"/>
+</svg>

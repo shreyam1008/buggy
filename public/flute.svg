@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="flute-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#fbbf24"/>
+      <stop offset="50%" style="stop-color:#f59e0b"/>
+      <stop offset="100%" style="stop-color:#d97706"/>
+    </linearGradient>
+    <linearGradient id="flute-shine" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:rgba(255,255,255,0.3)"/>
+      <stop offset="100%" style="stop-color:rgba(255,255,255,0)"/>
+    </linearGradient>
+  </defs>
+  <!-- Krishna's Divine Flute (Murli) -->
+  <g transform="rotate(-10 100 100)">
+    <!-- Main flute body -->
+    <rect x="30" y="90" width="140" height="20" rx="10" fill="url(#flute-grad)"/>
+    <rect x="30" y="90" width="140" height="10" rx="5" fill="url(#flute-shine)"/>
+    
+    <!-- Finger holes -->
+    <circle cx="60" cy="100" r="4" fill="#92400e"/>
+    <circle cx="85" cy="100" r="4" fill="#92400e"/>
+    <circle cx="110" cy="100" r="4" fill="#92400e"/>
+    <circle cx="135" cy="100" r="4" fill="#92400e"/>
+    
+    <!-- Mouth piece -->
+    <ellipse cx="170" cy="100" rx="12" ry="15" fill="url(#flute-grad)"/>
+    
+    <!-- Decorative ribbon -->
+    <path d="M155 90 Q145 80 130 85 Q120 90 130 100" stroke="#ec4899" stroke-width="3" fill="none"/>
+    <path d="M155 110 Q145 120 130 115 Q120 110 130 100" stroke="#ec4899" stroke-width="3" fill="none"/>
+  </g>
+  
+  <!-- Musical notes -->
+  <text x="40" y="70" font-size="24" fill="#ec4899">♪</text>
+  <text x="100" y="55" font-size="20" fill="#6366f1">♫</text>
+  <text x="150" y="75" font-size="22" fill="#ec4899">♪</text>
+</svg>

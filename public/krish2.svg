@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="krishna2-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5cf6"/>
+      <stop offset="100%" style="stop-color:#6366f1"/>
+    </linearGradient>
+  </defs>
+  <!-- Krishna Dancing - Simple Placeholder -->
+  <circle cx="100" cy="50" r="30" fill="url(#krishna2-grad)"/>
+  <!-- Body in dance pose -->
+  <ellipse cx="100" cy="120" rx="35" ry="45" fill="url(#krishna2-grad)" opacity="0.9"/>
+  <!-- Arms stretched in dance -->
+  <ellipse cx="50" cy="100" rx="25" ry="8" fill="url(#krishna2-grad)" opacity="0.8"/>
+  <ellipse cx="150" cy="100" rx="25" ry="8" fill="url(#krishna2-grad)" opacity="0.8"/>
+  <!-- Crown -->
+  <polygon points="70,30 100,10 130,30 120,40 100,30 80,40" fill="#fbbf24"/>
+</svg>

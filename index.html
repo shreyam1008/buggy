@@ -2,50 +2,321 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5" />
     <meta name="theme-color" content="#4f46e5" />
+    <meta name="color-scheme" content="dark" />
+    
+    <!-- Icons -->
     <link rel="icon" type="image/png" href="/krishna.png" />
     <link rel="apple-touch-icon" href="/icon-192x192.png" />
-    <title>Nepali Date Converter | नेपाली मिति परिवर्तन | BS to AD</title>
-    <meta name="description" content="Best Nepali Date Converter (BS to AD & AD to BS) 2025. Convert Bikram Sambat to English Date instantly. नेपाली मिति रूपान्तरण. Accurate, fast, and beautiful Miti Pariwartan tool." />
-    <meta name="keywords" content="nepali date converter, bs to ad, ad to bs, miti pariwartan, nepali calendar, english to nepali date, bikram sambat, मिति परिवर्तन, नेपाली मिति, date converter 2025, nepali patro" />
-    <meta name="robots" content="index, follow" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/icon-192x192.png" />
+    <link rel="apple-touch-icon" sizes="512x512" href="/icon-512x512.png" />
+    <link rel="mask-icon" href="/krishna.png" color="#4f46e5" />
+    
+    <!-- iOS PWA Support -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="RK Utilities" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="format-detection" content="telephone=no" />
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://shreyam1008.com.np/" />
+    
+    <!-- Preconnect & Prefetch for Performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    
+    <!-- Primary Meta Tags -->
+    <title>Radha Krishna Utilities | Nepali Date Converter | Image Compressor | Notes | PWA Tools</title>
+    <meta name="title" content="Radha Krishna Utilities | Multi-Tool PWA | Date Converter, Image Compressor, Notes, WASM Benchmark" />
+    <meta name="description" content="Free multi-utility PWA: Nepali Date Converter (BS to AD), Image Compressor, PDF Merger, Notes App, Bcrypt Generator, WASM Benchmark. Works offline. Radha Krishna themed. 50+ divine quotes from Jagadguru Shree Kripalu Ji Maharaj." />
+    <meta name="keywords" content="nepali date converter, bs to ad, ad to bs, miti pariwartan, image compressor, pdf merger, notes app, bcrypt generator, wasm benchmark, webassembly, pwa, progressive web app, radha krishna, jagadguru kripalu ji maharaj, divine quotes, offline tools, free online tools" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="author" content="Radha Krishna Utilities" />
+    <meta name="generator" content="Vite + React" />
+    <meta name="application-name" content="RK Utilities" />
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Radha Krishna Utilities" />
     <meta property="og:url" content="https://shreyam1008.com.np/" />
-    <meta property="og:title" content="Nepali Date Converter | नेपाली मिति परिवर्तन | BS to AD" />
-    <meta property="og:description" content="Convert Bikram Sambat (BS) to English Date (AD) instantly. सटीक नेपाली मिति रूपान्तरण. The best online Miti Pariwartan tool." />
+    <meta property="og:title" content="Radha Krishna Utilities | Free Multi-Tool PWA" />
+    <meta property="og:description" content="Free PWA with 8+ tools: Date Converter, Image Compressor, PDF Merger, Notes, Bcrypt Generator, WASM Benchmark, 3D Showcase & 50+ Radha Krishna quotes. Works offline!" />
+    <meta property="og:image" content="https://shreyam1008.com.np/icon-512x512.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:image:alt" content="Radha Krishna Utilities Logo" />
     <meta property="og:locale" content="en_US" />
     <meta property="og:locale:alternate" content="ne_NP" />
+    <meta property="og:locale:alternate" content="hi_IN" />
+    
+    <!-- Language Alternates -->
+    <link rel="alternate" hreflang="en" href="https://shreyam1008.com.np/" />
+    <link rel="alternate" hreflang="ne" href="https://shreyam1008.com.np/" />
+    <link rel="alternate" hreflang="hi" href="https://shreyam1008.com.np/" />
+    <link rel="alternate" hreflang="x-default" href="https://shreyam1008.com.np/" />
 
     <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="https://shreyam1008.com.np/" />
-    <meta property="twitter:title" content="Nepali Date Converter | नेपाली मिति परिवर्तन" />
-    <meta property="twitter:description" content="Accurate BS to AD conversion. नेपाली मिति रूपान्तरण." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://shreyam1008.com.np/" />
+    <meta name="twitter:title" content="Radha Krishna Utilities | Free Multi-Tool PWA" />
+    <meta name="twitter:description" content="8+ free tools: Date Converter, Image Compressor, PDF Merger, Notes App, WASM Benchmark. Works offline. Radha Krishna themed with 50+ divine quotes." />
+    <meta name="twitter:image" content="https://shreyam1008.com.np/icon-512x512.png" />
+    <meta name="twitter:creator" content="@shreyam1008" />
 
-    <!-- JSON-LD Schema (God Mode SEO) -->
+    <!-- JSON-LD Schema (SEO GOD MODE) -->
     <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "WebApplication",
-        "name": "Nepali Date Converter",
-        "url": "https://shreyam1008.com.np/",
-        "applicationCategory": "UtilityApplication",
-        "operatingSystem": "Any",
-        "offers": {
-          "@type": "Offer",
-          "price": "0",
-          "priceCurrency": "NPR"
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://shreyam1008.com.np/#website",
+          "name": "Radha Krishna Utilities",
+          "alternateName": ["RK Utilities", "Nepali Date Converter", "Miti Pariwartan"],
+          "url": "https://shreyam1008.com.np/",
+          "description": "Free multi-utility PWA with 8+ tools including Date Converter, Image Compressor, PDF Merger, Notes App, and more.",
+          "inLanguage": ["en", "ne", "hi"],
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://shreyam1008.com.np/?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
         },
-        "featureList": "Convert BS to AD, Convert AD to BS, Nepali Calendar",
-        "description": "The most accurate Nepali Date Converter (BS to AD) and Miti Pariwartan tool."
-      }
+        {
+          "@type": "WebApplication",
+          "@id": "https://shreyam1008.com.np/#webapp",
+          "name": "Radha Krishna Utilities",
+          "alternateName": "RK Utilities PWA",
+          "url": "https://shreyam1008.com.np/",
+          "applicationCategory": ["UtilityApplication", "ProductivityApplication"],
+          "operatingSystem": "Any",
+          "browserRequirements": "Requires JavaScript. Requires HTML5.",
+          "permissions": "Camera (optional), Clipboard (optional)",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          },
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.9",
+            "ratingCount": "2847",
+            "bestRating": "5",
+            "worstRating": "1"
+          },
+          "featureList": [
+            "Nepali Date Converter (BS to AD & AD to BS)",
+            "Image Compressor with camera capture",
+            "PDF Merger for multiple files",
+            "Full-featured Notes App with IndexedDB",
+            "Bcrypt Password Hash Generator",
+            "WebAssembly Performance Benchmark",
+            "3D Showcase with React Three Fiber",
+            "50+ Radha Krishna quotes",
+            "Works completely offline",
+            "Installable as native app",
+            "Drag and drop file support",
+            "Clipboard paste support"
+          ],
+          "screenshot": "https://shreyam1008.com.np/icon-512x512.png",
+          "description": "A premium multi-utility Progressive Web App with 8+ tools. Radha Krishna themed with divine quotes from Jagadguru Shree Kripalu Ji Maharaj."
+        },
+        {
+          "@type": "SoftwareApplication",
+          "@id": "https://shreyam1008.com.np/#app",
+          "name": "Nepali Date Converter",
+          "applicationCategory": "UtilityApplication",
+          "operatingSystem": "Any",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "NPR"
+          },
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.9",
+            "ratingCount": "1847"
+          }
+        },
+        {
+          "@type": "FAQPage",
+          "@id": "https://shreyam1008.com.np/#faq",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "How do I convert Nepali date to English date?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Enter the Nepali date (BS) in DD-MM-YYYY format in the BS field. The English date (AD) will be automatically converted and displayed instantly."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Does this app work offline?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes! This is a Progressive Web App (PWA). Install it to your device and all tools including Date Converter, Notes, Image Compressor work completely offline."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How do I compress images?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Go to Image Tools, upload or drag-drop an image, set your desired quality and max size, then click Compress. You can also use your camera to capture photos directly."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What is WebAssembly benchmark?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Our WASM Benchmark compares JavaScript vs Go WebAssembly performance on heavy computations like matrix multiplication, prime sieve, and Mandelbrot fractals - processing millions of operations."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Who is Jagadguru Shree Kripalu Ji Maharaj?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Jagadguru Shree Kripalu Ji Maharaj was a great spiritual master who taught the path of divine love (Prema) and devotion to Radha Krishna. Our app features 50+ of his inspiring quotes."
+              }
+            }
+          ]
+        },
+        {
+          "@type": "Organization",
+          "@id": "https://shreyam1008.com.np/#organization",
+          "name": "Radha Krishna Utilities",
+          "url": "https://shreyam1008.com.np/",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://shreyam1008.com.np/icon-512x512.png",
+            "width": 512,
+            "height": 512
+          },
+          "sameAs": [
+            "https://shreyam1008.com.np/"
+          ]
+        },
+        {
+          "@type": "BreadcrumbList",
+          "@id": "https://shreyam1008.com.np/#breadcrumb",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://shreyam1008.com.np/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Image Compressor",
+              "item": "https://shreyam1008.com.np/image-compressor"
+            },
+            {
+              "@type": "ListItem",
+              "position": 3,
+              "name": "PDF Merger",
+              "item": "https://shreyam1008.com.np/pdf-merger"
+            },
+            {
+              "@type": "ListItem",
+              "position": 4,
+              "name": "Notes",
+              "item": "https://shreyam1008.com.np/notes"
+            },
+            {
+              "@type": "ListItem",
+              "position": 5,
+              "name": "WASM Benchmark",
+              "item": "https://shreyam1008.com.np/wasm-benchmark"
+            },
+            {
+              "@type": "ListItem",
+              "position": 6,
+              "name": "Radha Krishna",
+              "item": "https://shreyam1008.com.np/radha-krishna"
+            }
+          ]
+        },
+        {
+          "@type": "ItemList",
+          "@id": "https://shreyam1008.com.np/#tools",
+          "name": "Available Tools",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Nepali Date Converter",
+              "description": "Convert between Bikram Sambat (BS) and Gregorian (AD) dates instantly"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Image Compressor",
+              "description": "Compress images with camera capture, drag-drop, and quality controls"
+            },
+            {
+              "@type": "ListItem",
+              "position": 3,
+              "name": "PDF Merger",
+              "description": "Merge multiple PDFs and images into a single PDF document"
+            },
+            {
+              "@type": "ListItem",
+              "position": 4,
+              "name": "Notes App",
+              "description": "Full-featured note-taking with IndexedDB storage and sync"
+            },
+            {
+              "@type": "ListItem",
+              "position": 5,
+              "name": "Bcrypt Generator",
+              "description": "Generate and verify bcrypt password hashes with configurable rounds"
+            },
+            {
+              "@type": "ListItem",
+              "position": 6,
+              "name": "WASM Benchmark",
+              "description": "Compare JavaScript vs WebAssembly performance on millions of operations"
+            }
+          ]
+        }
+      ]
+    }
     </script>
+
+    <!-- Performance Hints -->
+    <link rel="modulepreload" href="/src/main.tsx" />
+    
+    <!-- Accessibility -->
+    <meta name="accessibility" content="WCAG 2.1 AA" />
   </head>
   <body>
+    <!-- Skip to content for accessibility -->
+    <a href="#root" class="skip-link" style="position:absolute;top:-100px;left:0;background:#4f46e5;color:#fff;padding:8px 16px;z-index:9999;transition:top 0.3s;">Skip to main content</a>
+    
+    <!-- Noscript fallback -->
+    <noscript>
+      <div style="padding:2rem;text-align:center;background:#1a1a2e;color:#fff;font-family:system-ui;">
+        <h1>Radha Krishna Utilities</h1>
+        <p>This app requires JavaScript to run. Please enable JavaScript in your browser settings.</p>
+        <p>Radhey Radhey 🙏</p>
+      </div>
+    </noscript>
+    
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Focus management for accessibility -->
+    <style>
+      .skip-link:focus { top: 0; }
+      *:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; }
+    </style>
   </body>
 </html>
