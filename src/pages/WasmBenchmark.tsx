@@ -52,10 +52,55 @@ export default function WasmBenchmark() {
   const [progress, setProgress] = useState({ js: 0, go: 0 });
   const [currentTest, setCurrentTest] = useState('');
   const [wins, setWins] = useState({ js: 0, go: 0 });
+  const [isParallel, setIsParallel] = useState(false);
 
-  // Stored times for comparison after both complete
-  const [jsTimes, setJsTimes] = useState<number[]>([]);
-  const [goTimes, setGoTimes] = useState<number[]>([]);
+  // Web Worker for Parallel Mode
+  const runParallelBenchmark = async (suites: any[]) => {
+    const threadCount = navigator.hardwareConcurrency || 4;
+    const workers: Worker[] = [];
+    
+    // Initialize workers
+    const workerPromises = Array.from({ length: threadCount }).map(() => {
+      return new Promise<Worker>((resolve) => {
+        const worker = new Worker(new URL('../wasm/worker.ts', import.meta.url), { type: 'module' });
+        worker.onmessage = (e) => {
+          if (e.data.type === 'READY') resolve(worker);
+        };
+        workers.push(worker);
+      });
+    });
+
+    const activeWorkers = await Promise.all(workerPromises);
+    
+    // Distribute tasks
+    const taskPromises = suites.map((suite, i) => {
+      const workerIndex = i % threadCount;
+      const worker = activeWorkers[workerIndex];
+      
+      return new Promise<number>((resolve) => {
+        const messageId = i;
+        const handler = (e: MessageEvent) => {
+          if (e.data.type === 'RESULT' && e.data.id === messageId) {
+            worker.removeEventListener('message', handler);
+            resolve(e.data.time);
+          }
+        };
+        worker.addEventListener('message', handler);
+        worker.postMessage({
+          type: 'RUN_BENCHMARK',
+          fnName: suite.impl.go,
+          id: messageId
+        });
+      });
+    });
+
+    const times = await Promise.all(taskPromises);
+    
+    // Cleanup
+    workers.forEach(w => w.terminate());
+    
+    return times;
+  };
 
   const runSequentialBenchmark = async () => {
     if (!isGoLoaded) return;
@@ -63,8 +108,6 @@ export default function WasmBenchmark() {
     setResults([]);
     setProgress({ js: 0, go: 0 });
     setWins({ js: 0, go: 0 });
-    setJsTimes([]);
-    setGoTimes([]);
     
     // Create 50 test suites from the core benchmarks
     const coreTests = Object.keys(benchmarkMap);
@@ -96,28 +139,32 @@ export default function WasmBenchmark() {
       jsTimesArray.push(jsTime);
       setProgress(p => ({ ...p, js: ((i + 1) / suites.length) * 100 }));
     }
-    setJsTimes(jsTimesArray);
 
     // ========== PHASE 2: Go WASM runs all 50 ==========
     setPhase('go');
-    const goTimesArray: number[] = [];
+    let goTimesArray: number[] = [];
     
-    for (let i = 0; i < suites.length; i++) {
-      const suite = suites[i];
-      setCurrentTest(`Go: ${suite.name}`);
-      await new Promise(r => setTimeout(r, 5)); // Let UI update
-      
-      const goFnName = suite.impl.go;
-      const t0 = performance.now();
-      if ((window as any)[goFnName]) {
-        (window as any)[goFnName]();
+    if (isParallel) {
+      setCurrentTest(`Go: Parallel Mode (${navigator.hardwareConcurrency || 4} threads)`);
+      goTimesArray = await runParallelBenchmark(suites);
+      setProgress(p => ({ ...p, go: 100 }));
+    } else {
+      for (let i = 0; i < suites.length; i++) {
+        const suite = suites[i];
+        setCurrentTest(`Go: ${suite.name}`);
+        await new Promise(r => setTimeout(r, 5)); // Let UI update
+        
+        const goFnName = suite.impl.go;
+        const t0 = performance.now();
+        if ((window as any)[goFnName]) {
+          (window as any)[goFnName]();
+        }
+        const goTime = performance.now() - t0;
+        
+        goTimesArray.push(goTime);
+        setProgress(p => ({ ...p, go: ((i + 1) / suites.length) * 100 }));
       }
-      const goTime = performance.now() - t0;
-      
-      goTimesArray.push(goTime);
-      setProgress(p => ({ ...p, go: ((i + 1) / suites.length) * 100 }));
     }
-    setGoTimes(goTimesArray);
 
     // ========== PHASE 3: Calculate winners and build results ==========
     setPhase('done');
@@ -316,9 +363,29 @@ export default function WasmBenchmark() {
             </div>
           )}
 
-          <Button fullWidth onClick={runSequentialBenchmark} disabled={isRunning || !isGoLoaded} variant="primary">
-            {isRunning ? 'Racing in Progress...' : '🏁 START RACE'}
-          </Button>
+          <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+            <Button 
+              fullWidth 
+              onClick={() => { setIsParallel(false); runSequentialBenchmark(); }} 
+              disabled={isRunning || !isGoLoaded} 
+              variant={!isParallel ? "primary" : "secondary"}
+            >
+              🏁 SEQUENTIAL RACE
+            </Button>
+            <Button 
+              fullWidth 
+              onClick={() => { setIsParallel(true); runSequentialBenchmark(); }} 
+              disabled={isRunning || !isGoLoaded} 
+              variant={isParallel ? "primary" : "secondary"}
+              style={{ border: isParallel ? '2px solid #00add8' : 'none' }}
+            >
+              🔥 BEAST PARALLEL
+            </Button>
+          </div>
+          
+          <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>
+            {isParallel ? "Parallel: Multiple Go instances across CPU cores" : "Sequential: Single-threaded comparison"}
+          </div>
         </div>
       </div>
 
