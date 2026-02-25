@@ -15,8 +15,8 @@ import type { D1Database } from '@cloudflare/workers-types';
 // ─── Types ───────────────────────────────────────────────────
 export interface Env {
   DB: D1Database;
+  AI_API_KEY: string;
   // Future bindings:
-  // AI_API_KEY: string;
   // BUCKET: R2Bucket;
   // KV: KVNamespace;
 }
@@ -130,6 +130,44 @@ async function handleDeleteNote(db: D1Database, id: string): Promise<Response> {
   return json({ deleted: id });
 }
 
+// ─── AI Handlers ─────────────────────────────────────────────
+async function handleAI(env: Env, req: Request): Promise<Response> {
+  if (!env.AI_API_KEY) {
+    return error('AI API key is missing from environment secrets', 500);
+  }
+
+  const body = await req.json() as { messages?: any[], model?: string };
+  if (!body.messages || !Array.isArray(body.messages)) {
+    return error('Request must contain a valid "messages" array', 400);
+  }
+
+  // Use NVIDIA's generic completion endpoint (Llama-3-70B by default)
+  const model = body.model || 'meta/llama3-70b-instruct';
+
+  const response = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${env.AI_API_KEY}`,
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: model,
+      messages: body.messages,
+      temperature: 0.7,
+      max_tokens: 1024,
+    }),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    return error(`NVIDIA API Error: ${response.status} - ${errText}`, 502);
+  }
+
+  const data = await response.json();
+  return json(data);
+}
+
 // ─── Router ──────────────────────────────────────────────────
 type RouteHandler = (env: Env, req: Request, params: Record<string, string>) => Promise<Response>;
 
@@ -152,6 +190,7 @@ const routes: Route[] = [
         'GET  /api/notes',
         'POST /api/notes/sync',
         'DELETE /api/notes/:id',
+        'POST /api/ai',
       ],
     }),
   },
@@ -173,8 +212,14 @@ const routes: Route[] = [
     handler: async (env, _req, params) => handleDeleteNote(env.DB, params.id),
   },
 
+  // AI
+  {
+    method: 'POST',
+    pattern: /^\/api\/ai$/,
+    handler: async (env, req) => handleAI(env, req),
+  },
+
   // Future routes:
-  // { method: 'POST', pattern: /^\/api\/ai\/.*/, handler: handleAI },
   // { method: 'GET',  pattern: /^\/api\/bookmarks$/, handler: handleBookmarks },
 ];
 
