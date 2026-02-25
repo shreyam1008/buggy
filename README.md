@@ -1,146 +1,77 @@
 # ⚡ Buggy — Offline Utility PWA
 
-A blazing-fast, offline-first utility PWA built with the **latest bleeding-edge stack**:
+A blazing-fast, offline-first utility PWA built with a next-gen, zero-bloat architecture.
 
 | Tech | Version |
 |------|---------|
-| **Vite** | 8.0.0-beta.15 (Rolldown) |
+| **Vite** | 8.0.0-beta.15 |
 | **TypeScript** | 6.0.0-beta |
-| **React** | 19.1.1 |
+| **React** | 19.2 |
 | **Tailwind CSS** | 4.2.1 |
-| **Linter** | oxlint (via npx) |
+| **Database** | SQLite WASM (OPFS) + Cloudflare D1 |
+| **Toolchain** | Bun + oxlint |
 
-## 🛠️ Features
+## 📁 Repository Reorganization
 
+The project is split cleanly for Cloudflare hosting:
+
+```
+frontend/        -> Cloudflare Pages
+worker/          -> Cloudflare Workers
+```
+
+---
+
+## 🖥️ 1. Frontend (`/frontend`)
+
+The frontend is completely powered by **Bun**. It uses `sqlocal` to run a true SQLite WebAssembly database in the browser, persisting to the Origin Private File System (OPFS). This allows our offline app to use the exact same SQL architecture as our Cloudflare D1 backend.
+
+### Features
 | Route | Tool | Description |
 |-------|------|-------------|
-| `/` | **Date Converter** | Nepali (BS) ↔ English (AD) with auto-format, debounced conversion, month reference |
-| `/calendar` | **Nepali Calendar** | Monthly grid with BS/AD overlay, today highlight, Saturday markers |
-| `/image` | **Image Compressor** | Drop, paste, or camera capture · JPEG/PNG/WebP · Quality slider · Stats |
-| `/pdf` | **PDF Merger** | Merge PDFs + images into one document · Drag-drop · Reorder |
-| `/notes` | **Notes** | IndexedDB local storage · Cloud sync via Cloudflare D1 · Tags · Search |
-| `/bcrypt` | **Bcrypt Generator** | Generate + verify bcrypt hashes · Configurable rounds |
+| `/` | **Date Converter** | Nepali (BS) ↔ English (AD) |
+| `/calendar` | **Nepali Calendar** | Monthly grid with BS/AD overlay |
+| `/image` | **Image Compressor** | Drop, paste, camera capture · Format conversion |
+| `/pdf` | **PDF Merger** | Merge PDFs + Images · Reorder |
+| `/notes` | **Notes** | **OPFS SQLite** storage · Sync to D1 |
+| `/bcrypt` | **Bcrypt Generator** | Hasher + Verifier |
 
-## 🚀 Getting Started
+### Getting Started
 
 ```bash
-# Install dependencies
-npm install
+cd frontend
 
-# Start dev server
-npm run dev       # → http://localhost:5173
+# Install dependencies insanely fast
+bun install
 
-# Production build
-npm run build     # TypeScript check + Vite build
+# Start development server
+bun run dev       # → http://localhost:5173
 
-# Preview production build
-npm run preview
-
-# Lint with oxlint
-npm run lint
+# Production build, typecheck, and lint (oxlint)
+bun run build
+bun run lint
 ```
 
-## ☁️ Cloudflare Worker — `buggy-api`
+### PWA & OPFS Notes
+The frontend serves `_headers` containing `Cross-Origin-Embedder-Policy: require-corp` and `Cross-Origin-Opener-Policy: same-origin`. This is required to isolate the browser context and enable `SharedArrayBuffer`, allowing SQLite to perform synchronous, maximum-speed IO on the OPFS.
 
-A production-grade TypeScript Cloudflare Worker for Notes D1 sync. Designed for extensibility — future endpoints for AI, bookmarks, etc.
+---
 
-### Why TypeScript?
+## ☁️ 2. Backends & Sync (`/worker`)
 
-Cloudflare Workers run on **V8** natively — TypeScript compiles 1:1 to JS with zero overhead. Go would require WASM compilation, adding ~2MB cold start penalty and limited D1 binding support. **TypeScript is the best choice** for CF Workers.
+Our worker (`buggy-api`) is an ultra-minimalism masterpiece. It is entirely **zero-dependency** — there is no `package.json`, no `node_modules`, and no bloat. It's just massive native V8 processing power.
 
-### Architecture
+### Why Zero-Dependency & TypeScript?
+Cloudflare Workers execute on V8 Isolates. Because TypeScript compiles down to raw JavaScript with no overhead, we don't need heavyweight tools. Go or Rust would require WASM compilation, which introduces a 1–2MB cold start penalty. Pure TS is the fastest.
 
-```
-worker/
-├── wrangler.toml       # D1 binding + config
-└── src/
-    └── index.ts        # Router → Handler → D1
-```
-
-### Endpoints
-
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/` | Health check + endpoint list |
-| `GET` | `/api/notes` | Fetch all notes from D1 |
-| `POST` | `/api/notes/sync` | Merge local notes with D1 (last-write-wins) |
-| `DELETE` | `/api/notes/:id` | Delete a note from D1 |
-
-### Deploy
+### Deploying the Worker
 
 ```bash
 cd worker
 npx wrangler deploy
 ```
 
-The worker requires [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/) and a Cloudflare account. The D1 database `buggythegret` is pre-configured in `wrangler.toml`.
-
-### Adding Features
-
-The worker uses a clean **route table** pattern. Add new endpoints by:
-
-1. Create a handler function
-2. Add a route entry to the `routes` array
-3. Add any new D1 tables to `runMigrations()`
-
-```ts
-// Example: future AI endpoint
-{ method: 'POST', pattern: /^\/api\/ai\/chat$/, handler: handleAIChat },
-```
-
-Supports future bindings: `R2Bucket`, `KVNamespace`, `AI_API_KEY` (via secrets).
-
-## 📁 Project Structure
-
-```
-src/
-├── App.tsx                    # Router (wouter) + lazy loading
-├── main.tsx                   # Entry point
-├── index.css                  # Tailwind v4 entry
-├── components/
-│   ├── Sidebar.tsx            # Navigation sidebar
-│   └── Calendar.tsx           # Nepali calendar grid
-├── pages/
-│   ├── DateConverter.tsx      # BS ↔ AD converter
-│   ├── Calendar.tsx           # Re-exports Calendar component
-│   ├── ImageCompressor.tsx    # Image compression + format conversion
-│   ├── PdfMerger.tsx          # PDF + image merge
-│   ├── Notes.tsx              # Notes with D1 sync
-│   └── BcryptGenerator.tsx    # Hash generator + verifier
-├── data/
-│   └── nepaliCalendar.ts      # BS year data (1990-2090)
-└── utils/
-    └── dateConverter.ts       # BS ↔ AD conversion (pure functions)
-
-worker/
-├── wrangler.toml              # Cloudflare Worker config
-└── src/
-    └── index.ts               # Worker API
-```
-
-## 📦 Build Output
-
-```
-CSS:              4.6 KB (gzip)
-Core JS + React:  64 KB (gzip)
-Calendar:        1.3 KB (gzip)
-DateConverter:   1.7 KB (gzip)
-Notes:           3.5 KB (gzip)
-Bcrypt:         10.3 KB (gzip)
-ImageCompressor: 21.8 KB (gzip)
-PDF (pdf-lib):  175.6 KB (gzip)
-PWA entries:    18 precache
-Build time:     ~400ms
-```
-
-## 🔌 PWA
-
-- Full offline support via Workbox service worker
-- Installable on desktop + mobile
-- Auto-update on new deployments
-- Google Fonts cached for 1 year
-- All assets precached on install
+The worker connects to Cloudflare D1 (`buggythegret`). When the frontend `/notes` page hits exactly `POST /api/notes/sync`, the worker batches a massive `.batch()` SQLite update mapping the frontend OPFS SQLite directly to the Cloudflare D1 SQLite. Same queries, same logic. 
 
 ## 📜 License
-
 MIT

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { openDB, type IDBPDatabase } from 'idb';
+import { SQLocal } from 'sqlocal';
 
 interface Note {
   id: string;
@@ -11,34 +11,51 @@ interface Note {
   synced: boolean;
 }
 
-const DB_NAME = 'notes-db';
-const STORE_NAME = 'notes';
 const SYNC_URL_KEY = 'notes-sync-url';
+const sql = new SQLocal('notes-db.sqlite3');
 
-async function getDB(): Promise<IDBPDatabase> {
-  return openDB(DB_NAME, 1, {
-    upgrade(db) {
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        const store = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
-        store.createIndex('updatedAt', 'updatedAt');
-      }
-    },
-  });
+async function initDB() {
+  await sql.sql`
+    CREATE TABLE IF NOT EXISTS notes (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      content TEXT NOT NULL,
+      tags TEXT NOT NULL,
+      createdAt INTEGER NOT NULL,
+      updatedAt INTEGER NOT NULL,
+      synced INTEGER NOT NULL DEFAULT 0
+    )
+  `;
 }
 
 async function loadAllNotes(): Promise<Note[]> {
-  const db = await getDB();
-  return ((await db.getAll(STORE_NAME)) as Note[]).sort((a, b) => b.updatedAt - a.updatedAt);
+  const result = await sql.sql`SELECT * FROM notes ORDER BY updatedAt DESC`;
+  // result is an array of plain objects matching the table
+  return result.map((r: any) => ({
+    ...r,
+    tags: JSON.parse(r.tags),
+    synced: Boolean(r.synced),
+  }));
 }
 
 async function saveNote(note: Note): Promise<void> {
-  const db = await getDB();
-  await db.put(STORE_NAME, note);
+  const tagsStr = JSON.stringify(note.tags);
+  const syncedInt = note.synced ? 1 : 0;
+  
+  await sql.sql`
+    INSERT INTO notes (id, title, content, tags, createdAt, updatedAt, synced)
+    VALUES (${note.id}, ${note.title}, ${note.content}, ${tagsStr}, ${note.createdAt}, ${note.updatedAt}, ${syncedInt})
+    ON CONFLICT(id) DO UPDATE SET
+      title = excluded.title,
+      content = excluded.content,
+      tags = excluded.tags,
+      updatedAt = excluded.updatedAt,
+      synced = excluded.synced
+  `;
 }
 
 async function deleteNoteFromDB(id: string): Promise<void> {
-  const db = await getDB();
-  await db.delete(STORE_NAME, id);
+  await sql.sql`DELETE FROM notes WHERE id = ${id}`;
 }
 
 function fmtDate(ts: number) {
@@ -60,8 +77,13 @@ export default function Notes() {
     localStorage.getItem('notes-last-synced')
   );
 
-  const loadNotes = useCallback(async () => { setNotes(await loadAllNotes()); }, []);
-  useEffect(() => { loadNotes(); }, [loadNotes]);
+  const loadNotes = useCallback(async () => {
+    setNotes(await loadAllNotes());
+  }, []);
+
+  useEffect(() => {
+    initDB().then(loadNotes);
+  }, [loadNotes]);
 
   const createNote = () => {
     const note: Note = {
@@ -106,15 +128,34 @@ export default function Notes() {
     }
     setSyncing(true);
     try {
+      // 1. Get local notes
       const local = await loadAllNotes();
+      
+      // 2. Sync with Worker (D1)
       const res = await fetch(`${baseUrl}/api/notes/sync`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notes: local }),
       });
       if (!res.ok) throw new Error(`Sync failed: ${res.status}`);
+      
+      // 3. Receive merged D1 state
       const { notes: merged } = await res.json() as { notes: Note[] };
-      const db = await getDB();
-      for (const note of merged) await db.put(STORE_NAME, { ...note, synced: true });
+      
+      // 4. Overwrite local SQLite with master D1 state via batch
+      // (sqlocal transaction method)
+      await sql.transaction(async (tx) => {
+        for (const note of merged) {
+          const tagsStr = JSON.stringify(note.tags);
+          tx.sql`
+            INSERT INTO notes (id, title, content, tags, createdAt, updatedAt, synced)
+            VALUES (${note.id}, ${note.title}, ${note.content}, ${tagsStr}, ${note.createdAt}, ${note.updatedAt}, 1)
+            ON CONFLICT(id) DO UPDATE SET
+              title = excluded.title, content = excluded.content, tags = excluded.tags,
+              updatedAt = excluded.updatedAt, synced = 1
+          `;
+        }
+      });
+
       await loadNotes();
       const now = new Date().toLocaleString();
       localStorage.setItem('notes-last-synced', now);
@@ -136,7 +177,7 @@ export default function Notes() {
       <div className="flex items-start justify-between flex-wrap gap-3 mb-4">
         <div>
           <h1 className="text-2xl font-bold">Notes</h1>
-          <p className="text-sm text-slate-400">Local storage · Sync to cloud</p>
+          <p className="text-sm text-slate-400">Local SQLite (OPFS) · Sync to Cloudflare D1</p>
         </div>
         <div className="flex gap-2">
           <button onClick={syncToCloud} disabled={syncing}
@@ -208,7 +249,7 @@ export default function Notes() {
         </>
       )}
 
-      <p className="text-center text-xs text-slate-600 mt-6">{notes.length} notes stored locally</p>
+      <p className="text-center text-xs text-slate-600 mt-6">{notes.length} notes stored locally via SQLite</p>
     </div>
   );
 }

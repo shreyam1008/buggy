@@ -7,6 +7,23 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
     react(),
+    {
+      name: 'configure-response-headers',
+      configureServer: (server) => {
+        server.middlewares.use((_req, res, next) => {
+          res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+          res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+          next();
+        });
+      },
+      configurePreviewServer: (server) => {
+        server.middlewares.use((_req, res, next) => {
+          res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+          res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+          next();
+        });
+      },
+    },
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['icon-192x192.png', 'icon-512x512.png'],
@@ -31,7 +48,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,woff2}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,woff2,wasm}'],
         navigateFallback: 'index.html',
         runtimeCaching: [
           {
@@ -47,4 +64,7 @@ export default defineConfig({
       },
     }),
   ],
+  optimizeDeps: {
+    exclude: ['sqlocal'],
+  },
 });

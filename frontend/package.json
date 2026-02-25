@@ -5,17 +5,17 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
+    "build": "bunx tsc -b && vite build",
+    "lint": "bunx oxlint@latest src/",
     "preview": "vite preview"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "browser-image-compression": "^2.0.2",
-    "idb": "^8.0.3",
     "pdf-lib": "^1.17.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "sqlocal": "^0.17.0",
     "wouter": "^3.9.0"
   },
   "devDependencies": {
@@ -26,7 +26,7 @@
     "@vitejs/plugin-react": "^5.1.1",
     "tailwindcss": "^4.2.1",
     "typescript": "^6.0.0-beta",
-    "vite": "^8.0.0-beta.13",
+    "vite": "^8.0.0-beta.15",
     "vite-plugin-pwa": "^1.2.0"
   },
   "overrides": {
