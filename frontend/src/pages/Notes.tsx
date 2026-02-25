@@ -11,7 +11,6 @@ interface Note {
   synced: boolean;
 }
 
-const SYNC_URL_KEY = 'notes-sync-url';
 const sql = new SQLocal('notes-db.sqlite3');
 
 async function initDB() {
@@ -119,30 +118,25 @@ export default function Notes() {
   };
 
   const syncToCloud = async () => {
-    let baseUrl = localStorage.getItem(SYNC_URL_KEY);
+    const baseUrl = (import.meta.env.VITE_API_URL as string)?.replace(/\/$/, '');
+    
     if (!baseUrl) {
-      const url = prompt('Enter your Cloudflare Worker URL for D1 sync:\n(e.g. https://buggy-api.yourname.workers.dev)');
-      if (!url) return;
-      baseUrl = url.replace(/\/$/, '');
-      localStorage.setItem(SYNC_URL_KEY, baseUrl);
+      alert('VITE_API_URL is not configured. Please add it to your .env file or Cloudflare Pages environment variables.');
+      return;
     }
+
     setSyncing(true);
     try {
-      // 1. Get local notes
       const local = await loadAllNotes();
       
-      // 2. Sync with Worker (D1)
       const res = await fetch(`${baseUrl}/api/notes/sync`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notes: local }),
       });
-      if (!res.ok) throw new Error(`Sync failed: ${res.status}`);
+      if (!res.ok) throw new Error(`Server returned ${res.status}`);
       
-      // 3. Receive merged D1 state
       const { notes: merged } = await res.json() as { notes: Note[] };
       
-      // 4. Overwrite local SQLite with master D1 state via batch
-      // (sqlocal transaction method)
       await sql.transaction(async (tx) => {
         for (const note of merged) {
           const tagsStr = JSON.stringify(note.tags);
@@ -162,8 +156,10 @@ export default function Notes() {
       setLastSynced(now);
     } catch (e) {
       console.error('Sync error:', e);
-      alert(`Sync failed: ${(e as Error).message}`);
-    } finally { setSyncing(false); }
+      alert(`Sync Failed: ${(e as Error).message}\nMake sure your Cloudflare Worker is deployed and running.`);
+    } finally { 
+      setSyncing(false); 
+    }
   };
 
   const filtered = notes.filter((n) =>

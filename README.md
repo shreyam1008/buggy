@@ -11,33 +11,27 @@ A blazing-fast, offline-first utility PWA built with a next-gen, zero-bloat arch
 | **Database** | SQLite WASM (OPFS) + Cloudflare D1 |
 | **Toolchain** | Bun + oxlint |
 
-## 📁 Repository Reorganization
+---
 
-The project is split cleanly for Cloudflare hosting:
+## 📁 Repository Structure
+
+The project is split cleanly for independent Cloudflare hosting.
 
 ```
-frontend/        -> Cloudflare Pages
-worker/          -> Cloudflare Workers
+frontend/        -> Cloudflare Pages (shreyam1008.com.np)
+worker/          -> Cloudflare Workers (api.shreyam1008.com.np)
 ```
+
+- **`frontend/`**: Uses `bun` as the package manager and test runner. Contains all React UI logic. Use `oxlint` for lightning-fast linting.
+- **`worker/`**: **100% Zero Dependency**. No `package.json`, no `node_modules`. Pure TypeScript compiled on-the-fly by Cloudflare's V8 isolates for zero cold-starts.
 
 ---
 
-## 🖥️ 1. Frontend (`/frontend`)
+## 🖥️ 1. Frontend (`shreyam1008.com.np`)
 
-The frontend is completely powered by **Bun**. It uses `sqlocal` to run a true SQLite WebAssembly database in the browser, persisting to the Origin Private File System (OPFS). This allows our offline app to use the exact same SQL architecture as our Cloudflare D1 backend.
+Powered entirely by **Bun**. We run **SQLite WebAssembly** directly in the browser via `sqlocal` and persist it to the **OPFS (Origin Private File System)**. This allows the offline frontend to run the *exact same SQL queries* as the backend D1 database.
 
-### Features
-| Route | Tool | Description |
-|-------|------|-------------|
-| `/` | **Date Converter** | Nepali (BS) ↔ English (AD) |
-| `/calendar` | **Nepali Calendar** | Monthly grid with BS/AD overlay |
-| `/image` | **Image Compressor** | Drop, paste, camera capture · Format conversion |
-| `/pdf` | **PDF Merger** | Merge PDFs + Images · Reorder |
-| `/notes` | **Notes** | **OPFS SQLite** storage · Sync to D1 |
-| `/bcrypt` | **Bcrypt Generator** | Hasher + Verifier |
-
-### Getting Started
-
+### Getting Started Locally
 ```bash
 cd frontend
 
@@ -47,31 +41,65 @@ bun install
 # Start development server
 bun run dev       # → http://localhost:5173
 
-# Production build, typecheck, and lint (oxlint)
-bun run build
+# Lint with oxlint (fastest linter)
 bun run lint
 ```
 
-### PWA & OPFS Notes
-The frontend serves `_headers` containing `Cross-Origin-Embedder-Policy: require-corp` and `Cross-Origin-Opener-Policy: same-origin`. This is required to isolate the browser context and enable `SharedArrayBuffer`, allowing SQLite to perform synchronous, maximum-speed IO on the OPFS.
+### Cloudflare Pages Deployment
+To deploy to **Cloudflare Pages** and map to your custom domain (`shreyam1008.com.np`):
+
+1. Go to **Cloudflare Dashboard → Workers & Pages → Create Application → Pages → Connect to Git**.
+2. Select your repository.
+3. Configure the build settings:
+   - **Framework Preset**: `None`
+   - **Build command**: `bun run build`
+   - **Build output directory**: `frontend/dist`
+   - **Root directory (Advanced)**: `/frontend`
+4. Once deployed, go to the project's **Custom Domains** tab and enter `shreyam1008.com.np`.
+
+*(Note: The `public/_headers` file handles the strict `COOP` and `COEP` headers automatically required for SQLite `SharedArrayBuffer` speed in production.)*
 
 ---
 
-## ☁️ 2. Backends & Sync (`/worker`)
+## ☁️ 2. Backends & API (`api.shreyam1008.com.np`)
 
-Our worker (`buggy-api`) is an ultra-minimalism masterpiece. It is entirely **zero-dependency** — there is no `package.json`, no `node_modules`, and no bloat. It's just massive native V8 processing power.
+Our worker (`buggy-api`) is an ultra-minimalism masterpiece. It synchronizes the frontend's local SQLite database seamlessly with your Cloudflare D1 database.
 
-### Why Zero-Dependency & TypeScript?
-Cloudflare Workers execute on V8 Isolates. Because TypeScript compiles down to raw JavaScript with no overhead, we don't need heavyweight tools. Go or Rust would require WASM compilation, which introduces a 1–2MB cold start penalty. Pure TS is the fastest.
+### ❓ Is `wrangler.toml` safe to push to GitHub?
+**Yes.** 
+The `wrangler.toml` file contains Configuration details (like your `database_id`), which are safe and intended to be committed to version control. They are public routing IDs within Cloudflare's network, not passwords. 
 
-### Deploying the Worker
+**However, NEVER put API Keys (like OpenAI keys) in `wrangler.toml`.**
+You should put API keys in `.env` files locally or inject them using `wrangler secret`.
 
+### Setting up Secrets (API Keys)
+To add a secret to your worker (e.g., an AI API key for the future):
 ```bash
 cd worker
-npx wrangler deploy
+npx wrangler secret put AI_API_KEY
+```
+Cloudflare will prompt you to securely enter the value. Your code can then read it via `env.AI_API_KEY`. It will never touch git.
+
+### Cloudflare Workers Deployment
+To deploy the worker and map it to your custom domain (`api.shreyam1008.com.np`):
+
+1. Deploy the worker from your terminal:
+   ```bash
+   cd worker
+   npx wrangler deploy
+   ```
+2. Go to **Cloudflare Dashboard → Workers & Pages → buggy-api → Triggers -> Custom Domains**.
+3. Click "Add Custom Domain" and type `api.shreyam1008.com.np`.
+4. Update the sync URL in your frontend (it asks you when you click the 'Sync' button in the Notes app) to `https://api.shreyam1008.com.np`.
+
+### Testing Worker Locally
+You can test the worker using Cloudflare's local simulator:
+```bash
+cd worker
+npx wrangler dev
 ```
 
-The worker connects to Cloudflare D1 (`buggythegret`). When the frontend `/notes` page hits exactly `POST /api/notes/sync`, the worker batches a massive `.batch()` SQLite update mapping the frontend OPFS SQLite directly to the Cloudflare D1 SQLite. Same queries, same logic. 
+---
 
 ## 📜 License
 MIT
