@@ -87,7 +87,7 @@ export default function Sidebar() {
           <div className="pt-6 pb-2 px-3">
             <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">My Apps</h3>
             <div className="space-y-0.5">
-              <a href="https://github.com/shreyam1008/dbterm" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors cursor-pointer">
+              <a href="https://shreyam1008.github.io/dbterm/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors cursor-pointer">
                 <span className="text-base w-6 text-center opacity-70">🖥️</span>
                 <span>dbterm</span>
               </a>
