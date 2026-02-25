@@ -13,7 +13,6 @@ const CHAT_MODELS = [
 
 const IMG_MODELS = [
   { id: 'stabilityai/stable-diffusion-xl', name: 'Stable Diffusion XL' },
-  { id: 'stabilityai/sdxl-turbo', name: 'SDXL Turbo' },
 ];
 
 type Message = { role: 'user' | 'assistant'; content: string };

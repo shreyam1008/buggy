@@ -177,12 +177,12 @@ export default function Notes() {
         </div>
         <div className="flex gap-2">
           <button onClick={syncToCloud} disabled={syncing}
-            className="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-300 hover:bg-slate-700 disabled:opacity-50 transition cursor-pointer">
-            {syncing ? '⏳' : '☁️'} Sync
+            className="px-4 py-2 bg-transparent border-2 border-slate-700 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white disabled:opacity-50 transition-colors cursor-pointer flex items-center gap-2">
+            {syncing ? '⏳ Syncing' : '☁️ Sync'}
           </button>
           <button onClick={createNote}
-            className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition cursor-pointer">
-            ＋ New
+            className="px-4 py-2 bg-slate-200 hover:bg-white text-slate-900 border-2 border-slate-200 rounded-md text-sm font-bold transition-colors cursor-pointer flex items-center gap-2">
+            ＋ New Note
           </button>
         </div>
       </div>
@@ -190,21 +190,21 @@ export default function Notes() {
       {lastSynced && <p className="text-xs text-slate-600 mb-3">Last synced: {lastSynced}</p>}
 
       <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
-        placeholder="🔍 Search notes…"
-        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:ring-2 focus:ring-red-600 mb-4 transition" />
+        placeholder="Search notes…"
+        className="w-full bg-transparent border-2 border-slate-700 rounded-md px-4 py-3 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-slate-400 mb-6 transition-colors" />
 
       {editing && selected ? (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
-          <h3 className="font-semibold text-sm">{selected.createdAt === selected.updatedAt ? 'New Note' : 'Edit Note'}</h3>
-          <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title…" autoFocus
-            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:ring-2 focus:ring-red-600 transition" />
-          <textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="Write your note…" rows={8}
-            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:ring-2 focus:ring-red-600 resize-y transition" />
+        <div className="bg-transparent border-2 border-slate-700 rounded-md p-5 sm:p-6 space-y-4 mb-6">
+          <h3 className="font-bold text-lg text-slate-200 border-b border-slate-800 pb-2">{selected.createdAt === selected.updatedAt ? 'New Note' : 'Edit Note'}</h3>
+          <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" autoFocus
+            className="w-full bg-transparent border-2 border-slate-700 rounded-md px-3 py-2 text-base text-slate-100 placeholder-slate-600 outline-none focus:border-slate-400 transition-colors font-semibold" />
+          <textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="Write your note here…" rows={10}
+            className="w-full bg-transparent border-2 border-slate-700 rounded-md px-3 py-3 text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-slate-400 resize-y transition-colors font-mono" />
           <input type="text" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="Tags (comma separated)"
-            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:ring-2 focus:ring-red-600 transition" />
-          <div className="flex gap-2">
-            <button onClick={handleSave} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition cursor-pointer">💾 Save</button>
-            <button onClick={cancelEdit} className="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-300 hover:bg-slate-700 transition cursor-pointer">Cancel</button>
+            className="w-full bg-transparent border-2 border-slate-700 rounded-md px-3 py-2 text-sm text-slate-300 placeholder-slate-600 outline-none focus:border-slate-400 transition-colors" />
+          <div className="flex flex-wrap gap-3 pt-2">
+            <button onClick={handleSave} className="px-5 py-2.5 bg-slate-200 hover:bg-white text-slate-900 border-2 border-slate-200 rounded-md text-sm font-bold transition-colors cursor-pointer">Save Note</button>
+            <button onClick={cancelEdit} className="px-5 py-2.5 bg-transparent border-2 border-slate-700 rounded-md text-sm font-semibold text-slate-300 hover:bg-slate-800 transition-colors cursor-pointer">Cancel</button>
           </div>
         </div>
       ) : (
@@ -217,27 +217,33 @@ export default function Notes() {
               )}
             </div>
           ) : (
-            <div className="grid sm:grid-cols-2 gap-3">
+            <div className="grid sm:grid-cols-2 gap-4">
               {filtered.map((note) => (
                 <div key={note.id} onClick={() => startEdit(note)}
-                  className="bg-slate-900 border border-slate-800 rounded-xl p-4 cursor-pointer hover:border-slate-600 transition group">
-                  <div className="flex items-start justify-between mb-2">
-                    <strong className="text-sm">{note.title}</strong>
+                  className="bg-transparent border-2 border-slate-800 rounded-md p-5 cursor-pointer hover:border-slate-500 hover:bg-slate-900/50 transition-colors flex flex-col h-full group">
+                  <div className="flex items-start justify-between mb-3 gap-2">
+                    <strong className="text-base text-slate-200 font-semibold leading-tight">{note.title}</strong>
                     <button onClick={(e) => { e.stopPropagation(); handleDelete(note.id); }}
-                      className="text-slate-600 hover:text-red-400 transition opacity-0 group-hover:opacity-100 cursor-pointer">🗑</button>
+                      className="text-slate-500 hover:text-red-400 hover:bg-slate-800 p-1.5 rounded-md transition-colors cursor-pointer flex-shrink-0"
+                      aria-label="Delete note"
+                      title="Delete note">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                    </button>
                   </div>
-                  <p className="text-xs text-slate-500 line-clamp-3 mb-2">{note.content || 'No content'}</p>
+                  <p className="text-sm text-slate-400 line-clamp-3 mb-4 flex-1">{note.content || '...'}</p>
                   {note.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mb-2">
+                    <div className="flex flex-wrap gap-1.5 mb-3">
                       {note.tags.slice(0, 3).map((t) => (
-                        <span key={t} className="text-[10px] px-1.5 py-0.5 bg-slate-800 rounded text-slate-400">{t}</span>
+                         <span key={t} className="text-xs font-medium px-2 py-1 bg-slate-800 border border-slate-700 rounded text-slate-300">{t}</span>
                       ))}
                     </div>
                   )}
-                  <p className="text-[10px] text-slate-600">
-                    {fmtDate(note.updatedAt)}
-                    {!note.synced && <span className="text-amber-500"> · Unsynced</span>}
-                  </p>
+                  <div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-800/50">
+                    <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">
+                      {fmtDate(note.updatedAt)}
+                    </p>
+                    {!note.synced && <span className="text-[10px] font-bold text-orange-400 uppercase tracking-widest">Unsynced</span>}
+                  </div>
                 </div>
               ))}
             </div>
