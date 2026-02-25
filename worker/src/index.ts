@@ -208,7 +208,10 @@ async function handleAIImage(env: Env, req: Request): Promise<Response> {
 
   const model = body.model || 'stabilityai/stable-diffusion-xl';
 
-  const response = await fetch('https://integrate.api.nvidia.com/v1/images/generations', {
+  // NVIDIA changed their image endpoints
+  const endpoint = `https://ai.api.nvidia.com/v1/genai/${model}`;
+
+  const response = await fetch(endpoint, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${env.AI_API_KEY}`,
@@ -216,10 +219,7 @@ async function handleAIImage(env: Env, req: Request): Promise<Response> {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: model,
-      prompt: body.prompt,
-      response_format: "b64_json",
-      // These are typical SDXL payload options; NVIDIA NIM accepts them
+      text_prompts: [{ text: body.prompt }],
       steps: 30,
       cfg_scale: 5,
       sampler: "K_EULER_ANCESTRAL"
@@ -231,7 +231,13 @@ async function handleAIImage(env: Env, req: Request): Promise<Response> {
     return error(`NVIDIA Image generation failed: ${response.status} - ${errText}`, 502, req);
   }
 
-  const data = await response.json();
+  const data = await response.json() as any;
+  
+  // Transform NIM output back into the OpenAI structure so frontend AI.tsx stays identical
+  if (data.artifacts && data.artifacts[0]?.base64) {
+    return json({ data: [{ b64_json: data.artifacts[0].base64 }] }, 200, req);
+  }
+
   return json(data, 200, req);
 }
 
