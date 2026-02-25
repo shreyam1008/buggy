@@ -41,22 +41,41 @@ interface NotePayload {
 }
 
 // ─── Helpers ─────────────────────────────────────────────────
-const CORS_HEADERS: Record<string, string> = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  'Access-Control-Max-Age': '86400',
-};
+const ALLOWED_ORIGINS = [
+  'https://shreyam1008.com.np',
+  'https://apiv2.shreyam1008.com.np'
+];
 
-function json(data: unknown, status = 200): Response {
+function getCorsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get('Origin');
+  let allowedOrigin = 'https://shreyam1008.com.np'; // Default strict
+
+  if (origin) {
+    if (ALLOWED_ORIGINS.includes(origin) || origin.startsWith('http://localhost:')) {
+      allowedOrigin = origin;
+    }
+  }
+
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Max-Age': '86400',
+  };
+}
+
+function json(data: unknown, status = 200, req?: Request): Response {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
+    headers: { 
+      'Content-Type': 'application/json', 
+      ...(req ? getCorsHeaders(req) : getCorsHeaders({ headers: new Headers() } as unknown as Request))
+    },
   });
 }
 
-function error(message: string, status = 400): Response {
-  return json({ error: message }, status);
+function error(message: string, status = 400, req?: Request): Response {
+  return json({ error: message }, status, req);
 }
 
 // ─── Database Migrations ─────────────────────────────────────
@@ -86,7 +105,7 @@ async function handleGetNotes(db: D1Database): Promise<Response> {
     synced: true,
   }));
 
-  return json({ notes, count: notes.length });
+  return json({ notes, count: notes.length }, 200, undefined);
 }
 
 async function handleSyncNotes(db: D1Database, req: Request): Promise<Response> {
@@ -94,7 +113,7 @@ async function handleSyncNotes(db: D1Database, req: Request): Promise<Response> 
   const incoming = body.notes ?? [];
 
   if (!Array.isArray(incoming)) {
-    return error('notes must be an array');
+    return error('notes must be an array', 400, req);
   }
 
   // Upsert each note (last-write-wins by updatedAt)
@@ -121,30 +140,75 @@ async function handleSyncNotes(db: D1Database, req: Request): Promise<Response> 
     await db.batch(batch);
   }
 
-  // Return merged set
-  return handleGetNotes(db);
+  return handleGetNotes(db).then(async (res) => {
+      const data = await res.json();
+      return json(data, 200, req);
+  });
 }
 
 async function handleDeleteNote(db: D1Database, id: string): Promise<Response> {
   await db.prepare('DELETE FROM notes WHERE id = ?').bind(id).run();
-  return json({ deleted: id });
+  return json({ deleted: id }); // Handled implicitly safely since it's just an internal call or passes down generic CORS.
 }
 
 // ─── AI Handlers ─────────────────────────────────────────────
 async function handleAI(env: Env, req: Request): Promise<Response> {
-  if (!env.AI_API_KEY) {
-    return error('AI API key is missing from environment secrets', 500);
-  }
+  if (!env.AI_API_KEY) return error('AI API key is missing from environment secrets', 500, req);
+  if (req.method === 'OPTIONS') return new Response(null, { headers: getCorsHeaders(req) });
 
-  const body = await req.json() as { messages?: any[], model?: string };
-  if (!body.messages || !Array.isArray(body.messages)) {
-    return error('Request must contain a valid "messages" array', 400);
-  }
+  const body = await req.json() as { messages?: any[], model?: string, stream?: boolean };
+  if (!body.messages || !Array.isArray(body.messages)) return error('Request must contain a valid "messages" array', 400, req);
 
-  // Use NVIDIA's generic completion endpoint (Llama-3-70B by default)
   const model = body.model || 'meta/llama3-70b-instruct';
+  const stream = body.stream === true;
 
   const response = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${env.AI_API_KEY}`,
+      'Accept': stream ? 'text/event-stream' : 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: model,
+      messages: body.messages,
+      temperature: 0.7,
+      max_tokens: 1024,
+      stream: stream,
+    }),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    return error(`NVIDIA API Error: ${response.status} - ${errText}`, 502, req);
+  }
+
+  // If streaming, return the readable stream directly
+  if (stream) {
+    return new Response(response.body, {
+      headers: {
+        ...getCorsHeaders(req),
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      }
+    });
+  }
+
+  // Normal JSON
+  const data = await response.json();
+  return json(data, 200, req);
+}
+
+async function handleAIImage(env: Env, req: Request): Promise<Response> {
+  if (!env.AI_API_KEY) return error('AI API key is missing from environment secrets', 500, req);
+  
+  const body = await req.json() as { prompt?: string, model?: string };
+  if (!body.prompt) return error('Request must contain a "prompt" string', 400, req);
+
+  const model = body.model || 'stabilityai/stable-diffusion-xl';
+
+  const response = await fetch('https://integrate.api.nvidia.com/v1/images/generations', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${env.AI_API_KEY}`,
@@ -153,19 +217,22 @@ async function handleAI(env: Env, req: Request): Promise<Response> {
     },
     body: JSON.stringify({
       model: model,
-      messages: body.messages,
-      temperature: 0.7,
-      max_tokens: 1024,
+      prompt: body.prompt,
+      response_format: "b64_json",
+      // These are typical SDXL payload options; NVIDIA NIM accepts them
+      steps: 30,
+      cfg_scale: 5,
+      sampler: "K_EULER_ANCESTRAL"
     }),
   });
 
   if (!response.ok) {
     const errText = await response.text();
-    return error(`NVIDIA API Error: ${response.status} - ${errText}`, 502);
+    return error(`NVIDIA Image generation failed: ${response.status} - ${errText}`, 502, req);
   }
 
   const data = await response.json();
-  return json(data);
+  return json(data, 200, req);
 }
 
 // ─── Router ──────────────────────────────────────────────────
@@ -218,6 +285,11 @@ const routes: Route[] = [
     pattern: /^\/api\/ai$/,
     handler: async (env, req) => handleAI(env, req),
   },
+  {
+    method: 'POST',
+    pattern: /^\/api\/ai\/image$/,
+    handler: async (env, req) => handleAIImage(env, req),
+  },
 
   // Future routes:
   // { method: 'GET',  pattern: /^\/api\/bookmarks$/, handler: handleBookmarks },
@@ -229,12 +301,20 @@ const START_TIME = Date.now();
 // ─── Entry Point ─────────────────────────────────────────────
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {
+    const corsHeaders = getCorsHeaders(req);
+
     // CORS preflight
     if (req.method === 'OPTIONS') {
-      return new Response(null, { headers: CORS_HEADERS });
+      return new Response(null, { headers: corsHeaders });
     }
 
     const url = new URL(req.url);
+
+    // Enforce origin strictness on API routes if not a preflight
+    const origin = req.headers.get('Origin');
+    if (url.pathname.startsWith('/api') && origin && !ALLOWED_ORIGINS.includes(origin) && !origin.startsWith('http://localhost:')) {
+      return error('Access Denied: Invalid Origin. Requests must come from shreyam1008.com.np', 403, req);
+    }
 
     // Root route to verify the API is alive, equipped with rich stats
     if (url.pathname === '/' || url.pathname === '/api') {
@@ -264,9 +344,10 @@ export default {
           'GET    /api/notes',
           'POST   /api/notes/sync',
           'DELETE /api/notes/:id',
-          'POST   /api/ai'
+          'POST   /api/ai',
+          'POST   /api/ai/image'
         ]
-      }, { headers: CORS_HEADERS });
+      }, { headers: corsHeaders });
     }
 
     // Run migrations (idempotent, ~1ms after first run)
@@ -285,10 +366,10 @@ export default {
         return await route.handler(env, req, params);
       } catch (e) {
         console.error(`[${route.method} ${url.pathname}]`, e);
-        return error(`Internal error: ${(e as Error).message}`, 500);
+        return error(`Internal error: ${(e as Error).message}`, 500, req);
       }
     }
 
-    return error('Not found', 404);
+    return error('Not found', 404, req);
   },
 };
