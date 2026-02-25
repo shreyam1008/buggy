@@ -15,6 +15,22 @@ export default function Sidebar() {
   const [open, setOpen] = useState(false);
   const [location] = useLocation();
 
+  const [clicks, setClicks] = useState(0);
+  const [secretUnlocked, setSecretUnlocked] = useState(false);
+
+  const handleSecretClick = () => {
+    if (secretUnlocked) return;
+    const newClicks = clicks + 1;
+    setClicks(newClicks);
+    if (newClicks >= 5) {
+      setSecretUnlocked(true);
+    }
+    // reset after 2 seconds
+    setTimeout(() => {
+      setClicks(0);
+    }, 2000);
+  };
+
   return (
     <>
       {/* Mobile toggle */}
@@ -40,7 +56,10 @@ export default function Sidebar() {
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="p-4 border-b border-slate-800">
+        <div 
+          className="p-4 border-b border-slate-800 select-none cursor-default"
+          onClick={handleSecretClick}
+        >
           <h2 className="text-base font-bold text-white">⚡ Utilities</h2>
           <p className="text-xs text-slate-500 mt-0.5">Offline PWA</p>
         </div>
@@ -64,6 +83,32 @@ export default function Sidebar() {
               </div>
             </Link>
           ))}
+
+          <div className="pt-6 pb-2 px-3">
+            <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">My Apps</h3>
+            <div className="space-y-0.5">
+              <a href="https://github.com/shreyam1008/dbterm" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors cursor-pointer">
+                <span className="text-base w-6 text-center opacity-70">🖥️</span>
+                <span>dbterm</span>
+              </a>
+              <a href="https://radhey.web.app/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors cursor-pointer">
+                <span className="text-base w-6 text-center opacity-70">⚛️</span>
+                <span>Radhey</span>
+              </a>
+              <a href="https://nepallegalfirm.com.np/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors cursor-pointer">
+                <span className="text-base w-6 text-center opacity-70">⚖️</span>
+                <span>Legal Firm</span>
+              </a>
+              
+              {/* Secret Link */}
+              {secretUnlocked && (
+                <a href="https://loveyoubuddy.web.app/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5 px-3 py-2 mt-4 rounded-lg text-sm text-pink-400 bg-pink-500/10 border border-pink-500/20 hover:bg-pink-500/20 transition-all cursor-pointer animate-pulse">
+                  <span className="text-base w-6 text-center">💖</span>
+                  <span className="font-medium">Secret App</span>
+                </a>
+              )}
+            </div>
+          </div>
         </nav>
 
         <div className="p-3 border-t border-slate-800 text-center text-xs text-slate-600">
