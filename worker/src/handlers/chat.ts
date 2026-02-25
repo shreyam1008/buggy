@@ -55,7 +55,16 @@ export async function handleChatConnection(env: Env, req: Request) {
     username = generateKrishnaUsername();
   }
 
-  // Max 10 writers
+  // *** CRITICAL: Prune stale/dead sockets before counting writers ***
+  // Plain Workers don't guarantee `close` fires for every dead connection.
+  // Without this, phantom entries accumulate and block all new writers.
+  for (const c of activeClients) {
+    if (c.socket.readyState !== 1) { // 1 = OPEN
+      activeClients.delete(c);
+    }
+  }
+
+  // Max 10 concurrent writers
   let writers = 0;
   for (const c of activeClients) {
     if (c.canWrite) writers++;

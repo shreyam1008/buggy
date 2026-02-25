@@ -135,7 +135,7 @@ export default function ChatRoom() {
       </div>
 
       {/* Chat Container */}
-      <div className="flex flex-col flex-1 min-h-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm transition-colors duration-300">
+      <div className="flex flex-col flex-1 min-h-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm transition-colors duration-300 relative">
         
         {/* Messages Area */}
         <div 
