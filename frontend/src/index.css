@@ -1,9 +1,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
+/* Override Tailwind v4 dark mode: use .dark class instead of media query */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: 'Inter', system-ui, sans-serif;
   --color-primary: #dc2626;
   --color-primary-hover: #b91c1c;
   --color-accent: #6366f1;
+}
+
+/* Chat message subtle slide-up animation — GPU only (transform + opacity) */
+@keyframes chatMsgEnter {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.chat-msg-enter {
+  animation: chatMsgEnter 0.2s ease-out both;
 }

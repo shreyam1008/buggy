@@ -28,7 +28,8 @@ async function runMigrations(db: D1Database): Promise<void> {
         message TEXT NOT NULL,
         createdAt INTEGER NOT NULL
       )
-    `)
+    `),
+    db.prepare(`CREATE INDEX IF NOT EXISTS idx_chat_time ON live_chat(createdAt)`)
   ];
 
   await db.batch(migrations);

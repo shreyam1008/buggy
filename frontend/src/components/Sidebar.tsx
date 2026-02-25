@@ -12,6 +12,12 @@ const navItems = [
   { path: '/chat', label: 'Live Chat', icon: '💬' },
 ];
 
+const myApps = [
+  { href: 'https://shreyam1008.github.io/dbterm/', icon: '🖥️', label: 'dbterm' },
+  { href: 'https://radhey.web.app/', icon: '⚛️', label: 'Radhey' },
+  { href: 'https://nepallegalfirm.com.np/', icon: '⚖️', label: 'Legal Firm' },
+];
+
 const socials = [
   { href: 'mailto:shreyam1008@gmail.com', icon: '✉️', label: 'Email' },
   { href: 'https://github.com/shreyam1008', icon: '🐙', label: 'GitHub' },
@@ -23,8 +29,20 @@ const socials = [
 export default function Sidebar() {
   const [location] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+
+  // Secret App — 5 clicks to reveal
+  const [clicks, setClicks] = useState(0);
+  const [secretUnlocked, setSecretUnlocked] = useState(false);
+
+  const handleSecretClick = () => {
+    if (secretUnlocked) return;
+    const newClicks = clicks + 1;
+    setClicks(newClicks);
+    if (newClicks >= 5) setSecretUnlocked(true);
+    setTimeout(() => setClicks(0), 2000);
+  };
   
-  // Theme Toggle Logic
+  // Theme Toggle Logic — class-based dark mode
   const [theme, setTheme] = useState<'light'|'dark'>(() => {
     if (typeof localStorage !== 'undefined' && localStorage.getItem('buggy-theme')) {
       return localStorage.getItem('buggy-theme') as 'light'|'dark';
@@ -33,7 +51,7 @@ export default function Sidebar() {
   });
 
   useEffect(() => {
-    const root = window.document.documentElement;
+    const root = document.documentElement;
     if (theme === 'dark') {
       root.classList.add('dark');
     } else {
@@ -42,10 +60,7 @@ export default function Sidebar() {
     localStorage.setItem('buggy-theme', theme);
   }, [theme]);
 
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
-  };
-
+  const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   const closeSidebar = () => setIsOpen(false);
 
   return (
@@ -59,7 +74,7 @@ export default function Sidebar() {
 
       {isOpen && (
         <div 
-          className="lg:hidden fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm z-40 transition-opacity animate-in fade-in duration-300"
+          className="lg:hidden fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm z-40 transition-opacity"
           onClick={closeSidebar}
         />
       )}
@@ -67,20 +82,26 @@ export default function Sidebar() {
       <aside className={`fixed lg:static top-0 left-0 h-full w-[280px] bg-white dark:bg-[#0f172a] border-r border-slate-200 dark:border-slate-800/80 z-50 transform transition-transform duration-300 ease-out shadow-2xl lg:shadow-none ${
         isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       } flex flex-col`}>
-        <div className="flex-1 overflow-y-auto px-5 py-8 custom-scrollbar">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-              <span className="text-[26px]">⚡</span> Buggy
-            </h2>
-            <button 
-              onClick={closeSidebar} 
-              className="lg:hidden p-2 text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
-            >
-              ✕
-            </button>
-          </div>
 
-          <nav className="space-y-1.5 flex-1">
+        {/* Header — 5 clicks to unlock secret */}
+        <div 
+          className="px-5 py-6 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 select-none cursor-default transition-colors"
+          onClick={handleSecretClick}
+        >
+          <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+            <span className="text-[26px]">⚡</span> Utilities
+          </h2>
+          <button 
+            onClick={(e) => { e.stopPropagation(); closeSidebar(); }} 
+            className="lg:hidden p-2 text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Navigation */}
+        <div className="flex-1 overflow-y-auto px-4 py-4 custom-scrollbar">
+          <nav className="space-y-1">
             {navItems.map((item) => (
               <Link key={item.path} href={item.path}>
                 <button
@@ -88,7 +109,7 @@ export default function Sidebar() {
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group text-left ${
                     location === item.path
                       ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm font-semibold'
-                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 border border-transparent dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200 font-medium'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200 font-medium'
                   }`}
                 >
                   <span className={`text-xl transition-transform duration-300 ${location === item.path ? 'scale-110' : 'group-hover:scale-110'}`}>
@@ -99,9 +120,41 @@ export default function Sidebar() {
               </Link>
             ))}
           </nav>
+
+          {/* My Apps */}
+          <div className="pt-6 pb-2 px-3">
+            <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 transition-colors">My Apps</h3>
+            <div className="space-y-0.5">
+              {myApps.map((app) => (
+                <a 
+                  key={app.label}
+                  href={app.href} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer hover:scale-[1.01] transform"
+                >
+                  <span className="text-base w-6 text-center opacity-70">{app.icon}</span>
+                  <span>{app.label}</span>
+                </a>
+              ))}
+
+              {/* Secret App — revealed after 5 clicks on header */}
+              {secretUnlocked && (
+                <a 
+                  href="https://loveyoubuddy.web.app/" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-pink-500 hover:text-pink-400 hover:bg-pink-50 dark:hover:bg-pink-900/20 transition-all cursor-pointer hover:scale-[1.01] transform chat-msg-enter"
+                >
+                  <span className="text-base w-6 text-center">💖</span>
+                  <span className="font-semibold">Secret App</span>
+                </a>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Footer Area: User Profile, Theme Toggle & Socials */}
+        {/* Footer: Profile, Theme Toggle & Socials */}
         <div className="p-5 border-t border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-[#0b1121] transition-colors">
           
           <div className="flex items-center justify-between mb-4">
@@ -117,7 +170,7 @@ export default function Sidebar() {
 
             <button
               onClick={toggleTheme}
-              className="p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-600 dark:text-slate-300 hover:text-orange-500 dark:hover:text-amber-400 transition-colors shadow-sm"
+              className="p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-600 dark:text-slate-300 hover:text-orange-500 dark:hover:text-amber-400 transition-colors shadow-sm cursor-pointer"
               title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
             >
               {theme === 'dark' ? '☀️' : '🌙'}
