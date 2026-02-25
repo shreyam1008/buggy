@@ -20,7 +20,7 @@ function Loader() {
 
 export default function App() {
   return (
-    <div className="flex min-h-dvh bg-slate-950 text-slate-100">
+    <div className="flex min-h-dvh bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
       <Sidebar />
       <main className="flex-1 min-w-0 p-4 sm:p-6 lg:ml-60">
         <Suspense fallback={<Loader />}>
@@ -33,9 +33,9 @@ export default function App() {
             <Route path="/bcrypt" component={BcryptGenerator} />
             <Route path="/ai" component={AI} />
             <Route>
-              <div className="text-center py-20">
+              <div className="text-center py-20 animate-in fade-in zoom-in duration-300">
                 <h1 className="text-4xl font-bold">404</h1>
-                <p className="text-slate-400 mt-2">Page not found</p>
+                <p className="text-slate-600 dark:text-slate-400 mt-2">Page not found</p>
               </div>
             </Route>
           </Switch>

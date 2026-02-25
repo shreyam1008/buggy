@@ -102,12 +102,12 @@ export default function ImageCompressor() {
 
   return (
     <div className="max-w-3xl mx-auto pt-12 lg:pt-0" onPaste={onPaste}>
-      <h1 className="text-2xl font-bold mb-1">Image Compressor</h1>
-      <p className="text-sm text-slate-400 mb-6">Compress & convert images · Paste, drop, or camera capture</p>
+      <h1 className="text-2xl font-bold mb-1 text-slate-900 dark:text-white transition-colors duration-300">Image Compressor</h1>
+      <p className="text-sm text-slate-600 dark:text-slate-400 mb-6 transition-colors duration-300">Compress & convert images · Paste, drop, or camera capture</p>
 
       {!original ? (
         <div
-          className="bg-slate-900 border-2 border-dashed border-slate-700 rounded-xl p-10 text-center cursor-pointer hover:border-red-600 transition-colors"
+          className="bg-slate-50 dark:bg-slate-900 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-10 text-center cursor-pointer hover:border-red-500 dark:hover:border-red-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-300"
           onDrop={onDrop}
           onDragOver={(e) => e.preventDefault()}
           onClick={() => {
@@ -117,9 +117,9 @@ export default function ImageCompressor() {
             }
           }}
         >
-          <span className="text-5xl block mb-3">📷</span>
-          <p className="font-semibold text-white">Drop image here or click to browse</p>
-          <p className="text-xs text-slate-500 mt-1">Supports JPEG, PNG, WebP · Ctrl+V to paste</p>
+          <span className="text-5xl block mb-3 transform transition-transform hover:scale-110 duration-300">📷</span>
+          <p className="font-semibold text-slate-900 dark:text-white transition-colors">Drop image here or click to browse</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 transition-colors">Supports JPEG, PNG, WebP · Ctrl+V to paste</p>
           <input
             ref={fileRef}
             type="file"
@@ -130,32 +130,32 @@ export default function ImageCompressor() {
           <div className="flex justify-center gap-3 mt-4">
             <button
               onClick={(e) => { e.stopPropagation(); handleCamera(); }}
-              className="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-300 hover:bg-slate-700 transition cursor-pointer"
+              className="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all duration-300 cursor-pointer shadow-sm hover:scale-105"
             >
               📸 Camera
             </button>
           </div>
         </div>
       ) : (
-        <div className="space-y-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
+        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-4 shadow-sm transition-colors duration-300">
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-sm">Settings</h3>
-              <button onClick={reset} className="text-xs text-slate-400 hover:text-white transition cursor-pointer">↺ Reset</button>
+              <h3 className="font-semibold text-sm text-slate-900 dark:text-white">Settings</h3>
+              <button onClick={reset} className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer">↺ Reset</button>
             </div>
 
             {/* Format selector */}
             <div>
-              <label className="text-xs text-slate-500 mb-1.5 block">Output Format</label>
+              <label className="text-xs text-slate-500 dark:text-slate-400 mb-1.5 block transition-colors">Output Format</label>
               <div className="flex gap-2">
                 {(['jpeg', 'png', 'webp'] as OutputFormat[]).map((f) => (
                   <button
                     key={f}
                     onClick={() => setFormat(f)}
-                    className={`flex-1 py-2 rounded-lg text-xs font-semibold uppercase transition cursor-pointer ${
+                    className={`flex-1 py-2 rounded-lg text-xs font-semibold uppercase transition-all duration-300 cursor-pointer ${
                       format === f
-                        ? 'bg-red-600 text-white'
-                        : 'bg-slate-800 text-slate-400 border border-slate-700 hover:bg-slate-700'
+                        ? 'bg-red-600 text-white shadow-md scale-[1.02]'
+                        : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 hover:scale-[1.01]'
                     }`}
                   >
                     {f}
@@ -166,8 +166,8 @@ export default function ImageCompressor() {
 
             {/* Quality */}
             {format !== 'png' && (
-              <div>
-                <label className="text-xs text-slate-500 mb-1 block">Quality: <strong className="text-white">{quality}%</strong></label>
+              <div className="animate-in fade-in duration-300">
+                <label className="text-xs text-slate-500 dark:text-slate-400 mb-1 block transition-colors">Quality: <strong className="text-slate-900 dark:text-white">{quality}%</strong></label>
                 <input
                   type="range" min={10} max={100} value={quality}
                   onChange={(e) => setQuality(+e.target.value)}
@@ -179,7 +179,7 @@ export default function ImageCompressor() {
             <button
               onClick={compress}
               disabled={processing}
-              className="w-full py-2.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-semibold rounded-lg text-sm transition cursor-pointer"
+              className="w-full py-2.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-semibold rounded-lg text-sm transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md hover:scale-[1.01] active:scale-[0.98]"
             >
               {processing ? '⏳ Compressing…' : `⚡ Compress to ${format.toUpperCase()}`}
             </button>
@@ -187,24 +187,24 @@ export default function ImageCompressor() {
 
           {/* Stats */}
           {stats && (
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm transition-colors duration-300 animate-in fade-in slide-in-from-bottom-4">
               <div className="grid grid-cols-3 gap-4 text-center mb-4">
                 <div>
-                  <p className="text-xs text-slate-500">Original</p>
-                  <p className="text-lg font-bold">{fmtSize(stats.orig)}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 transition-colors">Original</p>
+                  <p className="text-lg font-bold text-slate-900 dark:text-white transition-colors">{fmtSize(stats.orig)}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500">Compressed</p>
-                  <p className="text-lg font-bold text-emerald-400">{fmtSize(stats.conv)}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 transition-colors">Compressed</p>
+                  <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400 transition-colors">{fmtSize(stats.conv)}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500">Saved</p>
-                  <p className="text-lg font-bold text-red-400">{Math.round((1 - stats.conv / stats.orig) * 100)}%</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 transition-colors">Saved</p>
+                  <p className="text-lg font-bold text-red-600 dark:text-red-400 transition-colors">{Math.round((1 - stats.conv / stats.orig) * 100)}%</p>
                 </div>
               </div>
               <button
                 onClick={download}
-                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-sm transition cursor-pointer"
+                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-sm transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md hover:scale-[1.01] active:scale-[0.98]"
               >
                 ⬇ Download {format.toUpperCase()}
               </button>
@@ -212,17 +212,17 @@ export default function ImageCompressor() {
           )}
 
           {/* Previews */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4 animate-in fade-in duration-500">
             {origPreview && (
               <div className="text-center">
-                <p className="text-xs text-slate-500 mb-1">Original</p>
-                <img src={origPreview} alt="Original" className="max-h-48 mx-auto rounded-lg object-contain" />
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-1 transition-colors">Original</p>
+                <img src={origPreview} alt="Original" className="max-h-48 mx-auto rounded-lg object-contain shadow-sm border border-slate-200 dark:border-slate-800" />
               </div>
             )}
             {convPreview && (
               <div className="text-center">
-                <p className="text-xs text-slate-500 mb-1">Compressed</p>
-                <img src={convPreview} alt="Compressed" className="max-h-48 mx-auto rounded-lg object-contain" />
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-1 transition-colors">Compressed</p>
+                <img src={convPreview} alt="Compressed" className="max-h-48 mx-auto rounded-lg object-contain shadow-sm border border-slate-200 dark:border-slate-800" />
               </div>
             )}
           </div>

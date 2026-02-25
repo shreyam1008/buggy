@@ -77,14 +77,14 @@ export default function DateConverter() {
 
   return (
     <div className="max-w-3xl mx-auto pt-12 lg:pt-0">
-      <h1 className="text-2xl font-bold mb-1">Date Converter</h1>
-      <p className="text-sm text-slate-400 mb-6">Convert between Nepali (BS) and English (AD) dates · मिति परिवर्तन</p>
+      <h1 className="text-2xl font-bold mb-1 text-slate-900 dark:text-white transition-colors duration-300">Date Converter</h1>
+      <p className="text-sm text-slate-600 dark:text-slate-400 mb-6 transition-colors duration-300">Convert between Nepali (BS) and English (AD) dates · मिति परिवर्तन</p>
 
       <div className="grid md:grid-cols-2 gap-4">
         {/* BS → AD */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-          <h3 className="font-semibold mb-1">🇳🇵 BS → AD</h3>
-          <p className="text-xs text-slate-500 mb-3">Nepali date (DD-MM-YYYY)</p>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm hover:shadow-md hover:scale-[1.01] transition-all duration-300">
+          <h3 className="font-semibold mb-1 text-slate-900 dark:text-white">🇳🇵 BS → AD</h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">Nepali date (DD-MM-YYYY)</p>
           <input
             type="text"
             value={bsInput}
@@ -92,14 +92,14 @@ export default function DateConverter() {
             placeholder="DD-MM-YYYY"
             maxLength={10}
             inputMode="numeric"
-            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:ring-2 focus:ring-red-600 transition"
+            className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:ring-2 focus:ring-red-600 transition-colors duration-200"
           />
           {adResult && (
-            <div className="mt-3 flex items-center justify-between gap-2 bg-slate-800/50 rounded-lg px-3 py-2.5">
-              <strong className="text-sm text-emerald-400">{adResult}</strong>
+            <div className="mt-3 flex items-center justify-between gap-2 bg-slate-100 dark:bg-slate-800/50 rounded-lg px-3 py-2.5 transition-colors duration-300 animate-in fade-in slide-in-from-top-2">
+              <strong className="text-sm text-emerald-600 dark:text-emerald-400">{adResult}</strong>
               <button
                 onClick={() => copy(adResult, 'ad')}
-                className="text-slate-400 hover:text-white transition text-sm cursor-pointer"
+                className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors text-sm cursor-pointer"
               >
                 {copiedField === 'ad' ? '✓' : '📋'}
               </button>
@@ -108,9 +108,9 @@ export default function DateConverter() {
         </div>
 
         {/* AD → BS */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-          <h3 className="font-semibold mb-1">🌍 AD → BS</h3>
-          <p className="text-xs text-slate-500 mb-3">English date (DD-MM-YYYY)</p>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm hover:shadow-md hover:scale-[1.01] transition-all duration-300">
+          <h3 className="font-semibold mb-1 text-slate-900 dark:text-white">🌍 AD → BS</h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">English date (DD-MM-YYYY)</p>
           <input
             type="text"
             value={adInput}
@@ -118,14 +118,14 @@ export default function DateConverter() {
             placeholder="DD-MM-YYYY"
             maxLength={10}
             inputMode="numeric"
-            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:ring-2 focus:ring-red-600 transition"
+            className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:ring-2 focus:ring-red-600 transition-colors duration-200"
           />
           {bsResult && (
-            <div className="mt-3 flex items-center justify-between gap-2 bg-slate-800/50 rounded-lg px-3 py-2.5">
-              <strong className="text-sm text-emerald-400">{bsResult}</strong>
+            <div className="mt-3 flex items-center justify-between gap-2 bg-slate-100 dark:bg-slate-800/50 rounded-lg px-3 py-2.5 transition-colors duration-300 animate-in fade-in slide-in-from-top-2">
+              <strong className="text-sm text-emerald-600 dark:text-emerald-400">{bsResult}</strong>
               <button
                 onClick={() => copy(bsResult, 'bs')}
-                className="text-slate-400 hover:text-white transition text-sm cursor-pointer"
+                className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors text-sm cursor-pointer"
               >
                 {copiedField === 'bs' ? '✓' : '📋'}
               </button>
@@ -135,31 +135,31 @@ export default function DateConverter() {
       </div>
 
       {/* Status */}
-      <div className={`mt-4 text-center text-sm py-2 rounded-lg ${
-        status.type === 'success' ? 'text-emerald-400 bg-emerald-950/30' :
-        status.type === 'error' ? 'text-red-400 bg-red-950/30' :
-        'text-slate-500'
+      <div className={`mt-4 text-center text-sm py-2 rounded-lg transition-colors duration-300 ${
+        status.type === 'success' ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30' :
+        status.type === 'error' ? 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30' :
+        'text-slate-500 dark:text-slate-500'
       }`}>
         {status.text}
       </div>
 
       {/* Month Reference */}
-      <div className="mt-8 bg-slate-900 border border-slate-800 rounded-xl p-5">
-        <h2 className="text-sm font-semibold text-slate-300 mb-4">📅 Month Reference</h2>
-        <div className="grid grid-cols-2 gap-6 text-xs text-slate-400">
+      <div className="mt-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm transition-colors duration-300">
+        <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-300 mb-4 transition-colors">📅 Month Reference</h2>
+        <div className="grid grid-cols-2 gap-6 text-xs text-slate-600 dark:text-slate-400">
           <div>
-            <h3 className="font-semibold text-slate-200 mb-2">Nepali Months (BS)</h3>
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 transition-colors">Nepali Months (BS)</h3>
             <ul className="space-y-0.5">
               {bsMonthNamesEn.map((en, i) => (
-                <li key={en}><span className="text-slate-500">{String(i + 1).padStart(2, '0')}</span> – {en} / {bsMonthNames[i]}</li>
+                <li key={en}><span className="text-slate-400 dark:text-slate-500">{String(i + 1).padStart(2, '0')}</span> – {en} / {bsMonthNames[i]}</li>
               ))}
             </ul>
           </div>
           <div>
-            <h3 className="font-semibold text-slate-200 mb-2">English Months (AD)</h3>
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 transition-colors">English Months (AD)</h3>
             <ul className="space-y-0.5">
               {adMonthNames.map((m, i) => (
-                <li key={m}><span className="text-slate-500">{String(i + 1).padStart(2, '0')}</span> – {m}</li>
+                <li key={m}><span className="text-slate-400 dark:text-slate-500">{String(i + 1).padStart(2, '0')}</span> – {m}</li>
               ))}
             </ul>
           </div>
