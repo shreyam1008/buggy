@@ -9,3 +9,4 @@ database_id = "9700f14a-a245-4279-b420-7ab78183fc2f"
 
 # [vars]
 # AI_API_KEY = ""  # Add via `wrangler secret put AI_API_KEY`
+minify = true
