@@ -223,6 +223,9 @@ const routes: Route[] = [
   // { method: 'GET',  pattern: /^\/api\/bookmarks$/, handler: handleBookmarks },
 ];
 
+// ─── Global State ──────────────────────────────────────────────
+const START_TIME = Date.now();
+
 // ─── Entry Point ─────────────────────────────────────────────
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {
@@ -233,9 +236,37 @@ export default {
 
     const url = new URL(req.url);
 
-    // Root route to verify the API is alive
+    // Root route to verify the API is alive, equipped with rich stats
     if (url.pathname === '/' || url.pathname === '/api') {
-      return Response.json({ status: 'ok', name: 'buggy-api', version: '1.0.0' }, { headers: CORS_HEADERS });
+      const now = Date.now();
+      const uptimeSec = Math.floor((now - START_TIME) / 1000);
+      
+      return Response.json({ 
+        name: 'buggy-api', 
+        status: 'healthy',
+        environment: 'production',
+        version: '1.1.0',
+        system: {
+          uptime_seconds: uptimeSec,
+          timestamp: new Date().toISOString(),
+          datacenter: req.cf?.colo || 'unknown (local dev)',
+          country: req.cf?.country || 'unknown',
+          city: req.cf?.city || 'unknown',
+          timezone: req.cf?.timezone || 'unknown',
+          tls_version: req.cf?.tlsVersion || 'unknown',
+          http_protocol: req.cf?.httpProtocol || 'unknown'
+        },
+        bindings: {
+          database_d1: !!env.DB ? 'connected' : 'missing',
+          ai_nim_api: !!env.AI_API_KEY ? 'configured' : 'missing'
+        },
+        endpoints: [
+          'GET    /api/notes',
+          'POST   /api/notes/sync',
+          'DELETE /api/notes/:id',
+          'POST   /api/ai'
+        ]
+      }, { headers: CORS_HEADERS });
     }
 
     // Run migrations (idempotent, ~1ms after first run)
