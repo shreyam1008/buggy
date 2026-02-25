@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useMutation } from '@tanstack/react-query';
 
 // Read Cloudflare Worker API URL from environment
 const API_URL = (import.meta.env.VITE_API_URL as string)?.replace(/\/$/, '') || '';
@@ -45,8 +46,6 @@ export default function AI() {
   const [imgModel, setImgModel] = useState(IMG_MODELS[0].id);
   const [prompt, setPrompt] = useState('');
   const [imgResult, setImgResult] = useState('');
-  const [imgLoading, setImgLoading] = useState(false);
-  const [imgError, setImgError] = useState('');
 
   // Auto-scroll chat
   useEffect(() => {
@@ -123,38 +122,29 @@ export default function AI() {
     }
   };
 
-  const handleImageSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!prompt.trim()) return;
-    if (!API_URL) {
-      alert("VITE_API_URL is missing.");
-      return;
-    }
-
-    setImgLoading(true);
-    setImgError('');
-    setImgResult('');
-
-    try {
+  const genImageMutation = useMutation({
+    mutationFn: async () => {
+      if (!API_URL) throw new Error("VITE_API_URL is missing.");
       const res = await fetch(`${API_URL}/api/ai/image`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ model: imgModel, prompt }),
       });
-
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to generate image');
-
       if (data.data && data.data[0]?.b64_json) {
-        setImgResult(`data:image/png;base64,${data.data[0].b64_json}`);
-      } else {
-        throw new Error('Invalid response from NVIDIA API');
+        return `data:image/png;base64,${data.data[0].b64_json}`;
       }
-    } catch (err: any) {
-      setImgError(err.message);
-    } finally {
-      setImgLoading(false);
-    }
+      throw new Error('Invalid response from NVIDIA API');
+    },
+    onSuccess: (data) => setImgResult(data),
+  });
+
+  const handleImageSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!prompt.trim()) return;
+    setImgResult('');
+    genImageMutation.mutate();
   };
 
   return (
@@ -282,29 +272,29 @@ export default function AI() {
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 placeholder={isOnline ? "A futuristic cyber-yeti drinking neon tea..." : "You are currently offline..."}
-                disabled={imgLoading || !isOnline}
+                disabled={genImageMutation.isPending || !isOnline}
                 className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 sm:py-3.5 outline-none focus:border-emerald-500 transition-all text-sm shadow-inner disabled:opacity-50"
               />
               <button
                 type="submit"
-                disabled={imgLoading || !prompt.trim() || !isOnline}
+                disabled={genImageMutation.isPending || !prompt.trim() || !isOnline}
                 className="w-full sm:w-auto px-6 py-3 sm:py-3.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 rounded-xl font-medium transition-colors cursor-pointer flex items-center justify-center gap-2 whitespace-nowrap shadow-md text-sm disabled:text-slate-500"
               >
-                {imgLoading ? '⏳ Rendering...' : '✨ Generate'}
+                {genImageMutation.isPending ? '⏳ Rendering...' : '✨ Generate'}
               </button>
             </div>
-            {imgError && <p className="text-red-400 text-sm bg-red-950/30 p-3 rounded-lg border border-red-900/50">{imgError}</p>}
+            {genImageMutation.isError && <p className="text-red-400 text-sm bg-red-950/30 p-3 rounded-lg border border-red-900/50">{genImageMutation.error.message}</p>}
           </form>
 
           <div className="flex-1 border-2 border-dashed border-slate-800 hover:border-slate-700 transition-colors rounded-2xl flex items-center justify-center bg-slate-950/40 relative overflow-hidden group shadow-inner">
-            {!imgResult && !imgLoading && (
+            {!imgResult && !genImageMutation.isPending && (
               <div className="text-slate-500 flex flex-col items-center space-y-4">
                 <span className="text-5xl opacity-40 group-hover:scale-110 transition-transform duration-500">🌌</span>
                 <p className="text-sm tracking-wide">Enter a prompt to synthesize an image</p>
               </div>
             )}
             
-            {imgLoading && (
+            {genImageMutation.isPending && (
               <div className="flex flex-col items-center justify-center absolute inset-0 bg-slate-900/80 z-10 backdrop-blur-md">
                 <div className="w-12 h-12 border-4 border-slate-700 border-t-emerald-500 rounded-full animate-spin mb-4 shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
                 <p className="text-emerald-400 animate-pulse font-medium tracking-wider text-sm shadow-emerald-500">Synthesizing Pixels...</p>

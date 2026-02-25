@@ -72,6 +72,7 @@ export default defineConfig({
         manualChunks(id) {
           if (id.includes('node_modules')) {
             if (id.includes('react') || id.includes('react-dom')) return 'vendor-react';
+            if (id.includes('@tanstack/react-query')) return 'vendor-query';
             if (id.includes('wouter')) return 'vendor-router';
             if (id.includes('pdf-lib')) return 'vendor-pdf';
             if (id.includes('sqlocal')) return 'vendor-sqlite';

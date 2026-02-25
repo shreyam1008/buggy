@@ -9,6 +9,7 @@ const PdfMerger = lazy(() => import('./pages/PdfMerger'));
 const Notes = lazy(() => import('./pages/Notes'));
 const BcryptGenerator = lazy(() => import('./pages/BcryptGenerator'));
 const AI = lazy(() => import('./pages/AI'));
+const ChatRoom = lazy(() => import('./pages/ChatRoom'));
 
 function Loader() {
   return (
@@ -32,6 +33,7 @@ export default function App() {
             <Route path="/notes" component={Notes} />
             <Route path="/bcrypt" component={BcryptGenerator} />
             <Route path="/ai" component={AI} />
+            <Route path="/chat" component={ChatRoom} />
             <Route>
               <div className="text-center py-20 animate-in fade-in zoom-in duration-300">
                 <h1 className="text-4xl font-bold">404</h1>

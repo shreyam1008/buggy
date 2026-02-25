@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://buggy.shreyam1008.com.np/sitemap.xml

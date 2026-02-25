@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { SQLocal } from 'sqlocal';
 
 interface Note {
@@ -64,25 +65,29 @@ function fmtDate(ts: number) {
 }
 
 export default function Notes() {
-  const [notes, setNotes] = useState<Note[]>([]);
+  const queryClient = useQueryClient();
   const [selected, setSelected] = useState<Note | null>(null);
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [tags, setTags] = useState('');
   const [search, setSearch] = useState('');
-  const [syncing, setSyncing] = useState(false);
   const [lastSynced, setLastSynced] = useState<string | null>(
     localStorage.getItem('notes-last-synced')
   );
 
-  const loadNotes = useCallback(async () => {
-    setNotes(await loadAllNotes());
-  }, []);
+  // Initialize DB once
+  const { isPending: dbInitializing } = useQuery({
+    queryKey: ['db-init'],
+    queryFn: async () => { await initDB(); return true; },
+    staleTime: Infinity,
+  });
 
-  useEffect(() => {
-    initDB().then(loadNotes);
-  }, [loadNotes]);
+  const { data: notes = [] } = useQuery({
+    queryKey: ['notes'],
+    queryFn: loadAllNotes,
+    enabled: !dbInitializing,
+  });
 
   const createNote = () => {
     const note: Note = {
@@ -97,14 +102,21 @@ export default function Notes() {
     setTags(note.tags.join(', ')); setEditing(true);
   };
 
-  const handleSave = async () => {
+  const saveMutation = useMutation({
+    mutationFn: saveNote,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notes'] }),
+  });
+
+  const handleSave = () => {
     if (!selected) return;
     const updated: Note = {
       ...selected, title: title || 'Untitled Note', content,
       tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
       updatedAt: Date.now(), synced: false,
     };
-    await saveNote(updated); setSelected(updated); setEditing(false); await loadNotes();
+    saveMutation.mutate(updated, {
+      onSuccess: () => { setSelected(updated); setEditing(false); }
+    });
   };
 
   const cancelEdit = () => {
@@ -112,23 +124,25 @@ export default function Notes() {
     setEditing(false);
   };
 
-  const handleDelete = async (id: string) => {
-    await deleteNoteFromDB(id); await loadNotes();
-    if (selected?.id === id) { setSelected(null); setEditing(false); }
+  const deleteMutation = useMutation({
+    mutationFn: deleteNoteFromDB,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notes'] }),
+  });
+
+  const handleDelete = (id: string) => {
+    deleteMutation.mutate(id, {
+      onSuccess: () => {
+        if (selected?.id === id) { setSelected(null); setEditing(false); }
+      }
+    });
   };
 
-  const syncToCloud = async () => {
-    const baseUrl = (import.meta.env.VITE_API_URL as string)?.replace(/\/$/, '');
-    
-    if (!baseUrl) {
-      alert('VITE_API_URL is not configured. Please add it to your .env file or Cloudflare Pages environment variables.');
-      return;
-    }
+  const syncMutation = useMutation({
+    mutationFn: async () => {
+      const baseUrl = (import.meta.env.VITE_API_URL as string)?.replace(/\/$/, '');
+      if (!baseUrl) throw new Error('VITE_API_URL is not configured.');
 
-    setSyncing(true);
-    try {
       const local = await loadAllNotes();
-      
       const res = await fetch(`${baseUrl}/api/notes/sync`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notes: local }),
@@ -136,7 +150,9 @@ export default function Notes() {
       if (!res.ok) throw new Error(`Server returned ${res.status}`);
       
       const { notes: merged } = await res.json() as { notes: Note[] };
-      
+      return merged;
+    },
+    onSuccess: async (merged) => {
       await sql.transaction(async (tx) => {
         for (const note of merged) {
           const tagsStr = JSON.stringify(note.tags);
@@ -149,18 +165,15 @@ export default function Notes() {
           `;
         }
       });
-
-      await loadNotes();
+      queryClient.invalidateQueries({ queryKey: ['notes'] });
       const now = new Date().toLocaleString();
       localStorage.setItem('notes-last-synced', now);
       setLastSynced(now);
-    } catch (e) {
-      console.error('Sync error:', e);
-      alert(`Sync Failed: ${(e as Error).message}\nMake sure your Cloudflare Worker is deployed and running.`);
-    } finally { 
-      setSyncing(false); 
+    },
+    onError: (error: Error) => {
+      alert(`Sync Failed: ${error.message}\nMake sure your Cloudflare Worker is deployed and running.`);
     }
-  };
+  });
 
   const filtered = notes.filter((n) =>
     n.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -176,9 +189,9 @@ export default function Notes() {
           <p className="text-sm text-slate-400">Local SQLite (OPFS) · Sync to Cloudflare D1</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={syncToCloud} disabled={syncing}
+          <button onClick={() => syncMutation.mutate()} disabled={syncMutation.isPending}
             className="px-4 py-2 bg-transparent border-2 border-slate-700 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white disabled:opacity-50 transition-colors cursor-pointer flex items-center gap-2">
-            {syncing ? '⏳ Syncing' : '☁️ Sync'}
+            {syncMutation.isPending ? '⏳ Syncing' : '☁️ Sync'}
           </button>
           <button onClick={createNote}
             className="px-4 py-2 bg-slate-200 hover:bg-white text-slate-900 border-2 border-slate-200 rounded-md text-sm font-bold transition-colors cursor-pointer flex items-center gap-2">

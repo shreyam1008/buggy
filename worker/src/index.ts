@@ -78,19 +78,28 @@ function error(message: string, status = 400, req?: Request): Response {
   return json({ error: message }, status, req);
 }
 
-// ─── Database Migrations ─────────────────────────────────────
 async function runMigrations(db: D1Database): Promise<void> {
-  await db.prepare(
-    `CREATE TABLE IF NOT EXISTS notes (
-      id TEXT PRIMARY KEY,
-      title TEXT NOT NULL DEFAULT '',
-      content TEXT NOT NULL DEFAULT '',
-      tags TEXT NOT NULL DEFAULT '[]',
-      createdAt INTEGER NOT NULL,
-      updatedAt INTEGER NOT NULL,
-      synced INTEGER NOT NULL DEFAULT 0
-    )`
-  ).run();
+  await db.batch([
+    db.prepare(
+      `CREATE TABLE IF NOT EXISTS notes (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL DEFAULT '',
+        content TEXT NOT NULL DEFAULT '',
+        tags TEXT NOT NULL DEFAULT '[]',
+        createdAt INTEGER NOT NULL,
+        updatedAt INTEGER NOT NULL,
+        synced INTEGER NOT NULL DEFAULT 0
+      )`
+    ),
+    db.prepare(
+      `CREATE TABLE IF NOT EXISTS live_chat (
+        id TEXT PRIMARY KEY,
+        username TEXT NOT NULL,
+        message TEXT NOT NULL,
+        createdAt INTEGER NOT NULL
+      )`
+    )
+  ]);
 }
 
 // ─── Notes Handlers ──────────────────────────────────────────
@@ -241,6 +250,112 @@ async function handleAIImage(env: Env, req: Request): Promise<Response> {
   return json(data, 200, req);
 }
 
+// ─── Chat WebSockets ──────────────────────────────────────────
+
+interface ChatClient {
+  socket: WebSocket;
+  username: string;
+  canWrite: boolean;
+  active: boolean;
+}
+
+const activeClients = new Set<ChatClient>();
+
+const VEDIC_PREFIXES = ['Shiva', 'Vishnu', 'Brahma', 'Krishna', 'Rama', 'Ganesha', 'Hanuman', 'Indra', 'Agni', 'Surya', 'Saraswati', 'Lakshmi', 'Parvati', 'Durga', 'Kali', 'Bhagwati'];
+
+function generateVedicUsername(): string {
+  const prefix = VEDIC_PREFIXES[Math.floor(Math.random() * VEDIC_PREFIXES.length)];
+  const suffix = Math.floor(100 + Math.random() * 900);
+  return `${prefix}_${suffix}`;
+}
+
+function broadcast(msg: any) {
+  const str = JSON.stringify(msg);
+  for (const client of activeClients) {
+    if (client.active) {
+      try { client.socket.send(str); } catch (e) { /* ignore disconnected */ }
+    }
+  }
+}
+
+async function handleChatConnection(env: Env, req: Request): Promise<Response> {
+  const upgradeHeader = req.headers.get('Upgrade');
+  if (!upgradeHeader || upgradeHeader !== 'websocket') {
+    return new Response('Expected Upgrade: websocket', { status: 426 });
+  }
+
+  const [client, server] = Object.values(new WebSocketPair());
+
+  const currentWriters = Array.from(activeClients).filter(c => c.canWrite && c.active).length;
+  const canWrite = currentWriters < 10;
+  const username = generateVedicUsername();
+
+  const chatClient: ChatClient = { socket: server, username, canWrite, active: true };
+  activeClients.add(chatClient);
+
+  server.accept();
+
+  // Send initial state & recent history
+  server.send(JSON.stringify({ type: 'welcome', username, canWrite }));
+  
+  env.DB.prepare('SELECT * FROM live_chat ORDER BY createdAt DESC LIMIT 50').all()
+    .then(({ results }) => {
+      if (results && results.length > 0) {
+        // Reverse so chronological locally
+        server.send(JSON.stringify({ type: 'history', messages: results.reverse() }));
+      }
+    }).catch(e => console.error('Failed to load history', e));
+
+  // Announce join
+  broadcast({ type: 'system', message: `${username} joined the ashram.`, count: activeClients.size, writers: currentWriters + (canWrite ? 1 : 0) });
+
+  server.addEventListener('message', async (event: any) => {
+    try {
+      const data = JSON.parse(event.data);
+      
+      if (data.type === 'chat' && canWrite) {
+        const msg = {
+          id: crypto.randomUUID(),
+          username,
+          message: data.message,
+          createdAt: Date.now()
+        };
+        // Broadcast instantly
+        broadcast({ type: 'chat', ...msg });
+        // Persist
+        await env.DB.prepare('INSERT INTO live_chat (id, username, message, createdAt) VALUES (?, ?, ?, ?)').bind(msg.id, msg.username, msg.message, msg.createdAt).run();
+      } 
+      else if (data.type === 'typing' && canWrite) {
+        broadcast({ type: 'typing', username, isTyping: data.isTyping });
+      }
+      else if (data.type === 'delete' && canWrite) {
+        const targetId = data.id;
+        const msgRecord = await env.DB.prepare('SELECT * FROM live_chat WHERE id = ?').bind(targetId).first();
+        if (msgRecord && msgRecord.username === username) {
+          const age = Date.now() - (msgRecord.createdAt as number);
+          if (age <= 30000) { // 30 second window
+            await env.DB.prepare('DELETE FROM live_chat WHERE id = ?').bind(targetId).run();
+            broadcast({ type: 'delete', id: targetId });
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Socket message parse error', e);
+    }
+  });
+
+  server.addEventListener('close', () => {
+    chatClient.active = false;
+    activeClients.delete(chatClient);
+    broadcast({ type: 'system', message: `${username} left.`, count: activeClients.size, writers: Array.from(activeClients).filter(c => c.canWrite).length });
+  });
+
+  return new Response(null, {
+    status: 101,
+    webSocket: client,
+  });
+}
+
 // ─── Router ──────────────────────────────────────────────────
 type RouteHandler = (env: Env, req: Request, params: Record<string, string>) => Promise<Response>;
 
@@ -264,6 +379,7 @@ const routes: Route[] = [
         'POST /api/notes/sync',
         'DELETE /api/notes/:id',
         'POST /api/ai',
+        'GET  /api/chat',
       ],
     }),
   },
@@ -295,6 +411,13 @@ const routes: Route[] = [
     method: 'POST',
     pattern: /^\/api\/ai\/image$/,
     handler: async (env, req) => handleAIImage(env, req),
+  },
+
+  // Live Chat
+  {
+    method: 'GET',
+    pattern: /^\/api\/chat$/,
+    handler: async (env, req) => handleChatConnection(env, req),
   },
 
   // Future routes:
@@ -351,7 +474,8 @@ export default {
           'POST   /api/notes/sync',
           'DELETE /api/notes/:id',
           'POST   /api/ai',
-          'POST   /api/ai/image'
+          'POST   /api/ai/image',
+          'GET    /api/chat (WebSocket)'
         ]
       }, { headers: corsHeaders });
     }

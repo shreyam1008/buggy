@@ -9,6 +9,7 @@ const navItems = [
   { path: '/notes', label: 'Notes', icon: '📝' },
   { path: '/bcrypt', label: 'Bcrypt', icon: '🔒' },
   { path: '/ai', label: 'AI Studio', icon: '✨' },
+  { path: '/chat', label: 'Live Chat', icon: '💬' },
 ];
 
 export default function Sidebar() {
