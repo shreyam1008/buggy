@@ -1,137 +1,74 @@
-# ⚡ Buggy — Next-Gen Offline Utility PWA
+# Buggy - Utilities & Sync PWA
+![Offline PWA Utilities](https://img.shields.io/badge/Status-Production-emerald?style=for-the-badge) ![Vite Build](https://img.shields.io/badge/Frontend-Vite_8_PWA-blue?style=for-the-badge) ![Worker](https://img.shields.io/badge/Backend-Cloudflare_Workers-f38020?style=for-the-badge)
 
-**Buggy** is a bleeding-edge, maximum-performance Progressive Web Application (PWA) hosting a suite of daily developer utilities. Built with an uncompromising focus on speed, offline capability, and modern web architecture, it runs entirely in the browser using WebAssembly and synchronizes securely to the edge.
+**Buggy** is an incredibly fast, bleeding-edge offline-first Progressive Web App (PWA) containing a suite of productivity utilities natively programmed for performance and massive scale. 
 
----
+Developed and distributed by **Shreyam Adhikari (shreyam1008)**.
 
-## 🚀 Tech Stack & Core Engine
+## 🚀 Features
 
-Buggy abandons legacy bundlers and frameworks in favor of a zero-bloat, ultra-modern stack designed for absolute minimum latency.
-
-| Technology | Details | Purpose |
-|------------|-------------------|---------|
-| **Vite `v8.0.0-beta`** | Rollup + Esbuild | Lightning-fast HMR and bundling. Custom Rollup `manualChunks` strips a 19s build down to **1.2s**, caching vendor libraries indefinitely on the client. |
-| **TypeScript `v6.0.0-beta`** | Strict Mode | Enforces immaculate type safety across both frontend UI and backend Worker handlers. |
-| **React `v19`** | Concurrent Mode | Next-generation React offering buttery-smooth transitions and hook-based concurrency. |
-| **Tailwind CSS `v4`** | Utility-first | Zero-configuration Vite native integration for perfectly semantic styling. |
-| **Bun** | JS Runtime/Manager | Used exclusively over npm/yarn for instant dependency resolution and script execution. |
+- **Live Ashram (WebSockets)**: Global real-time chat with 10 max writers, random Vedic usernames, typing indicators, and a strict 30-second self-destruct function built directly on Cloudflare Edge Memory.
+- **NVIDIA AI Studio**: Utilize cutting-edge LLMs (`Llama-3.1-70B`, `Gemma-2-9B`, `Mixtral-8x22B`) and `Stable Diffusion XL` via NVIDIA's blazing fast NIM APIs with full HTTP streaming support.
+- **OPFS Notes Sync**: Browser local-first SQLite (`sqlocal`) database holding your notes, which sync seamlessly to Cloudflare D1 across all your devices on command.
+- **Nepali Calendar**: Native, offline-first Nepali BS to English AD chronological engine.
+- **In-Browser Utilities**: Client-side Image Compression (WASM), PDF Merging (`pdf-lib`), and Bcrypt Hash generation. No server bandwidth required for heavy tasks!
+- **Native UI/UX**: Designed around OS-level `prefers-color-scheme` optimizations with a dedicated manual Dark Mode override that shifts pure CSS variables for hardware-accelerated animations and an incredible 100/100 Lighthouse score.
 
 ---
 
-## 🏗️ System Architecture & Data Flow
+## 🏗️ Architecture
 
-```mermaid
-graph TD
-    classDef frontend fill:#1e293b,stroke:#3b82f6,stroke-width:2px,color:#fff;
-    classDef worker fill:#1e293b,stroke:#f59e0b,stroke-width:2px,color:#fff;
-    classDef db fill:#0f172a,stroke:#10b981,stroke-width:2px,color:#fff;
-    classDef external fill:#0f172a,stroke:#8b5cf6,stroke-width:2px,color:#fff;
+The project has been aggressively refactored to separate the Data Layer, Network Layer, and Rendering Layer perfectly.
 
-    subgraph "Client (Browser / Offline PWA)"
-        UI[React 19 UI]:::frontend
-        OPFS[(SQLite WASM\nOPFS Storage)]:::db
-        SyncEngine[Sync Engine]:::frontend
-        AI[AI Interface]:::frontend
-        Cache[Service Worker\nCache]:::db
-    end
+### Frontend (`/frontend`)
+- **React 19 + TypeScript**: Strong typing combined with TanStack React Query (`useQuery`, `useMutation`) drastically reduces loading state boilerplate.
+- **Vite 8**: Sub-second build times relying entirely on `bun` with optimized manual chunks (`vendor-query`, `vendor-sqlite`) to keep the initial load under a few KBs.
+- **Tailwind v4**: Native CSS variable interpolation instead of heavy JS-in-CSS injection, delivering a pure `index.css` aesthetic.
+- **Custom React Hooks**: Features like `useLiveChat` cleanly separate the chaotic WebSocket connection loop from the pristine React presentation layer.
 
-    subgraph "Cloudflare Edge (api.shreyam1008.com.np)"
-        Worker[Cloudflare Worker]:::worker
-        D1[(D1 Global DB)]:::db
-    end
-    
-    subgraph "NVIDIA Serverless Inference"
-        NIM[NVIDIA NIM AI API]:::external
-    end
-
-    UI <--> |Local Read/Write (Zero Latency)| OPFS
-    UI --> |Offline Asset Load| Cache
-    UI <--> |Creates Prompts| AI
-    SyncEngine <--> |Bidirectional Rest Sync| Worker
-    AI <--> |SSE Stream / Base64 Image| Worker
-    Worker <--> |Persist/Fetch via SQL| D1
-    Worker <--> |Secure Bearer Request| NIM
-```
+### Backend (`/worker`)
+- **Cloudflare Workers (Edge)**: Runs instantly on V8 Isolates across thousands of datacenters globally.
+- **Modular Domain Design**: The `index.ts` Router is exceptionally minimal (< 100 lines), redirecting traffic intelligently to `handlers/ai.ts`, `handlers/notes.ts`, and `handlers/chat.ts`.
+- **Cloudflare D1 SQL**: Highly available SQL database for historical message persistence and global Note states. 
 
 ---
 
-## 🗄️ Database Deep-Dive
+## 💻 Local Development Setup
 
-### 1. In-Browser: `SQLocal` (SQLite WASM + OPFS)
-Buggy stores all your user data **locally** in the browser using a real SQLite engine.
-- **How it works:** SQLite is compiled to WebAssembly (WASM).
-- **Storage Layer:** It uses the **Origin Private File System (OPFS)**. This allows the WASM binary to perform synchronous read/write operations directly to your device's hard drive from the browser.
-- **Why it matters:** Unlike `localStorage` (which blocks the main thread) or `IndexedDB` (which is famously slow and clunky), OPFS SQLite offers near-native C++ database speeds. Queries resolve in mere milliseconds.
-- **Security Constraint:** OPFS requires `SharedArrayBuffer`, which is why the PWA strictly enforces `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp` headers.
-
-### 2. The Cloud Edge: Cloudflare D1
-When the user clicks **Sync**, the entire local database payload is structurally matched to a serverless SQL database distributed across Cloudflare's global edge network.
-- **Migrations:** The worker dynamically intercepts requests and runs a `runMigrations` SQL payload if the table doesn't exist, ensuring a zero-setup backend environment.
-- **Conflict Resolution:** The `ON CONFLICT(id) DO UPDATE SET` logic guarantees that the latest edits are flawlessly merged without duplicating notes.
-
----
-
-## ✨ Full Feature Suite
-
-### 1. 📝 Notes (OPFS Native)
-- **Local-First**: Notes are saved instantly to the local OPFS database.
-- **Monochromatic Brutalism**: Redesigned UI adhering to ultra-semantic `oat.ink` aesthetics—no invisible hovers, perfect touch accessibility.
-- **Cloud Sync**: Perform a bidirectional merge with Cloudflare D1.
-
-### 2. ✨ AI Studio (NVIDIA NIM Integration)
-- **Smart Offline Locks**: The UI gracefully detects `navigator.onLine` status and locks the studio with a warning when the device drops connection.
-- **SSE Chat**: Blazing-fast Server-Sent Event streaming chat bypassing massive SDK wrappers. Switch between live open-weights like `Llama-3.1-70B`, `Llama-3.1-8B`, and `Gemma-2-9B`.
-- **Image Generation**: Render prompts directly to massive `base64` image strings via a Worker proxy interpreting `stabilityai/stable-diffusion-xl`.
-
-### 3. Client-Side Cryptography & File Tooling
-- **📅 Date Converter**: Advanced Nepali-to-English (BS to AD) calendar manipulation.
-- **�️ Image Compressor**: Canvas-based compression (`browser-image-compression`). Zero server uploads.
-- **📄 PDF Merger**: Document byte-manipulation using `pdf-lib` securely in local memory.
-- **🔒 Bcrypt Generator**: Instant, secure password hashing using `bcryptjs`.
-
----
-
-## 📁 Repository Structure
-
-```text
-buggy/
-├── frontend/        -> Deployed to Cloudflare Pages (shreyam1008.com.np)
-│   ├── src/         -> React Components, Hooks, and Wouter routing
-│   ├── public/      -> PWA Manifest, Icons, and Strict Security Headers
-│   └── vite.config.ts -> Highly optimized Rollup manualChunks configuration
-└── worker/          -> Deployed to Cloudflare Workers (apiv2.shreyam1008.com.np)
-    ├── src/         -> Zero-dependency routing, D1 syncing, and AI Proxy logic
-    └── wrangler.toml -> Edge configuration and Database bindings
-```
-
----
-
-## 🖥️ Getting Started Locally
+We strictly use `bun` as the blazing fast package manager.
 
 ```bash
-# 1. Frontend setup
-cd frontend
+# 1. Clone the repository
+git clone https://github.com/shreyam1008/buggy
+cd buggy
+
+# 2. Setup the Worker & Database
+cd worker
+npm i -g npx # Assure npx is installed
+npx wrangler d1 create buggythegret # Or use your specific DB reference 
+npx wrangler deploy
+
+# 3. Start the Frontend
+cd ../frontend
 bun install
-
-# Start ultra-fast Vite dev server
-bun run dev       # → http://localhost:5173
-
-# 2. Worker setup (Test backend locally)
-cd ../worker
-npx wrangler secret put AI_API_KEY # Put your NVIDIA key here
-npx wrangler dev  # → http://localhost:8787
+bun run dev
 ```
 
----
-
-## 🔗 Related Projects
-
-This project belongs to an interconnected ecosystem of tools:
-- **[dbterm](https://shreyam1008.github.io/dbterm/)** - A beautiful, terminal-based database explorer.
-- **[Radhey](https://radhey.web.app/)**
-- **[Nepal Legal Firm](https://nepallegalfirm.com.np/)**
+Remember to map your `VITE_API_URL` inside `frontend/.env` to point to the live Worker edge location so the WebSockets and AI requests hit your datacenter correctly.
 
 ---
 
-## 📜 License
-MIT
+## 🕸️ SEO & Indexing
+
+- All indexing routes are configured via `sitemap.xml`.
+- **AI Crawlers are aggressively blocked** in `robots.txt` (`GPTBot`, `Claude-Web`, `CCBot`, etc.).
+- Deep JSON-LD structure metadata applied indicating Shreyam Adhikari as the Creator.
+
+---
+
+## 🔗 Connect With Me
+
+- **Twitter / X**: [@shreyam1008](https://x.com/shreyam1008)
+- **LinkedIn**: [Shreyam Adhikari](https://linkedin.com/in/shreyam1008)
+- **GitHub**: [shreyam1008](https://github.com/shreyam1008)
+- **YouTube**: [@shreyam1008](https://youtube.com/@shreyam1008)

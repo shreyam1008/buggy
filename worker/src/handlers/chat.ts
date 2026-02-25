@@ -65,7 +65,7 @@ export async function handleChatConnection(env: Env, req: Request) {
   const broadcast = (data: any, sender: WebSocket | null = null) => {
     const str = JSON.stringify(data);
     for (const c of activeClients) {
-      if (c.socket !== sender && c.socket.readyState === WebSocket.READY) {
+      if (c.socket !== sender && c.socket.readyState === 1) {
         c.socket.send(str);
       }
     }
@@ -92,7 +92,7 @@ export async function handleChatConnection(env: Env, req: Request) {
         
         // Broadcast instantly
         for (const c of activeClients) {
-           if (c.socket.readyState === WebSocket.READY) {
+           if (c.socket.readyState === 1) {
               c.socket.send(JSON.stringify(msgPayload));
            }
         }
@@ -114,7 +114,7 @@ export async function handleChatConnection(env: Env, req: Request) {
                 await env.DB.prepare(`DELETE FROM live_chat WHERE id = ?`).bind(msgId).run();
                 const dData = { type: 'delete', id: msgId };
                 for (const c of activeClients) {
-                    if (c.socket.readyState === WebSocket.READY) {
+                    if (c.socket.readyState === 1) {
                         c.socket.send(JSON.stringify(dData));
                     }
                 }

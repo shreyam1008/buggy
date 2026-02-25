@@ -8,9 +8,10 @@ export async function handleNotesSync(env: Env, req: Request) {
       return error('Invalid payload', req);
     }
 
-    const { results: remoteNotes } = await env.DB.prepare(
+    const { results } = await env.DB.prepare(
       `SELECT * FROM notes`
     ).all();
+    const remoteNotes = results as any[];
 
     const remoteMap = new Map(remoteNotes.map(n => [n.id, n]));
     const mergedMap = new Map();

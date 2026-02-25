@@ -38,9 +38,10 @@ export function useLiveChat() {
         setMyName(data.username);
         setCanWrite(data.canWrite);
       } else if (data.type === 'history') {
-        setMessages((prev) => [...data.messages.map((m: any) => ({ type: 'chat', ...m })), ...prev]);
+        const history = data.messages.map((m: any) => ({ type: 'chat', ...m }));
+        setMessages((prev) => [...history, ...prev].slice(-150));
       } else if (data.type === 'chat' || data.type === 'system') {
-        setMessages((prev) => [...prev, data]);
+        setMessages((prev) => [...prev, data].slice(-150));
         if (data.type === 'chat') {
           setTypists(prev => {
             const next = new Set(prev);
