@@ -1,222 +1,174 @@
-import React, { useState, useRef, useCallback } from 'react';
-import { motion, Reorder } from 'framer-motion';
-import { FileUp, FileText, Download, Trash2, GripVertical, Plus } from 'lucide-react';
-import { Button } from '../components/shared/Button';
+import { useState, useRef, useCallback } from 'react';
 
 interface PDFFile {
   id: string;
   file: File;
   name: string;
-  preview?: string;
+  isImage: boolean;
 }
 
 export default function PdfMerger() {
   const [files, setFiles] = useState<PDFFile[]>([]);
-  const [isMerging, setIsMerging] = useState(false);
+  const [merging, setMerging] = useState(false);
   const [mergedUrl, setMergedUrl] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
-  const handleFileSelect = useCallback((selectedFiles: FileList | null) => {
-    if (!selectedFiles) return;
-    
-    const newFiles: PDFFile[] = Array.from(selectedFiles)
-      .filter(file => file.type === 'application/pdf' || file.type.startsWith('image/'))
-      .map(file => ({
-        id: crypto.randomUUID(),
-        file,
-        name: file.name,
-      }));
-    
-    setFiles(prev => [...prev, ...newFiles]);
+  const addFiles = useCallback((fileList: FileList | null) => {
+    if (!fileList) return;
+    const newFiles: PDFFile[] = [];
+    for (let i = 0; i < fileList.length; i++) {
+      const f = fileList[i];
+      if (f.type === 'application/pdf' || f.type.startsWith('image/')) {
+        newFiles.push({
+          id: crypto.randomUUID(),
+          file: f,
+          name: f.name,
+          isImage: f.type.startsWith('image/'),
+        });
+      }
+    }
+    setFiles((prev) => [...prev, ...newFiles]);
     setMergedUrl(null);
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    handleFileSelect(e.dataTransfer.files);
-  }, [handleFileSelect]);
-
   const removeFile = (id: string) => {
-    setFiles(prev => prev.filter(f => f.id !== id));
+    setFiles((prev) => prev.filter((f) => f.id !== id));
     setMergedUrl(null);
   };
 
-  const mergePdfs = async () => {
+  const moveFile = (idx: number, dir: -1 | 1) => {
+    setFiles((prev) => {
+      const arr = [...prev];
+      const target = idx + dir;
+      if (target < 0 || target >= arr.length) return arr;
+      [arr[idx], arr[target]] = [arr[target], arr[idx]];
+      return arr;
+    });
+  };
+
+  const merge = async () => {
     if (files.length < 2) return;
-    
-    setIsMerging(true);
-    
+    setMerging(true);
     try {
-      // Lazy load pdf-lib
       const { PDFDocument } = await import('pdf-lib');
-      
-      const mergedPdf = await PDFDocument.create();
-      
-      for (const pdfFile of files) {
-        const arrayBuffer = await pdfFile.file.arrayBuffer();
-        
-        if (pdfFile.file.type === 'application/pdf') {
-          const pdf = await PDFDocument.load(arrayBuffer);
-          const pages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
-          pages.forEach(page => mergedPdf.addPage(page));
-        } else if (pdfFile.file.type.startsWith('image/')) {
-          // Convert image to PDF page
-          const imageBytes = new Uint8Array(arrayBuffer);
-          let image;
-          
-          if (pdfFile.file.type === 'image/png') {
-            image = await mergedPdf.embedPng(imageBytes);
-          } else {
-            image = await mergedPdf.embedJpg(imageBytes);
-          }
-          
-          const page = mergedPdf.addPage([image.width, image.height]);
-          page.drawImage(image, {
-            x: 0,
-            y: 0,
-            width: image.width,
-            height: image.height,
-          });
+      const merged = await PDFDocument.create();
+
+      for (const { file, isImage } of files) {
+        const bytes = await file.arrayBuffer();
+
+        if (!isImage) {
+          const src = await PDFDocument.load(bytes);
+          const pages = await merged.copyPages(src, src.getPageIndices());
+          pages.forEach((p) => merged.addPage(p));
+        } else {
+          // Embed image as PDF page
+          const imgBytes = new Uint8Array(bytes);
+          const image = file.type === 'image/png'
+            ? await merged.embedPng(imgBytes)
+            : await merged.embedJpg(imgBytes);
+          const page = merged.addPage([image.width, image.height]);
+          page.drawImage(image, { x: 0, y: 0, width: image.width, height: image.height });
         }
       }
-      
-      const mergedPdfBytes = await mergedPdf.save();
-      const blob = new Blob([mergedPdfBytes], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      
-      setMergedUrl(url);
-    } catch (error) {
-      console.error('Failed to merge PDFs:', error);
+
+      const pdfBytes = await merged.save();
+      const blob = new Blob([pdfBytes.buffer as ArrayBuffer], { type: 'application/pdf' });
+      if (mergedUrl) URL.revokeObjectURL(mergedUrl);
+      setMergedUrl(URL.createObjectURL(blob));
+    } catch (e) {
+      console.error('Merge failed:', e);
     } finally {
-      setIsMerging(false);
+      setMerging(false);
     }
   };
 
-  const downloadMerged = () => {
+  const download = () => {
     if (!mergedUrl) return;
-    
-    const link = document.createElement('a');
-    link.href = mergedUrl;
-    link.download = 'merged.pdf';
-    link.click();
+    const a = document.createElement('a');
+    a.href = mergedUrl;
+    a.download = 'merged.pdf';
+    a.click();
   };
 
   return (
-    <motion.div
-      className="page-container"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
-      <div className="page-header">
-        <h1 className="page-title">PDF Merger</h1>
-        <p className="page-subtitle">Combine PDFs & images into one document</p>
+    <div className="max-w-3xl mx-auto pt-12 lg:pt-0">
+      <h1 className="text-2xl font-bold mb-1">PDF Merger</h1>
+      <p className="text-sm text-slate-400 mb-6">Combine PDFs & images into one document</p>
+
+      <div
+        className="bg-slate-900 border-2 border-dashed border-slate-700 rounded-xl p-8 text-center cursor-pointer hover:border-red-600 transition-colors"
+        onDrop={(e) => { e.preventDefault(); addFiles(e.dataTransfer.files); }}
+        onDragOver={(e) => e.preventDefault()}
+        onClick={() => fileRef.current?.click()}
+      >
+        <span className="text-4xl block mb-2">📄</span>
+        <p className="font-semibold text-white">Drop PDFs or images here</p>
+        <p className="text-xs text-slate-500 mt-1">Or click to browse · Images are embedded as PDF pages</p>
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".pdf,image/*"
+          multiple
+          hidden
+          onChange={(e) => addFiles(e.target.files)}
+        />
       </div>
 
-      <div className="card" style={{ marginBottom: '1.5rem' }}>
-        <div className="card-content">
-          {/* Drop Zone */}
-          <div
-            className="drop-zone"
-            onDrop={handleDrop}
-            onDragOver={(e) => e.preventDefault()}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".pdf,image/*"
-              multiple
-              onChange={(e) => handleFileSelect(e.target.files)}
-              style={{ display: 'none' }}
-            />
-            <div className="drop-zone-icon">
-              <FileUp size={48} />
-            </div>
-            <p className="drop-zone-text">
-              Drop PDFs or images here, or click to select
-            </p>
+      {files.length > 0 && (
+        <div className="mt-4 bg-slate-900 border border-slate-800 rounded-xl p-5">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm text-slate-300">{files.length} file{files.length > 1 ? 's' : ''}</span>
+            <button
+              onClick={() => fileRef.current?.click()}
+              className="text-xs text-red-400 hover:text-red-300 transition cursor-pointer"
+            >
+              + Add More
+            </button>
           </div>
 
-          {/* File List */}
-          {files.length > 0 && (
-            <div style={{ marginTop: '1.5rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <span style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)' }}>
-                  {files.length} file{files.length !== 1 ? 's' : ''} selected
-                </span>
-                <Button variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()}>
-                  <Plus size={16} /> Add More
-                </Button>
-              </div>
-              
-              <Reorder.Group axis="y" values={files} onReorder={setFiles} style={{ listStyle: 'none', padding: 0 }}>
-                {files.map((pdfFile) => (
-                  <Reorder.Item
-                    key={pdfFile.id}
-                    value={pdfFile}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.75rem',
-                      padding: '0.75rem',
-                      background: 'rgba(255,255,255,0.03)',
-                      borderRadius: '12px',
-                      marginBottom: '0.5rem',
-                      cursor: 'grab',
-                    }}
-                    whileDrag={{ scale: 1.02, cursor: 'grabbing' }}
-                  >
-                    <GripVertical size={18} style={{ color: 'rgba(255,255,255,0.4)' }} />
-                    <FileText size={18} color="var(--primary-color)" />
-                    <span style={{ flex: 1, fontSize: '0.9rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {pdfFile.name}
-                    </span>
-                    <button
-                      onClick={() => removeFile(pdfFile.id)}
-                      style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer' }}
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </Reorder.Item>
-                ))}
-              </Reorder.Group>
-              
-              <Button
-                variant="primary"
-                fullWidth
-                onClick={mergePdfs}
-                disabled={files.length < 2 || isMerging}
-                style={{ marginTop: '1rem' }}
-              >
-                {isMerging ? (
-                  <><div className="loading-spinner" style={{ width: 18, height: 18 }} /> Merging...</>
-                ) : (
-                  <><FileText size={18} /> Merge {files.length} Files</>
-                )}
-              </Button>
-            </div>
-          )}
+          <ul className="space-y-1">
+            {files.map((f, i) => (
+              <li key={f.id} className="flex items-center gap-2 bg-slate-800/50 rounded-lg px-3 py-2 text-sm">
+                <span>{f.isImage ? '🖼️' : '📄'}</span>
+                <span className="flex-1 truncate text-slate-300">{f.name}</span>
+                <div className="flex gap-1">
+                  <button disabled={i === 0} onClick={() => moveFile(i, -1)} className="text-slate-500 hover:text-white disabled:opacity-30 text-xs cursor-pointer">↑</button>
+                  <button disabled={i === files.length - 1} onClick={() => moveFile(i, 1)} className="text-slate-500 hover:text-white disabled:opacity-30 text-xs cursor-pointer">↓</button>
+                  <button onClick={() => removeFile(f.id)} className="text-slate-500 hover:text-red-400 text-xs cursor-pointer">✕</button>
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          <div className="flex gap-2 mt-4">
+            <button
+              onClick={merge}
+              disabled={files.length < 2 || merging}
+              className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-semibold rounded-lg text-sm transition cursor-pointer"
+            >
+              {merging ? '⏳ Merging…' : `🔗 Merge ${files.length} Files`}
+            </button>
+            <button
+              onClick={() => { setFiles([]); setMergedUrl(null); }}
+              className="px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-300 hover:bg-slate-700 transition cursor-pointer"
+            >
+              Clear
+            </button>
+          </div>
         </div>
-      </div>
-
-      {/* Download Result */}
-      {mergedUrl && (
-        <motion.div
-          className="card"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <div className="card-content" style={{ textAlign: 'center' }}>
-            <div className="status-box status-success" style={{ marginBottom: '1rem' }}>
-              ✓ PDFs merged successfully!
-            </div>
-            <Button variant="primary" onClick={downloadMerged}>
-              <Download size={18} /> Download Merged PDF
-            </Button>
-          </div>
-        </motion.div>
       )}
-    </motion.div>
+
+      {mergedUrl && (
+        <div className="mt-4 bg-emerald-950/30 border border-emerald-800 rounded-xl p-5 text-center">
+          <p className="text-emerald-400 font-semibold mb-3">✅ Merged Successfully</p>
+          <button
+            onClick={download}
+            className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-sm transition cursor-pointer"
+          >
+            ⬇ Download Merged PDF
+          </button>
+        </div>
+      )}
+    </div>
   );
 }

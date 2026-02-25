@@ -1,154 +1,74 @@
+import { useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Home,
-  Image,
-  FileText,
-  StickyNote,
-  Lock,
-  Box,
-  Zap,
-  Flower2,
-  Menu,
-  X,
-} from 'lucide-react';
-import { useAppStore } from '../store/appStore';
 
-interface NavItem {
-  path: string;
-  label: string;
-  icon: React.ReactNode;
-}
-
-const navItems: NavItem[] = [
-  { path: '/', label: 'Date Converter', icon: <Home size={20} /> },
-  { path: '/image-compressor', label: 'Image Tools', icon: <Image size={20} /> },
-  { path: '/pdf-merger', label: 'PDF Merger', icon: <FileText size={20} /> },
-  { path: '/notes', label: 'Notes', icon: <StickyNote size={20} /> },
-  { path: '/bcrypt', label: 'Bcrypt', icon: <Lock size={20} /> },
-  { path: '/3d-showcase', label: '3D Showcase', icon: <Box size={20} /> },
-  { path: '/wasm-benchmark', label: 'WASM Benchmark', icon: <Zap size={20} /> },
-  { path: '/radha-krishna', label: 'Radha Krishna', icon: <Flower2 size={20} /> },
+const navItems = [
+  { path: '/', label: 'Date Converter', icon: '📅' },
+  { path: '/calendar', label: 'Calendar', icon: '🗓️' },
+  { path: '/image', label: 'Image Tools', icon: '🖼️' },
+  { path: '/pdf', label: 'PDF Merger', icon: '📄' },
+  { path: '/notes', label: 'Notes', icon: '📝' },
+  { path: '/bcrypt', label: 'Bcrypt', icon: '🔒' },
 ];
 
-const sidebarVariants = {
-  open: {
-    x: 0,
-    transition: {
-      type: 'spring' as const,
-      stiffness: 300,
-      damping: 30,
-    },
-  },
-  closed: {
-    x: '-100%',
-    transition: {
-      type: 'spring' as const,
-      stiffness: 300,
-      damping: 30,
-    },
-  },
-};
-
-const overlayVariants = {
-  open: { opacity: 1, pointerEvents: 'auto' as const },
-  closed: { opacity: 0, pointerEvents: 'none' as const },
-};
-
-export const Sidebar: React.FC = () => {
+export default function Sidebar() {
+  const [open, setOpen] = useState(false);
   const [location] = useLocation();
-  const { sidebarOpen, setSidebarOpen, currentGreeting } = useAppStore();
-
-  const closeSidebar = () => setSidebarOpen(false);
 
   return (
     <>
-      {/* Mobile Overlay */}
-      <AnimatePresence>
-        {sidebarOpen && (
-          <motion.div
-            className="sidebar-overlay"
-            variants={overlayVariants}
-            initial="closed"
-            animate="open"
-            exit="closed"
-            onClick={closeSidebar}
-          />
-        )}
-      </AnimatePresence>
+      {/* Mobile toggle */}
+      <button
+        className="lg:hidden fixed top-3 left-3 z-50 w-10 h-10 flex items-center justify-center rounded-lg bg-slate-800 border border-slate-700 text-xl cursor-pointer hover:bg-slate-700 transition-colors"
+        onClick={() => setOpen(!open)}
+        aria-label="Toggle menu"
+      >
+        {open ? '✕' : '☰'}
+      </button>
+
+      {/* Overlay */}
+      {open && (
+        <div
+          className="fixed inset-0 bg-black/40 z-30 lg:hidden"
+          onClick={() => setOpen(false)}
+        />
+      )}
 
       {/* Sidebar */}
-      <motion.aside
-        className="sidebar"
-        variants={sidebarVariants}
-        initial={false}
-        animate={sidebarOpen ? 'open' : 'closed'}
+      <aside
+        className={`fixed left-0 top-0 bottom-0 w-60 flex flex-col bg-slate-900 border-r border-slate-800 z-40 transition-transform duration-200 lg:translate-x-0 ${
+          open ? 'translate-x-0' : '-translate-x-full'
+        }`}
       >
-        {/* Header */}
-        <div className="sidebar-header">
-          <div className="sidebar-logo">
-            <Flower2 size={32} color="var(--primary-color)" />
-            <div>
-              <h2 className="sidebar-title">RK Utilities</h2>
-              <p className="sidebar-greeting">{currentGreeting}</p>
-            </div>
-          </div>
-          <button className="sidebar-close" onClick={closeSidebar} aria-label="Close sidebar">
-            <X size={24} />
-          </button>
+        <div className="p-4 border-b border-slate-800">
+          <h2 className="text-base font-bold text-white">⚡ Utilities</h2>
+          <p className="text-xs text-slate-500 mt-0.5">Offline PWA</p>
         </div>
 
-        {/* Navigation */}
-        <nav className="sidebar-nav">
-          {navItems.map((item) => {
-            const isActive = location === item.path;
-            return (
-              <Link key={item.path} href={item.path} onClick={closeSidebar}>
-                <motion.div
-                  className={`sidebar-nav-item ${isActive ? 'active' : ''}`}
-                  whileHover={{ x: 4 }}
-                  whileTap={{ scale: 0.98 }}
-                  transition={{ duration: 0.15 }}
-                >
-                  <span className="sidebar-nav-icon">{item.icon}</span>
-                  <span className="sidebar-nav-label">{item.label}</span>
-                  {isActive && (
-                    <motion.div
-                      className="sidebar-nav-indicator"
-                      layoutId="activeIndicator"
-                      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                    />
-                  )}
-                </motion.div>
-              </Link>
-            );
-          })}
+        <nav className="flex-1 overflow-y-auto p-2 space-y-0.5">
+          {navItems.map((item) => (
+            <Link
+              key={item.path}
+              href={item.path}
+              onClick={() => setOpen(false)}
+            >
+              <div
+                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm cursor-pointer transition-colors ${
+                  location === item.path
+                    ? 'bg-red-600 text-white font-semibold'
+                    : 'text-slate-300 hover:bg-slate-800'
+                }`}
+              >
+                <span className="text-base w-6 text-center">{item.icon}</span>
+                <span>{item.label}</span>
+              </div>
+            </Link>
+          ))}
         </nav>
 
-        {/* Footer */}
-        <div className="sidebar-footer">
-          <p className="sidebar-footer-text">
-            Made with 💜 for<br />
-            Radha Krishna
-          </p>
+        <div className="p-3 border-t border-slate-800 text-center text-xs text-slate-600">
+          Works offline · PWA
         </div>
-      </motion.aside>
+      </aside>
     </>
   );
-};
-
-// Mobile Menu Button
-export const MenuButton: React.FC = () => {
-  const { toggleSidebar } = useAppStore();
-
-  return (
-    <motion.button
-      className="menu-button"
-      onClick={toggleSidebar}
-      whileTap={{ scale: 0.9 }}
-      aria-label="Toggle menu"
-    >
-      <Menu size={24} />
-    </motion.button>
-  );
-};
+}

@@ -1,53 +1,44 @@
 import { Suspense, lazy } from 'react';
 import { Route, Switch } from 'wouter';
-import { AnimatePresence } from 'framer-motion';
-import { Layout } from './components/Layout';
-import './styles.css';
+import Sidebar from './components/Sidebar';
 
-// Lazy load pages for code splitting
-const Home = lazy(() => import('./pages/Home'));
+const DateConverter = lazy(() => import('./pages/DateConverter'));
+const Calendar = lazy(() => import('./pages/Calendar'));
 const ImageCompressor = lazy(() => import('./pages/ImageCompressor'));
 const PdfMerger = lazy(() => import('./pages/PdfMerger'));
 const Notes = lazy(() => import('./pages/Notes'));
 const BcryptGenerator = lazy(() => import('./pages/BcryptGenerator'));
-const ThreeDShowcase = lazy(() => import('./pages/ThreeDShowcase'));
-const WasmBenchmark = lazy(() => import('./pages/WasmBenchmark'));
-const RadhaKrishnaHub = lazy(() => import('./pages/RadhaKrishnaHub'));
 
-// Loading component
-const PageLoader = () => (
-  <div className="loading-page">
-    <div className="loading-spinner" />
-  </div>
-);
-
-function App() {
+function Loader() {
   return (
-    <Layout>
-      <Suspense fallback={<PageLoader />}>
-        <AnimatePresence mode="wait">
-          <Switch>
-            <Route path="/" component={Home} />
-            <Route path="/image-compressor" component={ImageCompressor} />
-            <Route path="/pdf-merger" component={PdfMerger} />
-            <Route path="/notes" component={Notes} />
-            <Route path="/bcrypt" component={BcryptGenerator} />
-            <Route path="/3d-showcase" component={ThreeDShowcase} />
-            <Route path="/wasm-benchmark" component={WasmBenchmark} />
-            <Route path="/radha-krishna" component={RadhaKrishnaHub} />
-            
-            {/* 404 Fallback */}
-            <Route>
-              <div className="page-container" style={{ textAlign: 'center', padding: '3rem' }}>
-                <h1 className="page-title">404</h1>
-                <p className="page-subtitle">Page not found</p>
-              </div>
-            </Route>
-          </Switch>
-        </AnimatePresence>
-      </Suspense>
-    </Layout>
+    <div className="flex items-center justify-center min-h-[50vh]">
+      <div className="w-8 h-8 border-3 border-slate-300 border-t-red-600 rounded-full animate-spin" />
+    </div>
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <div className="flex min-h-dvh bg-slate-950 text-slate-100">
+      <Sidebar />
+      <main className="flex-1 min-w-0 p-4 sm:p-6 lg:ml-60">
+        <Suspense fallback={<Loader />}>
+          <Switch>
+            <Route path="/" component={DateConverter} />
+            <Route path="/calendar" component={Calendar} />
+            <Route path="/image" component={ImageCompressor} />
+            <Route path="/pdf" component={PdfMerger} />
+            <Route path="/notes" component={Notes} />
+            <Route path="/bcrypt" component={BcryptGenerator} />
+            <Route>
+              <div className="text-center py-20">
+                <h1 className="text-4xl font-bold">404</h1>
+                <p className="text-slate-400 mt-2">Page not found</p>
+              </div>
+            </Route>
+          </Switch>
+        </Suspense>
+      </main>
+    </div>
+  );
+}

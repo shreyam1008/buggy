@@ -1,8 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Search, Trash2, Save, X, Tag, Clock } from 'lucide-react';
 import { openDB, type IDBPDatabase } from 'idb';
-import { Button } from '../components/shared/Button';
 
 interface Note {
   id: string;
@@ -16,6 +13,7 @@ interface Note {
 
 const DB_NAME = 'notes-db';
 const STORE_NAME = 'notes';
+const SYNC_URL_KEY = 'notes-sync-url';
 
 async function getDB(): Promise<IDBPDatabase> {
   return openDB(DB_NAME, 1, {
@@ -28,269 +26,189 @@ async function getDB(): Promise<IDBPDatabase> {
   });
 }
 
+async function loadAllNotes(): Promise<Note[]> {
+  const db = await getDB();
+  return ((await db.getAll(STORE_NAME)) as Note[]).sort((a, b) => b.updatedAt - a.updatedAt);
+}
+
+async function saveNote(note: Note): Promise<void> {
+  const db = await getDB();
+  await db.put(STORE_NAME, note);
+}
+
+async function deleteNoteFromDB(id: string): Promise<void> {
+  const db = await getDB();
+  await db.delete(STORE_NAME, id);
+}
+
+function fmtDate(ts: number) {
+  return new Date(ts).toLocaleDateString('en-US', {
+    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+  });
+}
+
 export default function Notes() {
   const [notes, setNotes] = useState<Note[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editTitle, setEditTitle] = useState('');
-  const [editContent, setEditContent] = useState('');
-  const [editTags, setEditTags] = useState('');
+  const [selected, setSelected] = useState<Note | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [tags, setTags] = useState('');
+  const [search, setSearch] = useState('');
+  const [syncing, setSyncing] = useState(false);
+  const [lastSynced, setLastSynced] = useState<string | null>(
+    localStorage.getItem('notes-last-synced')
+  );
 
-  const loadNotes = useCallback(async () => {
-    try {
-      const db = await getDB();
-      const allNotes = await db.getAll(STORE_NAME);
-      setNotes(allNotes.sort((a, b) => b.updatedAt - a.updatedAt));
-    } catch (error) {
-      console.error('Failed to load notes:', error);
-    }
-  }, []);
+  const loadNotes = useCallback(async () => { setNotes(await loadAllNotes()); }, []);
+  useEffect(() => { loadNotes(); }, [loadNotes]);
 
-  useEffect(() => {
-    loadNotes();
-  }, [loadNotes]);
-
-  const saveNote = async (note: Note) => {
-    try {
-      const db = await getDB();
-      await db.put(STORE_NAME, note);
-      await loadNotes();
-    } catch (error) {
-      console.error('Failed to save note:', error);
-    }
-  };
-
-  const deleteNote = async (id: string) => {
-    try {
-      const db = await getDB();
-      await db.delete(STORE_NAME, id);
-      await loadNotes();
-      if (selectedNote?.id === id) {
-        setSelectedNote(null);
-        setIsEditing(false);
-      }
-    } catch (error) {
-      console.error('Failed to delete note:', error);
-    }
-  };
-
-  const createNewNote = () => {
-    const newNote: Note = {
-      id: crypto.randomUUID(),
-      title: 'Untitled Note',
-      content: '',
-      tags: [],
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      synced: false,
+  const createNote = () => {
+    const note: Note = {
+      id: crypto.randomUUID(), title: 'Untitled Note', content: '',
+      tags: [], createdAt: Date.now(), updatedAt: Date.now(), synced: false,
     };
-    setSelectedNote(newNote);
-    setEditTitle(newNote.title);
-    setEditContent(newNote.content);
-    setEditTags('');
-    setIsEditing(true);
+    setSelected(note); setTitle(note.title); setContent(''); setTags(''); setEditing(true);
   };
 
-  const startEditing = (note: Note) => {
-    setSelectedNote(note);
-    setEditTitle(note.title);
-    setEditContent(note.content);
-    setEditTags(note.tags.join(', '));
-    setIsEditing(true);
+  const startEdit = (note: Note) => {
+    setSelected(note); setTitle(note.title); setContent(note.content);
+    setTags(note.tags.join(', ')); setEditing(true);
   };
 
   const handleSave = async () => {
-    if (!selectedNote) return;
-    
-    const updatedNote: Note = {
-      ...selectedNote,
-      title: editTitle || 'Untitled Note',
-      content: editContent,
-      tags: editTags.split(',').map(t => t.trim()).filter(Boolean),
-      updatedAt: Date.now(),
-      synced: false,
+    if (!selected) return;
+    const updated: Note = {
+      ...selected, title: title || 'Untitled Note', content,
+      tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
+      updatedAt: Date.now(), synced: false,
     };
-    
-    await saveNote(updatedNote);
-    setSelectedNote(updatedNote);
-    setIsEditing(false);
+    await saveNote(updated); setSelected(updated); setEditing(false); await loadNotes();
   };
 
   const cancelEdit = () => {
-    if (selectedNote && !notes.find(n => n.id === selectedNote.id)) {
-      setSelectedNote(null);
-    }
-    setIsEditing(false);
+    if (selected && !notes.find((n) => n.id === selected.id)) setSelected(null);
+    setEditing(false);
   };
 
-  const filteredNotes = notes.filter(note => 
-    note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    note.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    note.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+  const handleDelete = async (id: string) => {
+    await deleteNoteFromDB(id); await loadNotes();
+    if (selected?.id === id) { setSelected(null); setEditing(false); }
+  };
+
+  const syncToCloud = async () => {
+    let baseUrl = localStorage.getItem(SYNC_URL_KEY);
+    if (!baseUrl) {
+      const url = prompt('Enter your Cloudflare Worker URL for D1 sync:\n(e.g. https://buggy-api.yourname.workers.dev)');
+      if (!url) return;
+      baseUrl = url.replace(/\/$/, '');
+      localStorage.setItem(SYNC_URL_KEY, baseUrl);
+    }
+    setSyncing(true);
+    try {
+      const local = await loadAllNotes();
+      const res = await fetch(`${baseUrl}/api/notes/sync`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes: local }),
+      });
+      if (!res.ok) throw new Error(`Sync failed: ${res.status}`);
+      const { notes: merged } = await res.json() as { notes: Note[] };
+      const db = await getDB();
+      for (const note of merged) await db.put(STORE_NAME, { ...note, synced: true });
+      await loadNotes();
+      const now = new Date().toLocaleString();
+      localStorage.setItem('notes-last-synced', now);
+      setLastSynced(now);
+    } catch (e) {
+      console.error('Sync error:', e);
+      alert(`Sync failed: ${(e as Error).message}`);
+    } finally { setSyncing(false); }
+  };
+
+  const filtered = notes.filter((n) =>
+    n.title.toLowerCase().includes(search.toLowerCase()) ||
+    n.content.toLowerCase().includes(search.toLowerCase()) ||
+    n.tags.some((t) => t.toLowerCase().includes(search.toLowerCase()))
   );
 
-  const formatDate = (timestamp: number) => {
-    const date = new Date(timestamp);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
   return (
-    <motion.div
-      className="page-container"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      style={{ maxWidth: '1000px' }}
-    >
-      <div className="page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+    <div className="max-w-3xl mx-auto pt-12 lg:pt-0">
+      <div className="flex items-start justify-between flex-wrap gap-3 mb-4">
         <div>
-          <h1 className="page-title">Notes</h1>
-          <p className="page-subtitle">Your notes, stored locally & synced</p>
+          <h1 className="text-2xl font-bold">Notes</h1>
+          <p className="text-sm text-slate-400">Local storage · Sync to cloud</p>
         </div>
-        <Button variant="primary" onClick={createNewNote}>
-          <Plus size={18} /> New Note
-        </Button>
-      </div>
-
-      <div className="input-group" style={{ marginBottom: '1.5rem' }}>
-        <div className="input-wrapper">
-          <div className="input-icon"><Search size={18} /></div>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search notes..."
-            className="input input-with-icon"
-          />
+        <div className="flex gap-2">
+          <button onClick={syncToCloud} disabled={syncing}
+            className="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-300 hover:bg-slate-700 disabled:opacity-50 transition cursor-pointer">
+            {syncing ? '⏳' : '☁️'} Sync
+          </button>
+          <button onClick={createNote}
+            className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition cursor-pointer">
+            ＋ New
+          </button>
         </div>
       </div>
 
-      <AnimatePresence mode="wait">
-        {isEditing && selectedNote ? (
-          <motion.div
-            key="editor"
-            className="card"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-          >
-            <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 className="card-title">{selectedNote.createdAt === selectedNote.updatedAt ? 'New Note' : 'Edit Note'}</h3>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <Button variant="ghost" size="sm" onClick={cancelEdit}>
-                  <X size={16} /> Cancel
-                </Button>
-                <Button variant="primary" size="sm" onClick={handleSave}>
-                  <Save size={16} /> Save
-                </Button>
-              </div>
-            </div>
-            <div className="card-content">
-              <div className="input-group">
-                <label className="label">Title</label>
-                <input
-                  type="text"
-                  value={editTitle}
-                  onChange={(e) => setEditTitle(e.target.value)}
-                  placeholder="Note title..."
-                  className="input"
-                  autoFocus
-                />
-              </div>
-              
-              <div className="input-group">
-                <label className="label">Content</label>
-                <textarea
-                  value={editContent}
-                  onChange={(e) => setEditContent(e.target.value)}
-                  placeholder="Write your note..."
-                  className="input"
-                  style={{ minHeight: '200px', resize: 'vertical' }}
-                />
-              </div>
+      {lastSynced && <p className="text-xs text-slate-600 mb-3">Last synced: {lastSynced}</p>}
 
-              <div className="input-group">
-                <label className="label"><Tag size={14} style={{ marginRight: '0.25rem' }} />Tags (comma separated)</label>
-                <input
-                  type="text"
-                  value={editTags}
-                  onChange={(e) => setEditTags(e.target.value)}
-                  placeholder="tag1, tag2, tag3"
-                  className="input"
-                />
-              </div>
-            </div>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="list"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            {filteredNotes.length === 0 ? (
-              <div className="card" style={{ textAlign: 'center', padding: '3rem' }}>
-                <p style={{ color: 'rgba(255,255,255,0.6)', marginBottom: '1rem' }}>
-                  {notes.length === 0 ? 'No notes yet. Create your first note!' : 'No notes match your search.'}
-                </p>
-                {notes.length === 0 && (
-                  <Button variant="primary" onClick={createNewNote}>
-                    <Plus size={18} /> Create Note
-                  </Button>
-                )}
-              </div>
-            ) : (
-              <div className="notes-grid">
-                {filteredNotes.map((note) => (
-                  <motion.div
-                    key={note.id}
-                    className="note-card"
-                    onClick={() => startEditing(note)}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    layout
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <h4 className="note-title">{note.title}</h4>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); deleteNote(note.id); }}
-                        style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: '0.25rem' }}
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                    <p className="note-preview">{note.content || 'No content'}</p>
-                    
-                    {note.tags.length > 0 && (
-                      <div style={{ marginBottom: '0.5rem' }}>
-                        {note.tags.slice(0, 3).map((tag, i) => (
-                          <span key={i} className="tag">{tag}</span>
-                        ))}
-                      </div>
-                    )}
-                    
-                    <div className="note-meta">
-                      <Clock size={12} style={{ marginRight: '0.25rem' }} />
-                      {formatDate(note.updatedAt)}
-                      {!note.synced && <span style={{ marginLeft: '0.5rem', color: '#fbbf24' }}>• Unsynced</span>}
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
+        placeholder="🔍 Search notes…"
+        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:ring-2 focus:ring-red-600 mb-4 transition" />
 
-      <div style={{ marginTop: '2rem', textAlign: 'center', fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)' }}>
-        {notes.length} notes stored locally
-      </div>
-    </motion.div>
+      {editing && selected ? (
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
+          <h3 className="font-semibold text-sm">{selected.createdAt === selected.updatedAt ? 'New Note' : 'Edit Note'}</h3>
+          <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title…" autoFocus
+            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:ring-2 focus:ring-red-600 transition" />
+          <textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="Write your note…" rows={8}
+            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:ring-2 focus:ring-red-600 resize-y transition" />
+          <input type="text" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="Tags (comma separated)"
+            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:ring-2 focus:ring-red-600 transition" />
+          <div className="flex gap-2">
+            <button onClick={handleSave} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition cursor-pointer">💾 Save</button>
+            <button onClick={cancelEdit} className="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-300 hover:bg-slate-700 transition cursor-pointer">Cancel</button>
+          </div>
+        </div>
+      ) : (
+        <>
+          {filtered.length === 0 ? (
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center">
+              <p className="text-slate-400">{notes.length === 0 ? 'No notes yet.' : 'No results.'}</p>
+              {notes.length === 0 && (
+                <button onClick={createNote} className="mt-3 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition cursor-pointer">＋ Create Note</button>
+              )}
+            </div>
+          ) : (
+            <div className="grid sm:grid-cols-2 gap-3">
+              {filtered.map((note) => (
+                <div key={note.id} onClick={() => startEdit(note)}
+                  className="bg-slate-900 border border-slate-800 rounded-xl p-4 cursor-pointer hover:border-slate-600 transition group">
+                  <div className="flex items-start justify-between mb-2">
+                    <strong className="text-sm">{note.title}</strong>
+                    <button onClick={(e) => { e.stopPropagation(); handleDelete(note.id); }}
+                      className="text-slate-600 hover:text-red-400 transition opacity-0 group-hover:opacity-100 cursor-pointer">🗑</button>
+                  </div>
+                  <p className="text-xs text-slate-500 line-clamp-3 mb-2">{note.content || 'No content'}</p>
+                  {note.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {note.tags.slice(0, 3).map((t) => (
+                        <span key={t} className="text-[10px] px-1.5 py-0.5 bg-slate-800 rounded text-slate-400">{t}</span>
+                      ))}
+                    </div>
+                  )}
+                  <p className="text-[10px] text-slate-600">
+                    {fmtDate(note.updatedAt)}
+                    {!note.synced && <span className="text-amber-500"> · Unsynced</span>}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      <p className="text-center text-xs text-slate-600 mt-6">{notes.length} notes stored locally</p>
+    </div>
   );
 }

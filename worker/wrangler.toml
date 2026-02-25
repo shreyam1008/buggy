@@ -1,0 +1,11 @@
+name = "buggy-api"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "buggythegret"
+database_id = "9700f14a-a245-4279-b420-7ab78183fc2f"
+
+# [vars]
+# AI_API_KEY = ""  # Add via `wrangler secret put AI_API_KEY`
