@@ -23,7 +23,7 @@ export default function App() {
   return (
     <div className="flex min-h-dvh bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
       <Sidebar />
-      <main className="flex-1 min-w-0 p-4 sm:p-6 lg:ml-60">
+      <main className="flex-1 min-w-0 p-4 sm:p-6 overflow-y-auto">
         <Suspense fallback={<Loader />}>
           <Switch>
             <Route path="/" component={DateConverter} />

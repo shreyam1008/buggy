@@ -148,27 +148,29 @@ export default function AI() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto flex flex-col h-[calc(100vh-2rem)]">
+    <div className="max-w-5xl mx-auto flex flex-col h-[calc(100dvh-2rem)] pt-12 lg:pt-0">
       {/* Offline Banner */}
       {!isOnline && (
-        <div className="bg-orange-500/20 text-orange-400 border border-orange-500/30 px-4 py-2.5 rounded-lg mb-4 text-sm font-medium flex items-center gap-2 shadow-inner">
-          <span className="animate-pulse">⚠️</span> AI Studio natively requires an active internet connection to contact LLM endpoints.
+        <div className="bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-400 border border-orange-300 dark:border-orange-500/30 px-4 py-2.5 rounded-lg mb-4 text-sm font-medium flex items-center gap-2 shadow-inner transition-colors">
+          <span className="animate-pulse">⚠️</span> AI Studio requires an active internet connection.
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3 flex-shrink-0">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-400 to-teal-500 bg-clip-text text-transparent leading-tight w-full truncate">
+          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent leading-tight w-full truncate">
             AI Studio
           </h1>
-          <p className="text-slate-400 text-xs sm:text-sm mt-0.5">Accelerated by NVIDIA NIM API</p>
+          <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm mt-0.5 transition-colors">Accelerated by NVIDIA NIM API</p>
         </div>
         
-        <div className="flex bg-slate-800 p-1 rounded-lg shadow-inner w-full sm:w-auto">
+        <div className="flex bg-slate-200 dark:bg-slate-800 p-1 rounded-lg shadow-inner w-full sm:w-auto transition-colors">
           <button
             onClick={() => setActiveTab('chat')}
             className={`flex-1 sm:flex-none px-4 sm:px-5 py-2 rounded-md text-sm font-medium transition-all duration-200 cursor-pointer ${
-              activeTab === 'chat' ? 'bg-slate-700 text-emerald-400 shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
+              activeTab === 'chat' 
+                ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-md' 
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-300/50 dark:hover:bg-slate-700/50'
             }`}
           >
             💬 Chat
@@ -176,7 +178,9 @@ export default function AI() {
           <button
             onClick={() => setActiveTab('image')}
             className={`flex-1 sm:flex-none px-4 sm:px-5 py-2 rounded-md text-sm font-medium transition-all duration-200 cursor-pointer ${
-              activeTab === 'image' ? 'bg-slate-700 text-emerald-400 shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
+              activeTab === 'image' 
+                ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-md' 
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-300/50 dark:hover:bg-slate-700/50'
             }`}
           >
             🎨 Image
@@ -185,13 +189,13 @@ export default function AI() {
       </div>
 
       {activeTab === 'chat' && (
-        <div className="flex flex-col flex-1 bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
-          <div className="flex items-center justify-between p-3 border-b border-slate-800 bg-slate-800/30">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider pl-2">Language Model</span>
+        <div className="flex flex-col flex-1 min-h-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm transition-colors">
+          <div className="flex items-center justify-between p-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/30 transition-colors">
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider pl-2">Language Model</span>
             <select
               value={chatModel}
               onChange={(e) => setChatModel(e.target.value)}
-              className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-emerald-500 transition-colors shadow-sm cursor-pointer"
+              className="bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-900 dark:text-white outline-none focus:border-emerald-500 transition-colors shadow-sm cursor-pointer"
             >
               {CHAT_MODELS.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
             </select>
@@ -199,7 +203,7 @@ export default function AI() {
           
           <div className="flex-1 overflow-y-auto p-4 space-y-6">
             {messages.length === 0 && (
-              <div className="h-full flex flex-col items-center justify-center text-slate-500 space-y-3">
+              <div className="h-full flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 space-y-3">
                 <span className="text-4xl opacity-50">🤖</span>
                 <p>Start a conversation with an LLM</p>
               </div>
@@ -209,7 +213,7 @@ export default function AI() {
                 <div className={`max-w-[85%] rounded-2xl px-5 py-3.5 shadow-md ${
                   msg.role === 'user' 
                     ? 'bg-emerald-600/90 text-white rounded-br-sm' 
-                    : 'bg-slate-800 text-slate-200 rounded-bl-sm border border-slate-700/50'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-bl-sm border border-slate-200 dark:border-slate-700/50'
                 }`}>
                   <p className="whitespace-pre-wrap leading-relaxed text-[15px]">{msg.content}</p>
                 </div>
@@ -217,7 +221,7 @@ export default function AI() {
             ))}
             {chatLoading && messages[messages.length - 1]?.role === 'user' && (
               <div className="flex justify-start">
-                <div className="bg-slate-800 rounded-2xl rounded-bl-sm px-5 py-4 border border-slate-700/50 shadow-md">
+                <div className="bg-slate-100 dark:bg-slate-800 rounded-2xl rounded-bl-sm px-5 py-4 border border-slate-200 dark:border-slate-700/50 shadow-md">
                   <div className="flex items-center justify-center space-x-1.5">
                     <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce"></div>
                     <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce [animation-delay:-.2s]"></div>
@@ -229,7 +233,7 @@ export default function AI() {
             <div ref={messagesEndRef} />
           </div>
 
-          <form onSubmit={handleChatSubmit} className="p-3 sm:p-4 bg-slate-800/40 border-t border-slate-800">
+          <form onSubmit={handleChatSubmit} className="p-3 sm:p-4 bg-slate-50 dark:bg-slate-800/40 border-t border-slate-200 dark:border-slate-800 transition-colors">
             <div className="relative">
               <input
                 type="text"
@@ -237,12 +241,12 @@ export default function AI() {
                 onChange={(e) => setInput(e.target.value)}
                 placeholder={isOnline ? "Ask the AI anything..." : "You are currently offline..."}
                 disabled={chatLoading || !isOnline}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-4 pr-12 sm:pr-14 py-3 sm:py-3.5 outline-none focus:border-emerald-500 transition-all disabled:opacity-50 shadow-inner text-sm sm:text-base"
+                className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl pl-4 pr-12 sm:pr-14 py-3 sm:py-3.5 outline-none focus:border-emerald-500 transition-all disabled:opacity-50 shadow-inner text-sm sm:text-base text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
               />
               <button
                 type="submit"
                 disabled={chatLoading || !input.trim() || !isOnline}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 sm:p-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-700 rounded-lg transition-colors cursor-pointer disabled:cursor-not-allowed shadow text-sm sm:text-base"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 sm:p-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-300 dark:disabled:bg-slate-700 rounded-lg transition-colors cursor-pointer disabled:cursor-not-allowed shadow text-sm sm:text-base text-white"
               >
                 🚀
               </button>
@@ -252,15 +256,15 @@ export default function AI() {
       )}
 
       {activeTab === 'image' && (
-        <div className="flex flex-col flex-1 bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl p-4 sm:p-6">
+        <div className="flex flex-col flex-1 min-h-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm p-4 sm:p-6 transition-colors">
           <form onSubmit={handleImageSubmit} className="space-y-4 mb-6">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-1">
-              <label className="text-[11px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider">Diffusion Model</label>
+              <label className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Diffusion Model</label>
               <select
                 value={imgModel}
                 onChange={(e) => setImgModel(e.target.value)}
                 disabled={!isOnline}
-                className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-emerald-500 transition-colors cursor-pointer disabled:opacity-50"
+                className="bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500 transition-colors cursor-pointer disabled:opacity-50"
               >
                 {IMG_MODELS.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
               </select>
@@ -273,31 +277,31 @@ export default function AI() {
                 onChange={(e) => setPrompt(e.target.value)}
                 placeholder={isOnline ? "A futuristic cyber-yeti drinking neon tea..." : "You are currently offline..."}
                 disabled={genImageMutation.isPending || !isOnline}
-                className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 sm:py-3.5 outline-none focus:border-emerald-500 transition-all text-sm shadow-inner disabled:opacity-50"
+                className="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-3 sm:py-3.5 outline-none focus:border-emerald-500 transition-all text-sm shadow-inner disabled:opacity-50 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
               />
               <button
                 type="submit"
                 disabled={genImageMutation.isPending || !prompt.trim() || !isOnline}
-                className="w-full sm:w-auto px-6 py-3 sm:py-3.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 rounded-xl font-medium transition-colors cursor-pointer flex items-center justify-center gap-2 whitespace-nowrap shadow-md text-sm disabled:text-slate-500"
+                className="w-full sm:w-auto px-6 py-3 sm:py-3.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-300 dark:disabled:bg-slate-800 rounded-xl font-medium transition-colors cursor-pointer flex items-center justify-center gap-2 whitespace-nowrap shadow-md text-sm text-white disabled:text-slate-500"
               >
                 {genImageMutation.isPending ? '⏳ Rendering...' : '✨ Generate'}
               </button>
             </div>
-            {genImageMutation.isError && <p className="text-red-400 text-sm bg-red-950/30 p-3 rounded-lg border border-red-900/50">{genImageMutation.error.message}</p>}
+            {genImageMutation.isError && <p className="text-red-600 dark:text-red-400 text-sm bg-red-50 dark:bg-red-950/30 p-3 rounded-lg border border-red-200 dark:border-red-900/50">{genImageMutation.error.message}</p>}
           </form>
 
-          <div className="flex-1 border-2 border-dashed border-slate-800 hover:border-slate-700 transition-colors rounded-2xl flex items-center justify-center bg-slate-950/40 relative overflow-hidden group shadow-inner">
+          <div className="flex-1 border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors rounded-2xl flex items-center justify-center bg-slate-50 dark:bg-slate-950/40 relative overflow-hidden group shadow-inner">
             {!imgResult && !genImageMutation.isPending && (
-              <div className="text-slate-500 flex flex-col items-center space-y-4">
+              <div className="text-slate-400 dark:text-slate-500 flex flex-col items-center space-y-4">
                 <span className="text-5xl opacity-40 group-hover:scale-110 transition-transform duration-500">🌌</span>
                 <p className="text-sm tracking-wide">Enter a prompt to synthesize an image</p>
               </div>
             )}
             
             {genImageMutation.isPending && (
-              <div className="flex flex-col items-center justify-center absolute inset-0 bg-slate-900/80 z-10 backdrop-blur-md">
-                <div className="w-12 h-12 border-4 border-slate-700 border-t-emerald-500 rounded-full animate-spin mb-4 shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
-                <p className="text-emerald-400 animate-pulse font-medium tracking-wider text-sm shadow-emerald-500">Synthesizing Pixels...</p>
+              <div className="flex flex-col items-center justify-center absolute inset-0 bg-white/80 dark:bg-slate-900/80 z-10 backdrop-blur-md">
+                <div className="w-12 h-12 border-4 border-slate-300 dark:border-slate-700 border-t-emerald-500 rounded-full animate-spin mb-4 shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
+                <p className="text-emerald-600 dark:text-emerald-400 animate-pulse font-medium tracking-wider text-sm">Synthesizing Pixels...</p>
               </div>
             )}
 
@@ -307,7 +311,7 @@ export default function AI() {
                 <a
                   href={imgResult}
                   download={`buggy-gen-${Date.now()}.png`}
-                  className="absolute bottom-5 right-5 bg-slate-900/90 backdrop-blur-md px-5 py-2.5 rounded-xl border border-slate-700/50 hover:bg-emerald-600 hover:border-emerald-500 transition-all text-sm flex items-center gap-2 opacity-0 group-hover:opacity-100 shadow-xl cursor-pointer"
+                  className="absolute bottom-5 right-5 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700/50 hover:bg-emerald-600 hover:border-emerald-500 hover:text-white transition-all text-sm flex items-center gap-2 opacity-0 group-hover:opacity-100 shadow-xl cursor-pointer text-slate-700 dark:text-slate-300"
                 >
                   📥 Save Image
                 </a>

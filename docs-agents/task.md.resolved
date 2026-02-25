@@ -1,0 +1,56 @@
+# Buggy PWA - Task Checklist
+
+- [x] Phase 1: Repository Reorganization (Frontend/Worker split)
+- [x] Phase 2: Bun Migration for Frontend Tooling
+- [x] Phase 3: Zero-dependency Cloudflare Worker Migration
+- [x] Phase 4: Local OPFS SQLite Persistence (sqlocal)
+- [x] Phase 5: Cloudflare Deployment Configuration & Docs
+- [x] Phase 6: Sync refinements and Worker Observability (Completed)
+
+## Phase 7: NVIDIA AI Integration & API Security
+- [x] Backend: Restrict API CORS origins to strictly `https://shreyam1008.com.np` and `http://localhost`.
+- [x] Backend: Update `/api/ai` chat endpoint to support real-time Server-Sent Event (SSE) streaming.
+- [x] Backend: Implement `/api/ai/image` endpoint for Text-to-Image generation using NVIDIA NIM.
+- [x] Frontend: Create [src/pages/AI.tsx](file:///home/shre/Desktop/PM/buggy/frontend/src/pages/AI.tsx) with Chat and Image Generation tabs.
+- [x] Frontend: Implement streaming chat UI with selection of Top 5 NVIDIA models.
+- [x] Frontend: Implement Image Generation UI.
+- [x] Frontend: Add "AI" to standard app navigation.
+
+### Phase 8: Native UI/UX Polish (0-Perf-Impact)
+- [x] Implement pure native dark/light mode using Tailwind v4.
+- [x] Add hardware-accelerated CSS animations (`transform`, `opacity` only).
+- [x] Audit application layouts and components to ensure they respond cleanly to the new theme.
+
+### Phase 9: Real-Time Global Chat (WebSockets)
+- [x] Backend: Create `live_chat` D1 table and in-memory WebSockets manager.
+- [x] Backend: Implement max 10 writers logic and Vedic username generation.
+- [x] Backend: Handle broadcast for typing indicators and incoming messages.
+- [x] Backend: Implement 30-second delete window rule.
+- [x] Frontend: Build [ChatRoom.tsx](file:///home/shre/Desktop/PM/buggy/frontend/src/pages/ChatRoom.tsx) with mobile-first UI and connect to standard WebSockets.
+- [x] Frontend: Add route and sidebar integration for the new Chat feature.
+
+### Phase 10: Architecture & SEO Polish
+- [x] Frontend: Install `@tanstack/react-query` and configure `QueryClientProvider` in [main.tsx](file:///home/shre/Desktop/PM/buggy/src/main.tsx).
+- [x] Frontend: Refactor [Notes.tsx](file:///home/shre/Desktop/PM/buggy/src/pages/Notes.tsx), [AI.tsx](file:///home/shre/Desktop/PM/buggy/frontend/src/pages/AI.tsx), and [ChatRoom.tsx](file:///home/shre/Desktop/PM/buggy/frontend/src/pages/ChatRoom.tsx) to use Query/Mutation hooks.
+- [x] Frontend: Update [vite.config.ts](file:///home/shre/Desktop/PM/buggy/vite.config.ts) manual chunks for `vendor-query`.
+- [x] Frontend: Supercharge [index.html](file:///home/shre/Desktop/PM/buggy/index.html) with Shreyam Adhikari (shreyam1008) SEO tags and JSON-LD.
+- [x] Backend: Split [worker/src/index.ts](file:///home/shre/Desktop/PM/buggy/worker/src/index.ts) into isolated `handlers/` (notes, ai, chat).
+
+### Phase 11: Final UI/UX Feedback & Docs
+- [x] Frontend: Implement manual Dark/Light mode toggle with `localStorage` persistence.
+- [x] Frontend: Add Shreyam1008 social links (GitHub, X, YouTube, etc.) to the Sidebar.
+- [x] Frontend: Optimize [useLiveChat](file:///home/shre/Desktop/PM/buggy/frontend/src/hooks/useLiveChat.ts#16-172) to cap array length (e.g., 200 items) for DOM performance.
+- [x] SEO: Update [robots.txt](file:///home/shre/Desktop/PM/buggy/public/robots.txt) to explicitly block AI crawlers (GPTBot, CCBot, etc.).
+- [x] Docs: Fully rewrite [README.md](file:///home/shre/Desktop/PM/buggy/README.md) to document TanStack, real-time chat, and the edge architecture.
+
+### Phase 12: Production-Quality Chat System
+- [x] Backend: Krishna-only names, localStorage identity handshake, cursor pagination, D1 index.
+- [x] Frontend: Rewrite [useLiveChat.ts](file:///home/shre/Desktop/PM/buggy/frontend/src/hooks/useLiveChat.ts) — persistent identity, load-more, exponential backoff, no render leaks.
+- [x] Frontend: Rewrite [ChatRoom.tsx](file:///home/shre/Desktop/PM/buggy/frontend/src/pages/ChatRoom.tsx) — no screen jump, smart scroll, per-bubble delete timer, load-older UX.
+- [x] Verification: Build check + lint clean.
+
+### Phase 13: Full Dark/Light Mode Audit & README
+- [x] Audit ALL pages for dark/light mode color scheme correctness.
+- [x] Fix mobile chat "connecting" stuck state.
+- [x] Rewrite README.md with Mermaid diagrams, data flow, and performance showcase.
+- [x] Fix UI sizing issues across desktop/mobile.

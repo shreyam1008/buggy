@@ -34,7 +34,13 @@ export function useLiveChat() {
     const wsUrl = storedName ? `${WS_URL}?name=${encodeURIComponent(storedName)}` : WS_URL;
     const ws = new WebSocket(wsUrl);
 
+    // Mobile safety: if WS doesn't open in 10s, force-close and trigger reconnect
+    const connectTimeout = setTimeout(() => {
+      if (ws.readyState !== 1) ws.close();
+    }, 10000);
+
     ws.onopen = () => {
+      clearTimeout(connectTimeout);
       setConnected(true);
       reconnectAttempt.current = 0; // Reset backoff on successful connect
     };

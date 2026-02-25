@@ -1,74 +1,252 @@
-# Buggy - Utilities & Sync PWA
-![Offline PWA Utilities](https://img.shields.io/badge/Status-Production-emerald?style=for-the-badge) ![Vite Build](https://img.shields.io/badge/Frontend-Vite_8_PWA-blue?style=for-the-badge) ![Worker](https://img.shields.io/badge/Backend-Cloudflare_Workers-f38020?style=for-the-badge)
+<p align="center">
+  <strong>⚡ Buggy</strong><br>
+  <em>Blazing-fast, offline-first PWA utilities built for the edge</em>
+</p>
 
-**Buggy** is an incredibly fast, bleeding-edge offline-first Progressive Web App (PWA) containing a suite of productivity utilities natively programmed for performance and massive scale. 
-
-Developed and distributed by **Shreyam Adhikari (shreyam1008)**.
-
-## 🚀 Features
-
-- **Live Ashram (WebSockets)**: Global real-time chat with 10 max writers, random Vedic usernames, typing indicators, and a strict 30-second self-destruct function built directly on Cloudflare Edge Memory.
-- **NVIDIA AI Studio**: Utilize cutting-edge LLMs (`Llama-3.1-70B`, `Gemma-2-9B`, `Mixtral-8x22B`) and `Stable Diffusion XL` via NVIDIA's blazing fast NIM APIs with full HTTP streaming support.
-- **OPFS Notes Sync**: Browser local-first SQLite (`sqlocal`) database holding your notes, which sync seamlessly to Cloudflare D1 across all your devices on command.
-- **Nepali Calendar**: Native, offline-first Nepali BS to English AD chronological engine.
-- **In-Browser Utilities**: Client-side Image Compression (WASM), PDF Merging (`pdf-lib`), and Bcrypt Hash generation. No server bandwidth required for heavy tasks!
-- **Native UI/UX**: Designed around OS-level `prefers-color-scheme` optimizations with a dedicated manual Dark Mode override that shifts pure CSS variables for hardware-accelerated animations and an incredible 100/100 Lighthouse score.
+<p align="center">
+  <img src="https://img.shields.io/badge/Frontend-Vite_8_+_React_19-blue?style=flat-square" />
+  <img src="https://img.shields.io/badge/Backend-Cloudflare_Workers-f38020?style=flat-square" />
+  <img src="https://img.shields.io/badge/DB-D1_(SQLite)-green?style=flat-square" />
+  <img src="https://img.shields.io/badge/Runtime-Bun-white?style=flat-square" />
+  <img src="https://img.shields.io/badge/AI-NVIDIA_NIM-76b900?style=flat-square" />
+</p>
 
 ---
 
-## 🏗️ Architecture
+## What Is Buggy?
 
-The project has been aggressively refactored to separate the Data Layer, Network Layer, and Rendering Layer perfectly.
+**Buggy** is a production-grade Progressive Web App containing 8 high-performance utilities — from AI chat with live streaming to a native Nepali calendar — all running offline-first on the client and syncing to Cloudflare's global edge network when needed.
 
-### Frontend (`/frontend`)
-- **React 19 + TypeScript**: Strong typing combined with TanStack React Query (`useQuery`, `useMutation`) drastically reduces loading state boilerplate.
-- **Vite 8**: Sub-second build times relying entirely on `bun` with optimized manual chunks (`vendor-query`, `vendor-sqlite`) to keep the initial load under a few KBs.
-- **Tailwind v4**: Native CSS variable interpolation instead of heavy JS-in-CSS injection, delivering a pure `index.css` aesthetic.
-- **Custom React Hooks**: Features like `useLiveChat` cleanly separate the chaotic WebSocket connection loop from the pristine React presentation layer.
-
-### Backend (`/worker`)
-- **Cloudflare Workers (Edge)**: Runs instantly on V8 Isolates across thousands of datacenters globally.
-- **Modular Domain Design**: The `index.ts` Router is exceptionally minimal (< 100 lines), redirecting traffic intelligently to `handlers/ai.ts`, `handlers/notes.ts`, and `handlers/chat.ts`.
-- **Cloudflare D1 SQL**: Highly available SQL database for historical message persistence and global Note states. 
+Built by **Shreyam Adhikari** ([@shreyam1008](https://github.com/shreyam1008)).
 
 ---
 
-## 💻 Local Development Setup
+## Features
 
-We strictly use `bun` as the blazing fast package manager.
+| Feature | Description | Stack |
+|---------|-------------|-------|
+| 📅 **Date Converter** | Convert between Nepali BS and English AD dates with auto-formatting | Pure math engine, zero API |
+| 🗓️ **Nepali Calendar** | Full month grid with BS ↔ AD overlay per cell | Client-side only |
+| 🖼️ **Image Compressor** | JPEG/PNG/WebP compression via Web Workers | `browser-image-compression` |
+| 📄 **PDF Merger** | Merge PDFs + images into one document | `pdf-lib` (lazy-loaded) |
+| 📝 **Notes** | Local SQLite (OPFS) + cloud sync to D1 | `sqlocal` + Cloudflare D1 |
+| 🔒 **Bcrypt** | Generate and verify bcrypt hashes | `bcryptjs` (client-only) |
+| ✨ **AI Studio** | Chat with LLMs (streaming SSE) + image generation | NVIDIA NIM API proxy |
+| 💬 **Live Chat** | Real-time global WebSocket ashram with Krishna names | Cloudflare Workers WebSocket |
 
-```bash
-# 1. Clone the repository
-git clone https://github.com/shreyam1008/buggy
-cd buggy
+---
 
-# 2. Setup the Worker & Database
-cd worker
-npm i -g npx # Assure npx is installed
-npx wrangler d1 create buggythegret # Or use your specific DB reference 
-npx wrangler deploy
+## Architecture
 
-# 3. Start the Frontend
-cd ../frontend
-bun install
-bun run dev
+### High-Level System Diagram
+
+```mermaid
+graph TB
+    subgraph Client["Browser (PWA)"]
+        SW[Service Worker]
+        React[React 19 + TanStack Query]
+        SQLite[sqlocal - OPFS SQLite]
+        WS_Client[WebSocket Client]
+    end
+
+    subgraph Edge["Cloudflare Edge"]
+        Worker[Worker Router - index.ts]
+        NotesH[handlers/notes.ts]
+        AIH[handlers/ai.ts]
+        ChatH[handlers/chat.ts]
+        D1[(D1 - SQLite)]
+    end
+
+    subgraph External["External APIs"]
+        NVIDIA[NVIDIA NIM API]
+    end
+
+    React -->|POST /api/notes/sync| NotesH
+    React -->|POST /api/ai| AIH
+    WS_Client -->|WS /api/chat| ChatH
+    SQLite -.->|Local-first| React
+    Worker --> NotesH
+    Worker --> AIH
+    Worker --> ChatH
+    NotesH --> D1
+    ChatH --> D1
+    AIH --> NVIDIA
+    SW -.->|Cache assets| React
 ```
 
-Remember to map your `VITE_API_URL` inside `frontend/.env` to point to the live Worker edge location so the WebSockets and AI requests hit your datacenter correctly.
+### Data Flow: Notes Sync
+
+```mermaid
+sequenceDiagram
+    participant Browser as Browser (OPFS SQLite)
+    participant Worker as Cloudflare Worker
+    participant D1 as D1 Database
+
+    Note over Browser: User creates/edits notes locally
+    Browser->>Browser: sqlocal writes to OPFS
+    Note over Browser: User clicks "Sync"
+    Browser->>Worker: POST /api/notes/sync {notes: [...]}
+    Worker->>D1: Fetch all server notes
+    Worker->>Worker: Merge by updatedAt timestamp
+    Worker->>D1: Upsert merged notes
+    Worker-->>Browser: {notes: mergedArray}
+    Browser->>Browser: sqlocal upserts merged notes
+    Note over Browser: Both sides now in sync
+```
+
+### Data Flow: Live Chat (WebSocket)
+
+```mermaid
+sequenceDiagram
+    participant Client as Browser
+    participant WS as Worker WebSocket
+    participant D1 as D1 Database
+
+    Client->>WS: Upgrade ?name=Govinda_123
+    WS->>WS: Prune stale sockets
+    WS->>WS: Validate identity from D1
+    WS-->>Client: {type: welcome, username, canWrite}
+    WS->>D1: SELECT last 30 messages
+    WS-->>Client: {type: history, messages, hasMore}
+
+    Note over Client: User sends message
+    Client->>WS: {type: chat, message}
+    WS->>WS: Broadcast to all OPEN sockets
+    WS->>D1: INSERT (fire-and-forget)
+    WS-->>Client: {type: chat, id, username, message}
+
+    Note over Client: User requests older messages
+    Client->>WS: {type: loadMore, before: timestamp}
+    WS->>D1: SELECT WHERE createdAt < ? LIMIT 31
+    WS-->>Client: {type: history, messages, hasMore}
+```
 
 ---
 
-## 🕸️ SEO & Indexing
+## Performance Philosophy
 
-- All indexing routes are configured via `sitemap.xml`.
-- **AI Crawlers are aggressively blocked** in `robots.txt` (`GPTBot`, `Claude-Web`, `CCBot`, etc.).
-- Deep JSON-LD structure metadata applied indicating Shreyam Adhikari as the Creator.
+### Build Pipeline
+
+```
+Source (TypeScript + TSX)
+  │
+  ├─ Bun          — Package manager (3x faster than npm)
+  ├─ Vite 8       — Dev server with instant HMR via native ESM
+  ├─ Rollup       — Production bundler with tree-shaking
+  ├─ OXC          — Linting (500x faster than ESLint via Rust)
+  └─ Tailwind v4  — Zero-runtime CSS via @theme variables
+```
+
+### Code Splitting Strategy
+
+Every page is `React.lazy()` loaded. Heavy dependencies are isolated into manual chunks:
+
+| Chunk | Size (gzip) | Contents |
+|-------|-------------|----------|
+| `vendor-react` | 57 KB | React 19 + React DOM |
+| `vendor-pdf` | 161 KB | pdf-lib (loaded only on /pdf) |
+| `vendor-sqlite` | 7 KB | sqlocal (loaded only on /notes) |
+| `index` (shell) | 3.3 KB | App router + Sidebar |
+| Per-page chunks | 1.9–3.7 KB | Each utility page |
+
+**Total initial load: ~60 KB gzipped** (React + shell only). Everything else loads on demand.
+
+### Zero Re-render Architecture
+
+| Pattern | Where | Why |
+|---------|-------|-----|
+| `useRef` for WebSocket | `useLiveChat.ts` | Avoids stale closures, stable callbacks with zero deps |
+| `memo(DeletableBubble)` | `ChatRoom.tsx` | Only the deletable msg re-renders its countdown timer |
+| No-op `Set` guards | `useLiveChat.ts` | If typists didn't change, return same reference → no render |
+| `TanStack Query` | `Notes.tsx`, `AI.tsx` | Declarative cache invalidation, no manual loading states |
+
+### PWA Capabilities
+
+- **29 precached entries** via Workbox `generateSW`
+- **Offline-first**: Date Converter, Calendar, Image Tools, PDF Merger, Bcrypt all work with zero network
+- **Dynamic viewport**: `100dvh` layouts prevent mobile keyboard jump
+- **GPU-only animations**: `transform` + `opacity` only → compositor thread, zero paint
 
 ---
 
-## 🔗 Connect With Me
+## Worker Architecture
 
-- **Twitter / X**: [@shreyam1008](https://x.com/shreyam1008)
+```
+worker/src/
+├── index.ts              # Edge router (~100 lines)
+│   ├── Routes table      # Regex pattern matching
+│   ├── D1 migrations     # notes + live_chat + idx_chat_time
+│   └── CORS middleware   # Strict origin whitelisting
+├── handlers/
+│   ├── notes.ts          # Sync engine (UPSERT by updatedAt)
+│   ├── ai.ts             # NVIDIA NIM proxy (SSE streaming)
+│   └── chat.ts           # WebSocket manager
+│       ├── Krishna names # 20 epithets (Govinda, Madhava...)
+│       ├── Identity      # localStorage persistence via URL param
+│       ├── Pagination    # Cursor-based LIMIT 31 (prefetch+1)
+│       └── Stale prune   # Dead socket cleanup before writer count
+└── utils/
+    └── response.ts       # JSON helper + CORS headers
+```
+
+---
+
+## Dark/Light Mode
+
+The manual theme toggle in the sidebar uses `localStorage('buggy-theme')` and applies the `.dark` class to `<html>`. Tailwind v4 requires an explicit override for class-based dark mode:
+
+```css
+@custom-variant dark (&:where(.dark, .dark *));
+```
+
+All 8 pages have been audited for proper `dark:` variant coverage — every input, card, border, and text element has both light and dark colors.
+
+---
+
+## SEO & Crawlers
+
+- Rich JSON-LD structured data for **Shreyam Adhikari**
+- Open Graph + Twitter Card meta tags
+- `sitemap.xml` with all utility routes
+- **AI crawlers blocked**: GPTBot, ChatGPT-User, CCBot, Google-Extended, Anthropic-ai, Claude-Web, Omgili
+
+---
+
+## Local Development
+
+```bash
+# Prerequisites: Bun, Wrangler CLI
+
+# Frontend
+cd frontend
+bun install
+bun run dev          # Vite dev server on :5173
+
+# Worker
+cd worker
+npx wrangler dev     # Local Workers runtime on :8787
+```
+
+### Environment Variables
+
+| Variable | Where | Purpose |
+|----------|-------|---------|
+| `VITE_API_URL` | `frontend/.env` | Cloudflare Worker URL |
+| `AI_API_KEY` | Wrangler secret | NVIDIA NIM API key |
+
+---
+
+## My Other Apps
+
+- 🖥️ [dbterm](https://shreyam1008.github.io/dbterm/) — Terminal database client
+- ⚛️ [Radhey](https://radhey.web.app/) — React application
+- ⚖️ [Legal Firm](https://nepallegalfirm.com.np/) — Law firm website
+
+---
+
+## Connect
+
+- **GitHub**: [@shreyam1008](https://github.com/shreyam1008)
+- **Twitter/X**: [@shreyam1008](https://x.com/shreyam1008)
 - **LinkedIn**: [Shreyam Adhikari](https://linkedin.com/in/shreyam1008)
-- **GitHub**: [shreyam1008](https://github.com/shreyam1008)
 - **YouTube**: [@shreyam1008](https://youtube.com/@shreyam1008)

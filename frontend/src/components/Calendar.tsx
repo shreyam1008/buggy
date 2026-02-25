@@ -40,30 +40,30 @@ export default function Calendar() {
 
   return (
     <div className="max-w-md mx-auto pt-12 lg:pt-0">
-      <h1 className="text-2xl font-bold mb-1">🗓️ नेपाली पात्रो</h1>
-      <p className="text-sm text-slate-400 mb-4">Nepali Calendar · BS ↔ AD</p>
+      <h1 className="text-2xl font-bold mb-1 text-slate-900 dark:text-white transition-colors">🗓️ नेपाली पात्रो</h1>
+      <p className="text-sm text-slate-500 dark:text-slate-400 mb-4 transition-colors">Nepali Calendar · BS ↔ AD</p>
 
       {/* Navigation */}
-      <div className="flex items-center justify-between mb-4 bg-slate-900 border border-slate-800 rounded-xl p-3">
+      <div className="flex items-center justify-between mb-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-sm transition-colors">
         <button onClick={prev} disabled={year <= BS_MIN_YEAR && month === 0}
-          className="px-3 py-1.5 bg-slate-800 rounded-lg text-sm hover:bg-slate-700 transition disabled:opacity-30 cursor-pointer">←</button>
+          className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition disabled:opacity-30 cursor-pointer text-slate-700 dark:text-slate-300">←</button>
         <div className="text-center">
-          <div className="font-bold text-sm">{bsMonthNames[month]} {toNepaliNumeral(year)}</div>
-          <div className="text-[10px] text-slate-500">{bsMonthNamesEn[month]} {year} BS</div>
+          <div className="font-bold text-sm text-slate-900 dark:text-white">{bsMonthNames[month]} {toNepaliNumeral(year)}</div>
+          <div className="text-[10px] text-slate-500 dark:text-slate-400">{bsMonthNamesEn[month]} {year} BS</div>
         </div>
         <button onClick={next} disabled={year >= BS_MAX_YEAR && month === 11}
-          className="px-3 py-1.5 bg-slate-800 rounded-lg text-sm hover:bg-slate-700 transition disabled:opacity-30 cursor-pointer">→</button>
+          className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition disabled:opacity-30 cursor-pointer text-slate-700 dark:text-slate-300">→</button>
       </div>
 
       <button onClick={goToday}
-        className="w-full mb-3 py-1.5 bg-red-600/10 text-red-400 rounded-lg text-xs font-semibold hover:bg-red-600/20 transition cursor-pointer">
+        className="w-full mb-3 py-1.5 bg-red-50 dark:bg-red-600/10 text-red-600 dark:text-red-400 rounded-lg text-xs font-semibold hover:bg-red-100 dark:hover:bg-red-600/20 transition cursor-pointer">
         Today: {bsMonthNamesEn[today.month]} {today.day}, {today.year}
       </button>
 
       {/* Day headers */}
       <div className="grid grid-cols-7 gap-0.5 mb-0.5">
         {dayNamesEn.map((d, i) => (
-          <div key={d} className={`text-center text-[10px] font-semibold py-1 ${i === 6 ? 'text-red-400' : 'text-slate-500'}`}>
+          <div key={d} className={`text-center text-[10px] font-semibold py-1 ${i === 6 ? 'text-red-500 dark:text-red-400' : 'text-slate-500 dark:text-slate-400'}`}>
             {bsDayNames[i]}
           </div>
         ))}
@@ -86,13 +86,13 @@ export default function Calendar() {
               key={d}
               onClick={() => setSelectedDay(d)}
               className={`aspect-square rounded-lg text-center relative flex flex-col items-center justify-center transition cursor-pointer
-                ${isToday(d) ? 'ring-2 ring-red-600 bg-red-600/10' : ''}
-                ${sel && !isToday(d) ? 'bg-slate-700' : ''}
-                ${!sel && !isToday(d) ? 'hover:bg-slate-800' : ''}
-                ${isSat ? 'text-red-400' : ''}`}
+                ${isToday(d) ? 'ring-2 ring-red-600 bg-red-50 dark:bg-red-600/10' : ''}
+                ${sel && !isToday(d) ? 'bg-slate-200 dark:bg-slate-700' : ''}
+                ${!sel && !isToday(d) ? 'hover:bg-slate-100 dark:hover:bg-slate-800' : ''}
+                ${isSat ? 'text-red-500 dark:text-red-400' : 'text-slate-900 dark:text-slate-200'}`}
             >
               <span className="text-sm font-semibold leading-none">{toNepaliNumeral(d)}</span>
-              <span className="text-[8px] text-slate-500 leading-none mt-0.5">{getAdOverlay(d)}</span>
+              <span className="text-[8px] text-slate-400 dark:text-slate-500 leading-none mt-0.5">{getAdOverlay(d)}</span>
             </button>
           );
         })}
@@ -100,11 +100,11 @@ export default function Calendar() {
 
       {/* Selected day detail */}
       {selectedDay && selectedAd && (
-        <div className="mt-4 bg-slate-900 border border-slate-800 rounded-xl p-4 text-center">
-          <p className="font-bold text-lg">
+        <div className="mt-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 text-center shadow-sm transition-colors">
+          <p className="font-bold text-lg text-slate-900 dark:text-white">
             {bsMonthNames[month]} {toNepaliNumeral(selectedDay)}, {toNepaliNumeral(year)}
           </p>
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-slate-600 dark:text-slate-400">
             {bsMonthNamesEn[month]} {selectedDay}, {year} BS
           </p>
           <p className="text-xs text-slate-500 mt-1">

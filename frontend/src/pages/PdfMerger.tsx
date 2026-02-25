@@ -61,7 +61,6 @@ export default function PdfMerger() {
           const pages = await merged.copyPages(src, src.getPageIndices());
           pages.forEach((p) => merged.addPage(p));
         } else {
-          // Embed image as PDF page
           const imgBytes = new Uint8Array(bytes);
           const image = file.type === 'image/png'
             ? await merged.embedPng(imgBytes)
@@ -92,18 +91,18 @@ export default function PdfMerger() {
 
   return (
     <div className="max-w-3xl mx-auto pt-12 lg:pt-0">
-      <h1 className="text-2xl font-bold mb-1">PDF Merger</h1>
-      <p className="text-sm text-slate-400 mb-6">Combine PDFs & images into one document</p>
+      <h1 className="text-2xl font-bold mb-1 text-slate-900 dark:text-white transition-colors">PDF Merger</h1>
+      <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 transition-colors">Combine PDFs & images into one document</p>
 
       <div
-        className="bg-slate-900 border-2 border-dashed border-slate-700 rounded-xl p-8 text-center cursor-pointer hover:border-red-600 transition-colors"
+        className="bg-slate-50 dark:bg-slate-900 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-8 text-center cursor-pointer hover:border-red-500 dark:hover:border-red-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
         onDrop={(e) => { e.preventDefault(); addFiles(e.dataTransfer.files); }}
         onDragOver={(e) => e.preventDefault()}
         onClick={() => fileRef.current?.click()}
       >
         <span className="text-4xl block mb-2">📄</span>
-        <p className="font-semibold text-white">Drop PDFs or images here</p>
-        <p className="text-xs text-slate-500 mt-1">Or click to browse · Images are embedded as PDF pages</p>
+        <p className="font-semibold text-slate-900 dark:text-white transition-colors">Drop PDFs or images here</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 transition-colors">Or click to browse · Images are embedded as PDF pages</p>
         <input
           ref={fileRef}
           type="file"
@@ -115,12 +114,12 @@ export default function PdfMerger() {
       </div>
 
       {files.length > 0 && (
-        <div className="mt-4 bg-slate-900 border border-slate-800 rounded-xl p-5">
+        <div className="mt-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm transition-colors">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-sm text-slate-300">{files.length} file{files.length > 1 ? 's' : ''}</span>
+            <span className="text-sm text-slate-600 dark:text-slate-300 transition-colors">{files.length} file{files.length > 1 ? 's' : ''}</span>
             <button
               onClick={() => fileRef.current?.click()}
-              className="text-xs text-red-400 hover:text-red-300 transition cursor-pointer"
+              className="text-xs text-red-500 dark:text-red-400 hover:text-red-400 dark:hover:text-red-300 transition cursor-pointer"
             >
               + Add More
             </button>
@@ -128,13 +127,13 @@ export default function PdfMerger() {
 
           <ul className="space-y-1">
             {files.map((f, i) => (
-              <li key={f.id} className="flex items-center gap-2 bg-slate-800/50 rounded-lg px-3 py-2 text-sm">
+              <li key={f.id} className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800/50 rounded-lg px-3 py-2 text-sm transition-colors">
                 <span>{f.isImage ? '🖼️' : '📄'}</span>
-                <span className="flex-1 truncate text-slate-300">{f.name}</span>
+                <span className="flex-1 truncate text-slate-700 dark:text-slate-300">{f.name}</span>
                 <div className="flex gap-1">
-                  <button disabled={i === 0} onClick={() => moveFile(i, -1)} className="text-slate-500 hover:text-white disabled:opacity-30 text-xs cursor-pointer">↑</button>
-                  <button disabled={i === files.length - 1} onClick={() => moveFile(i, 1)} className="text-slate-500 hover:text-white disabled:opacity-30 text-xs cursor-pointer">↓</button>
-                  <button onClick={() => removeFile(f.id)} className="text-slate-500 hover:text-red-400 text-xs cursor-pointer">✕</button>
+                  <button disabled={i === 0} onClick={() => moveFile(i, -1)} className="text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 text-xs cursor-pointer">↑</button>
+                  <button disabled={i === files.length - 1} onClick={() => moveFile(i, 1)} className="text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 text-xs cursor-pointer">↓</button>
+                  <button onClick={() => removeFile(f.id)} className="text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 text-xs cursor-pointer">✕</button>
                 </div>
               </li>
             ))}
@@ -150,7 +149,7 @@ export default function PdfMerger() {
             </button>
             <button
               onClick={() => { setFiles([]); setMergedUrl(null); }}
-              className="px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-300 hover:bg-slate-700 transition cursor-pointer"
+              className="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer"
             >
               Clear
             </button>
@@ -159,8 +158,8 @@ export default function PdfMerger() {
       )}
 
       {mergedUrl && (
-        <div className="mt-4 bg-emerald-950/30 border border-emerald-800 rounded-xl p-5 text-center">
-          <p className="text-emerald-400 font-semibold mb-3">✅ Merged Successfully</p>
+        <div className="mt-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl p-5 text-center transition-colors">
+          <p className="text-emerald-600 dark:text-emerald-400 font-semibold mb-3">✅ Merged Successfully</p>
           <button
             onClick={download}
             className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-sm transition cursor-pointer"
