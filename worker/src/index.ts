@@ -184,10 +184,15 @@ export default {
   async fetch(req: Request, env: Env): Promise<Response> {
     // CORS preflight
     if (req.method === 'OPTIONS') {
-      return new Response(null, { status: 204, headers: CORS_HEADERS });
+      return new Response(null, { headers: CORS_HEADERS });
     }
 
     const url = new URL(req.url);
+
+    // Root route to verify the API is alive
+    if (url.pathname === '/' || url.pathname === '/api') {
+      return Response.json({ status: 'ok', name: 'buggy-api', version: '1.0.0' }, { headers: CORS_HEADERS });
+    }
 
     // Run migrations (idempotent, ~1ms after first run)
     await runMigrations(env.DB);
