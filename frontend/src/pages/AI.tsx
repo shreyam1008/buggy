@@ -4,10 +4,10 @@ import { useState, useRef, useEffect } from 'react';
 const API_URL = (import.meta.env.VITE_API_URL as string)?.replace(/\/$/, '') || '';
 
 const CHAT_MODELS = [
-  { id: 'meta/llama3-70b-instruct', name: 'Llama 3 70B' },
-  { id: 'meta/llama3-8b-instruct', name: 'Llama 3 8B' },
+  { id: 'meta/llama-3.1-70b-instruct', name: 'Llama 3.1 70B' },
+  { id: 'meta/llama-3.1-8b-instruct', name: 'Llama 3.1 8B' },
   { id: 'mistralai/mixtral-8x22b-instruct-v0.1', name: 'Mixtral 8x22B' },
-  { id: 'google/gemma-7b-it', name: 'Gemma 7B' },
+  { id: 'google/gemma-2-9b-it', name: 'Gemma 2 9B' },
   { id: 'snowflake/arctic', name: 'Snowflake Arctic' },
 ];
 
@@ -21,6 +21,20 @@ type Message = { role: 'user' | 'assistant'; content: string };
 export default function AI() {
   const [activeTab, setActiveTab] = useState<'chat' | 'image'>('chat');
   
+  // Offline state
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
   // Chat state
   const [chatModel, setChatModel] = useState(CHAT_MODELS[0].id);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -146,18 +160,25 @@ export default function AI() {
 
   return (
     <div className="max-w-5xl mx-auto flex flex-col h-[calc(100vh-2rem)]">
-      <div className="flex items-center justify-between mb-4">
+      {/* Offline Banner */}
+      {!isOnline && (
+        <div className="bg-orange-500/20 text-orange-400 border border-orange-500/30 px-4 py-2.5 rounded-lg mb-4 text-sm font-medium flex items-center gap-2 shadow-inner">
+          <span className="animate-pulse">⚠️</span> AI Studio natively requires an active internet connection to contact LLM endpoints.
+        </div>
+      )}
+
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-teal-500 bg-clip-text text-transparent">
+          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-400 to-teal-500 bg-clip-text text-transparent leading-tight w-full truncate">
             AI Studio
           </h1>
-          <p className="text-slate-400 text-sm mt-1">Accelerated by NVIDIA NIM API</p>
+          <p className="text-slate-400 text-xs sm:text-sm mt-0.5">Accelerated by NVIDIA NIM API</p>
         </div>
         
-        <div className="flex bg-slate-800 p-1 rounded-lg shadow-inner">
+        <div className="flex bg-slate-800 p-1 rounded-lg shadow-inner w-full sm:w-auto">
           <button
             onClick={() => setActiveTab('chat')}
-            className={`px-5 py-2 rounded-md text-sm font-medium transition-all duration-200 cursor-pointer ${
+            className={`flex-1 sm:flex-none px-4 sm:px-5 py-2 rounded-md text-sm font-medium transition-all duration-200 cursor-pointer ${
               activeTab === 'chat' ? 'bg-slate-700 text-emerald-400 shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
             }`}
           >
@@ -165,7 +186,7 @@ export default function AI() {
           </button>
           <button
             onClick={() => setActiveTab('image')}
-            className={`px-5 py-2 rounded-md text-sm font-medium transition-all duration-200 cursor-pointer ${
+            className={`flex-1 sm:flex-none px-4 sm:px-5 py-2 rounded-md text-sm font-medium transition-all duration-200 cursor-pointer ${
               activeTab === 'image' ? 'bg-slate-700 text-emerald-400 shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
             }`}
           >
@@ -219,20 +240,20 @@ export default function AI() {
             <div ref={messagesEndRef} />
           </div>
 
-          <form onSubmit={handleChatSubmit} className="p-4 bg-slate-800/40 border-t border-slate-800">
+          <form onSubmit={handleChatSubmit} className="p-3 sm:p-4 bg-slate-800/40 border-t border-slate-800">
             <div className="relative">
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask the AI anything..."
-                disabled={chatLoading}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-4 pr-14 py-3.5 outline-none focus:border-emerald-500 transition-all disabled:opacity-50 shadow-inner"
+                placeholder={isOnline ? "Ask the AI anything..." : "You are currently offline..."}
+                disabled={chatLoading || !isOnline}
+                className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-4 pr-12 sm:pr-14 py-3 sm:py-3.5 outline-none focus:border-emerald-500 transition-all disabled:opacity-50 shadow-inner text-sm sm:text-base"
               />
               <button
                 type="submit"
-                disabled={chatLoading || !input.trim()}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-700 rounded-lg transition-colors cursor-pointer disabled:cursor-not-allowed shadow"
+                disabled={chatLoading || !input.trim() || !isOnline}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 sm:p-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-700 rounded-lg transition-colors cursor-pointer disabled:cursor-not-allowed shadow text-sm sm:text-base"
               >
                 🚀
               </button>
@@ -242,32 +263,33 @@ export default function AI() {
       )}
 
       {activeTab === 'image' && (
-        <div className="flex flex-col flex-1 bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl p-6">
-          <form onSubmit={handleImageSubmit} className="space-y-5 mb-8">
-            <div className="flex justify-between items-center mb-1">
-              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Diffusion Model</label>
+        <div className="flex flex-col flex-1 bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl p-4 sm:p-6">
+          <form onSubmit={handleImageSubmit} className="space-y-4 mb-6">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-1">
+              <label className="text-[11px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider">Diffusion Model</label>
               <select
                 value={imgModel}
                 onChange={(e) => setImgModel(e.target.value)}
-                className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-emerald-500 transition-colors cursor-pointer"
+                disabled={!isOnline}
+                className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-emerald-500 transition-colors cursor-pointer disabled:opacity-50"
               >
                 {IMG_MODELS.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
               </select>
             </div>
             
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
               <input
                 type="text"
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                placeholder="A futuristic cyber-yeti drinking neon tea..."
-                disabled={imgLoading}
-                className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3.5 outline-none focus:border-emerald-500 transition-all text-sm shadow-inner"
+                placeholder={isOnline ? "A futuristic cyber-yeti drinking neon tea..." : "You are currently offline..."}
+                disabled={imgLoading || !isOnline}
+                className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 sm:py-3.5 outline-none focus:border-emerald-500 transition-all text-sm shadow-inner disabled:opacity-50"
               />
               <button
                 type="submit"
-                disabled={imgLoading || !prompt.trim()}
-                className="px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 rounded-xl font-medium transition-colors cursor-pointer flex items-center gap-2 whitespace-nowrap shadow-md text-sm"
+                disabled={imgLoading || !prompt.trim() || !isOnline}
+                className="w-full sm:w-auto px-6 py-3 sm:py-3.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 rounded-xl font-medium transition-colors cursor-pointer flex items-center justify-center gap-2 whitespace-nowrap shadow-md text-sm disabled:text-slate-500"
               >
                 {imgLoading ? '⏳ Rendering...' : '✨ Generate'}
               </button>
