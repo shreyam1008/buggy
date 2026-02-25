@@ -8,6 +8,7 @@ const ImageCompressor = lazy(() => import('./pages/ImageCompressor'));
 const PdfMerger = lazy(() => import('./pages/PdfMerger'));
 const Notes = lazy(() => import('./pages/Notes'));
 const BcryptGenerator = lazy(() => import('./pages/BcryptGenerator'));
+const AI = lazy(() => import('./pages/AI'));
 
 function Loader() {
   return (
@@ -30,6 +31,7 @@ export default function App() {
             <Route path="/pdf" component={PdfMerger} />
             <Route path="/notes" component={Notes} />
             <Route path="/bcrypt" component={BcryptGenerator} />
+            <Route path="/ai" component={AI} />
             <Route>
               <div className="text-center py-20">
                 <h1 className="text-4xl font-bold">404</h1>

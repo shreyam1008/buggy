@@ -8,6 +8,7 @@ const navItems = [
   { path: '/pdf', label: 'PDF Merger', icon: '📄' },
   { path: '/notes', label: 'Notes', icon: '📝' },
   { path: '/bcrypt', label: 'Bcrypt', icon: '🔒' },
+  { path: '/ai', label: 'AI Studio', icon: '✨' },
 ];
 
 export default function Sidebar() {
