@@ -10,6 +10,7 @@
  *   Each feature gets its own handler function.
  *   CORS is handled globally.
  */
+import type { D1Database } from '@cloudflare/workers-types';
 
 // ─── Types ───────────────────────────────────────────────────
 export interface Env {
@@ -60,19 +61,17 @@ function error(message: string, status = 400): Response {
 
 // ─── Database Migrations ─────────────────────────────────────
 async function runMigrations(db: D1Database): Promise<void> {
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS notes (
+  await db.prepare(
+    `CREATE TABLE IF NOT EXISTS notes (
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL DEFAULT '',
       content TEXT NOT NULL DEFAULT '',
       tags TEXT NOT NULL DEFAULT '[]',
       createdAt INTEGER NOT NULL,
-      updatedAt INTEGER NOT NULL
-    )
-  `);
-  // Future tables:
-  // CREATE TABLE IF NOT EXISTS bookmarks (...)
-  // CREATE TABLE IF NOT EXISTS settings (...)
+      updatedAt INTEGER NOT NULL,
+      synced INTEGER NOT NULL DEFAULT 0
+    )`
+  ).run();
 }
 
 // ─── Notes Handlers ──────────────────────────────────────────
