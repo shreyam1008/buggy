@@ -26,8 +26,8 @@ export default function App() {
       <main className="flex-1 min-w-0 p-4 sm:p-6 overflow-y-auto">
         <Suspense fallback={<Loader />}>
           <Switch>
-            <Route path="/" component={DateConverter} />
-            <Route path="/calendar" component={Calendar} />
+            <Route path="/" component={Calendar} />
+            <Route path="/date-converter" component={DateConverter} />
             <Route path="/image" component={ImageCompressor} />
             <Route path="/pdf" component={PdfMerger} />
             <Route path="/notes" component={Notes} />

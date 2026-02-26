@@ -2,8 +2,8 @@ import { Link, useLocation } from 'wouter';
 import { useState, useEffect } from 'react';
 
 const navItems = [
-  { path: '/', label: 'Date Converter', icon: '📅' },
-  { path: '/calendar', label: 'Calendar', icon: '🗓️' },
+  { path: '/', label: 'Calendar', icon: '🗓️' },
+  { path: '/date-converter', label: 'Date Converter', icon: '📅' },
   { path: '/image', label: 'Image Tools', icon: '🖼️' },
   { path: '/pdf', label: 'PDF Merger', icon: '📄' },
   { path: '/notes', label: 'Notes', icon: '📝' },
@@ -85,7 +85,7 @@ export default function Sidebar() {
 
         {/* Header — 5 clicks to unlock secret */}
         <div 
-          className="px-5 py-6 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 select-none cursor-default transition-colors"
+          className="px-5 py-6 flex-shrink-0 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 select-none cursor-default transition-colors"
           onClick={handleSecretClick}
         >
           <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
@@ -100,7 +100,7 @@ export default function Sidebar() {
         </div>
 
         {/* Navigation */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 custom-scrollbar">
+        <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 custom-scrollbar">
           <nav className="space-y-1">
             {navItems.map((item) => (
               <Link key={item.path} href={item.path}>
@@ -112,10 +112,10 @@ export default function Sidebar() {
                       : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200 font-medium'
                   }`}
                 >
-                  <span className={`text-xl transition-transform duration-300 ${location === item.path ? 'scale-110' : 'group-hover:scale-110'}`}>
+                  <span className={`text-[18px] sm:text-xl transition-transform duration-300 ${location === item.path ? 'scale-110' : 'group-hover:scale-110'}`}>
                     {item.icon}
                   </span>
-                  <span className="text-[15px]">{item.label}</span>
+                  <span className="text-sm sm:text-[15px]">{item.label}</span>
                 </button>
               </Link>
             ))}
@@ -155,7 +155,7 @@ export default function Sidebar() {
         </div>
 
         {/* Footer: Profile, Theme Toggle & Socials */}
-        <div className="p-5 border-t border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-[#0b1121] transition-colors">
+        <div className="p-4 sm:p-5 flex-shrink-0 border-t border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-[#0b1121] transition-colors">
           
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">

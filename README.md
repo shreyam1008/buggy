@@ -53,8 +53,9 @@ graph TB
         Worker[Worker Router - index.ts]
         NotesH[handlers/notes.ts]
         AIH[handlers/ai.ts]
-        ChatH[handlers/chat.ts]
         D1[(D1 - SQLite)]
+        DO[ChatRoom Durable Object]
+        DOSQL[(DO SQLite - Zero Latency)]
     end
 
     subgraph External["External APIs"]
@@ -63,13 +64,13 @@ graph TB
 
     React -->|POST /api/notes/sync| NotesH
     React -->|POST /api/ai| AIH
-    WS_Client -->|WS /api/chat| ChatH
+    WS_Client -->|WS /api/chat| DO
     SQLite -.->|Local-first| React
     Worker --> NotesH
     Worker --> AIH
-    Worker --> ChatH
+    Worker --> DO
     NotesH --> D1
-    ChatH --> D1
+    DO --> DOSQL
     AIH --> NVIDIA
     SW -.->|Cache assets| React
 ```
@@ -94,31 +95,28 @@ sequenceDiagram
     Note over Browser: Both sides now in sync
 ```
 
-### Data Flow: Live Chat (WebSocket)
+### Data Flow: Live Chat (WebSocket Hibernation)
 
 ```mermaid
 sequenceDiagram
     participant Client as Browser
-    participant WS as Worker WebSocket
-    participant D1 as D1 Database
+    participant WS as ChatRoom DO (Hibernation)
+    participant DB as DO SQLite
 
     Client->>WS: Upgrade ?name=Govinda_123
-    WS->>WS: Prune stale sockets
-    WS->>WS: Validate identity from D1
+    WS->>WS: Validate identity & acceptWebSocket()
     WS-->>Client: {type: welcome, username, canWrite}
-    WS->>D1: SELECT last 30 messages
+    WS->>DB: SELECT last 30 messages (Zero Latency)
     WS-->>Client: {type: history, messages, hasMore}
 
     Note over Client: User sends message
     Client->>WS: {type: chat, message}
-    WS->>WS: Broadcast to all OPEN sockets
-    WS->>D1: INSERT (fire-and-forget)
+    WS->>WS: Broadcast to all connected sockets
+    WS->>DB: INSERT (Synchronous)
     WS-->>Client: {type: chat, id, username, message}
 
-    Note over Client: User requests older messages
-    Client->>WS: {type: loadMore, before: timestamp}
-    WS->>D1: SELECT WHERE createdAt < ? LIMIT 31
-    WS-->>Client: {type: history, messages, hasMore}
+    Note over Client: DO evicts from memory when idle
+    Note over Client: Sockets stay connected. DO wakes on next message.
 ```
 
 ---
@@ -179,12 +177,11 @@ worker/src/
 │   └── CORS middleware   # Strict origin whitelisting
 ├── handlers/
 │   ├── notes.ts          # Sync engine (UPSERT by updatedAt)
-│   ├── ai.ts             # NVIDIA NIM proxy (SSE streaming)
-│   └── chat.ts           # WebSocket manager
-│       ├── Krishna names # 20 epithets (Govinda, Madhava...)
-│       ├── Identity      # localStorage persistence via URL param
-│       ├── Pagination    # Cursor-based LIMIT 31 (prefetch+1)
-│       └── Stale prune   # Dead socket cleanup before writer count
+│   └── ai.ts             # NVIDIA NIM proxy (SSE streaming)
+├── ChatRoom.ts           # Durable Object (WebSocket Hibernation)
+│   ├── Colocated SQLite  # Zero-latency storage for messages
+│   ├── serializeAttachment # State persistence across hibernation
+│   └── Broadcast logic   # Single-point-of-coordination
 └── utils/
     └── response.ts       # JSON helper + CORS headers
 ```
