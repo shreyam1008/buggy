@@ -64,7 +64,6 @@ export default function ChatRoom() {
     typists, hasMore, sendMessage, sendTyping, deleteMessage, loadOlder 
   } = useLiveChat();
 
-  // ── Smart auto-scroll: only if user is near bottom ──
   const isNearBottom = () => {
     const el = scrollAreaRef.current;
     if (!el) return true;
@@ -76,12 +75,10 @@ export default function ChatRoom() {
       bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
       setShowNewPill(false);
     } else {
-      // User scrolled up — show the "new messages" pill
       if (messages.length > 0) setShowNewPill(true);
     }
   }, [messages]);
 
-  // Dismiss pill when user scrolls to bottom
   const onScroll = () => {
     if (isNearBottom()) setShowNewPill(false);
   };
@@ -96,7 +93,6 @@ export default function ChatRoom() {
     if (!input.trim() || !canWrite) return;
     sendMessage(input);
     setInput('');
-    // Force scroll after own message
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
   };
 
@@ -107,6 +103,17 @@ export default function ChatRoom() {
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     typingTimeoutRef.current = setTimeout(() => sendTyping(false), 2000);
   };
+
+  // ── Status bar content ──
+  const statusDot = connected ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse';
+  const statusText = connected
+    ? canWrite ? `${myName}` : `${myName} · Observing`
+    : 'Connecting…';
+  const statusBadge = connected
+    ? canWrite 
+      ? <span className="text-[10px] font-bold px-1.5 py-0.5 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 rounded">Live</span>
+      : <span className="text-[10px] font-bold px-1.5 py-0.5 bg-amber-500/15 text-amber-600 dark:text-amber-400 rounded">Full (10/10)</span>
+    : <span className="text-[10px] font-bold px-1.5 py-0.5 bg-slate-500/15 text-slate-500 rounded animate-pulse">Connecting</span>;
 
   if (!socketExists) {
     return (
@@ -119,18 +126,19 @@ export default function ChatRoom() {
 
   return (
     <div className="max-w-3xl mx-auto flex flex-col h-[100dvh] lg:h-[calc(100vh-2rem)] pt-12 lg:pt-0 overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-3 flex-shrink-0 px-1">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent flex items-center gap-2">
+      {/* Header — compact, clear status */}
+      <div className="flex items-center justify-between mb-2 flex-shrink-0 px-1">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent flex items-center gap-2">
             Live Ashram
-            <span className={`w-2.5 h-2.5 rounded-full ${connected ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} />
+            <span className={`w-2 h-2 rounded-full flex-shrink-0 ${statusDot}`} />
           </h1>
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-0.5 transition-colors">
-            {connected 
-              ? (canWrite ? `Connected as ${myName}` : `Observing as ${myName} (Room Full)`) 
-              : 'Connecting...'}
-          </p>
+          <div className="flex items-center gap-2 mt-0.5">
+            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 truncate font-medium">
+              {statusText}
+            </p>
+            {statusBadge}
+          </div>
         </div>
       </div>
 
@@ -141,23 +149,23 @@ export default function ChatRoom() {
         <div 
           ref={scrollAreaRef}
           onScroll={onScroll}
-          className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-3"
+          className="flex-1 overflow-y-auto overscroll-contain p-3 sm:p-4 space-y-3"
         >
           {/* Load Older */}
           {hasMore && (
             <div className="flex justify-center pb-2">
               <button 
                 onClick={loadOlder}
-                className="text-xs font-medium px-4 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                className="text-[10px] sm:text-xs font-medium px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
               >
-                ↑ Load older messages
+                ↑ Load older
               </button>
             </div>
           )}
 
           {messages.length === 0 && (
             <div className="h-full flex items-center justify-center text-slate-400 dark:text-slate-500 text-sm">
-              Silence in the ashram...
+              Silence in the ashram…
             </div>
           )}
           
@@ -211,10 +219,10 @@ export default function ChatRoom() {
           </div>
         )}
 
-        {/* Input Area — sticky at bottom, no screen jump */}
+        {/* Input Area */}
         <form 
           onSubmit={send} 
-          className="flex-shrink-0 p-3 sm:p-4 bg-slate-50 dark:bg-slate-800/40 border-t border-slate-200 dark:border-slate-800 transition-colors"
+          className="flex-shrink-0 p-2.5 sm:p-3 bg-slate-50 dark:bg-slate-800/40 border-t border-slate-200 dark:border-slate-800 transition-colors"
         >
           <div className="relative">
             <input
@@ -222,18 +230,18 @@ export default function ChatRoom() {
               value={input}
               onChange={handleInput}
               placeholder={connected 
-                ? (canWrite ? 'Speak your mind...' : 'Room is currently full (10 max). Observing...') 
-                : 'Connecting...'}
+                ? (canWrite ? 'Speak your mind…' : 'Room full — observing only') 
+                : 'Connecting…'}
               disabled={!connected || !canWrite}
               maxLength={500}
-              className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl pl-4 pr-12 py-3 outline-none focus:border-orange-500 transition-all disabled:opacity-60 shadow-inner text-sm text-slate-900 dark:text-white dark:placeholder-slate-500"
+              className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl pl-4 pr-12 py-2.5 sm:py-3 outline-none focus:border-orange-500 transition-all disabled:opacity-50 text-sm text-slate-900 dark:text-white dark:placeholder-slate-500"
             />
             <button
               type="submit"
               disabled={!input.trim() || !connected || !canWrite}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-orange-600 hover:bg-orange-500 disabled:bg-slate-300 dark:disabled:bg-slate-700 rounded-lg transition-colors cursor-pointer disabled:cursor-not-allowed shadow text-white"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 p-2 bg-orange-600 hover:bg-orange-500 disabled:bg-slate-300 dark:disabled:bg-slate-700 rounded-lg transition-colors cursor-pointer disabled:cursor-not-allowed text-white"
             >
-              🚀
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4 20-7z"/></svg>
             </button>
           </div>
         </form>

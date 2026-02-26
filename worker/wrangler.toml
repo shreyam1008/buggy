@@ -8,6 +8,15 @@ binding = "DB"
 database_name = "buggythegret"
 database_id = "9700f14a-a245-4279-b420-7ab78183fc2f"
 
+# Durable Object for live chat WebSocket coordination
+[[durable_objects.bindings]]
+name = "CHAT_ROOM"
+class_name = "ChatRoom"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = [ "ChatRoom" ]
+
 # [vars]
 # AI_API_KEY = ""  # Add via `wrangler secret put AI_API_KEY`
 
