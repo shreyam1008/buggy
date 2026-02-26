@@ -23,17 +23,21 @@ export default function App() {
   return (
     <div className="flex min-h-dvh bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
       <Sidebar />
-      <main className="flex-1 min-w-0 p-4 sm:p-6 overflow-y-auto">
+      <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         <Suspense fallback={<Loader />}>
           <Switch>
-            <Route path="/" component={Calendar} />
-            <Route path="/date-converter" component={DateConverter} />
-            <Route path="/image" component={ImageCompressor} />
-            <Route path="/pdf" component={PdfMerger} />
-            <Route path="/notes" component={Notes} />
-            <Route path="/bcrypt" component={BcryptGenerator} />
-            <Route path="/ai" component={AI} />
+            {/* Pages with explicit padding wrapper */}
+            <Route path="/" component={() => <div className="p-4 sm:p-6"><Calendar /></div>} />
+            <Route path="/date-converter" component={() => <div className="p-4 sm:p-6"><DateConverter /></div>} />
+            <Route path="/image" component={() => <div className="p-4 sm:p-6"><ImageCompressor /></div>} />
+            <Route path="/pdf" component={() => <div className="p-4 sm:p-6"><PdfMerger /></div>} />
+            <Route path="/notes" component={() => <div className="p-4 sm:p-6"><Notes /></div>} />
+            <Route path="/bcrypt" component={() => <div className="p-4 sm:p-6"><BcryptGenerator /></div>} />
+            <Route path="/ai" component={() => <div className="p-4 sm:p-6"><AI /></div>} />
+            
+            {/* Full bleed for Chat */}
             <Route path="/chat" component={ChatRoom} />
+            
             <Route>
               <div className="text-center py-20 animate-in fade-in zoom-in duration-300">
                 <h1 className="text-4xl font-bold">404</h1>
