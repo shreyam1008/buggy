@@ -166,7 +166,7 @@ export default function Notes() {
         for (const note of merged) {
           const tags = parseTags(note.tags);
           const tagsStr = JSON.stringify(tags);
-          tx.sql`
+          await tx.sql`
             INSERT INTO notes (id, title, content, tags, createdAt, updatedAt, synced)
             VALUES (${note.id}, ${note.title}, ${note.content}, ${tagsStr}, ${note.createdAt}, ${note.updatedAt}, 1)
             ON CONFLICT(id) DO UPDATE SET

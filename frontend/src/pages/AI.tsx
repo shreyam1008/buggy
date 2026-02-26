@@ -109,7 +109,7 @@ export default function AI() {
                   return copy;
                 });
               }
-            } catch (err) {
+            } catch {
               // Ignore malformed JSON chunks during streaming
             }
           }

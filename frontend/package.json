@@ -1,7 +1,7 @@
 {
-  "name": "nepali-calendar",
+  "name": "shreyam1008",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.00.8",
   "type": "module",
   "scripts": {
     "dev": "vite",
