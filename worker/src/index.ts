@@ -8,35 +8,48 @@ export interface Env {
   AI_API_KEY: string;
 }
 
-async function runMigrations(db: D1Database): Promise<void> {
-  const migrations = [
-    db.prepare(`
-      CREATE TABLE IF NOT EXISTS notes (
-        id TEXT PRIMARY KEY,
-        title TEXT NOT NULL,
-        content TEXT NOT NULL,
-        tags TEXT NOT NULL,
-        createdAt INTEGER NOT NULL,
-        updatedAt INTEGER NOT NULL,
-        synced INTEGER NOT NULL DEFAULT 1
-      )
-    `),
-    db.prepare(`
-      CREATE TABLE IF NOT EXISTS live_chat (
-        id TEXT PRIMARY KEY,
-        username TEXT NOT NULL,
-        message TEXT NOT NULL,
-        createdAt INTEGER NOT NULL
-      )
-    `),
-    db.prepare(`CREATE INDEX IF NOT EXISTS idx_chat_time ON live_chat(createdAt)`)
-  ];
+// Module-level flag — survives across requests in the same isolate.
+// Avoids hitting D1 on every single request just to check if tables exist.
+let migrated = false;
 
-  await db.batch(migrations);
+async function ensureMigrations(db: D1Database): Promise<void> {
+  if (migrated) return;
+  try {
+    const check = await db.prepare(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='notes'"
+    ).first();
+    if (!check) {
+      await db.batch([
+        db.prepare(`
+          CREATE TABLE IF NOT EXISTS notes (
+            id TEXT PRIMARY KEY,
+            title TEXT NOT NULL,
+            content TEXT NOT NULL,
+            tags TEXT NOT NULL,
+            createdAt INTEGER NOT NULL,
+            updatedAt INTEGER NOT NULL,
+            synced INTEGER NOT NULL DEFAULT 1
+          )
+        `),
+        db.prepare(`
+          CREATE TABLE IF NOT EXISTS live_chat (
+            id TEXT PRIMARY KEY,
+            username TEXT NOT NULL,
+            message TEXT NOT NULL,
+            createdAt INTEGER NOT NULL
+          )
+        `),
+        db.prepare(`CREATE INDEX IF NOT EXISTS idx_chat_time ON live_chat(createdAt)`)
+      ]);
+    }
+    migrated = true;
+  } catch (e) {
+    console.error('Migration error:', e);
+  }
 }
 
 type Route = {
-  method: 'GET' | 'POST' | 'OPTIONS';
+  method: 'GET' | 'POST';
   pattern: RegExp;
   handler: (env: Env, req: Request) => Promise<Response>;
 };
@@ -75,23 +88,17 @@ const routes: Route[] = [
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
-    const url = new URL(request.url);
-
-    try {
-      if (request.method === 'GET' || request.method === 'POST') {
-        const check = await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='notes'").first();
-        if (!check) await runMigrations(env.DB);
-      }
-    } catch (e) {
-      console.log('Migration check var:', e);
-    }
-
+    // Fast-path: CORS preflight — no DB work needed
     if (request.method === 'OPTIONS') {
       return new Response(null, { headers: getCorsHeaders(request) });
     }
 
+    const url = new URL(request.url);
+
     for (const route of routes) {
       if (route.method === request.method && route.pattern.test(url.pathname)) {
+        // Only run migrations for routes that actually need the DB
+        await ensureMigrations(env.DB);
         return route.handler(env, request);
       }
     }

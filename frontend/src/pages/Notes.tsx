@@ -28,12 +28,21 @@ async function initDB() {
   `;
 }
 
+// Safely parse tags — handles string, array, or unexpected values
+function parseTags(raw: any): string[] {
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw === 'string') {
+    try { const parsed = JSON.parse(raw); return Array.isArray(parsed) ? parsed : []; } catch { return []; }
+  }
+  return [];
+}
+
 async function loadAllNotes(): Promise<Note[]> {
   const result = await sql.sql`SELECT * FROM notes ORDER BY updatedAt DESC`;
   // result is an array of plain objects matching the table
   return result.map((r: any) => ({
     ...r,
-    tags: JSON.parse(r.tags),
+    tags: parseTags(r.tags),
     synced: Boolean(r.synced),
   }));
 }
@@ -155,7 +164,8 @@ export default function Notes() {
     onSuccess: async (merged) => {
       await sql.transaction(async (tx) => {
         for (const note of merged) {
-          const tagsStr = JSON.stringify(note.tags);
+          const tags = parseTags(note.tags);
+          const tagsStr = JSON.stringify(tags);
           tx.sql`
             INSERT INTO notes (id, title, content, tags, createdAt, updatedAt, synced)
             VALUES (${note.id}, ${note.title}, ${note.content}, ${tagsStr}, ${note.createdAt}, ${note.updatedAt}, 1)
