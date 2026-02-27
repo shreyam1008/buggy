@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 const API_URL = (import.meta.env.VITE_API_URL as string)?.replace(/\/$/, '') || '';
 const WS_URL = API_URL ? API_URL.replace(/^http/, 'ws') + '/api/chat' : '';
@@ -26,7 +26,7 @@ export function useLiveChat() {
   const reconnectAttempt = useRef(0);
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const connect = useCallback(() => {
+  const connect = () => {
     if (!WS_URL) return;
 
     // Grab stored identity for persistence across refreshes
@@ -109,7 +109,7 @@ export function useLiveChat() {
     };
     
     wsRef.current = ws;
-  }, []);
+  };
 
   useEffect(() => {
     connect();
@@ -121,26 +121,26 @@ export function useLiveChat() {
 
   // --- Actions (stable via refs, no stale closure) ---
 
-  const sendMessage = useCallback((message: string) => {
+  const sendMessage = (message: string) => {
     const ws = wsRef.current;
     if (!ws || ws.readyState !== 1) return;
     ws.send(JSON.stringify({ type: 'chat', message }));
     ws.send(JSON.stringify({ type: 'typing', isTyping: false }));
-  }, []);
+  };
 
-  const sendTyping = useCallback((isTyping: boolean) => {
+  const sendTyping = (isTyping: boolean) => {
     const ws = wsRef.current;
     if (!ws || ws.readyState !== 1) return;
     ws.send(JSON.stringify({ type: 'typing', isTyping }));
-  }, []);
+  };
 
-  const deleteMessage = useCallback((id: string) => {
+  const deleteMessage = (id: string) => {
     const ws = wsRef.current;
     if (!ws || ws.readyState !== 1) return;
     ws.send(JSON.stringify({ type: 'delete', id }));
-  }, []);
+  };
 
-  const loadOlder = useCallback(() => {
+  const loadOlder = () => {
     const ws = wsRef.current;
     if (!ws || ws.readyState !== 1) return;
     // Find earliest message timestamp in current list
@@ -153,7 +153,7 @@ export function useLiveChat() {
       ws.send(JSON.stringify({ type: 'loadMore', before: oldest }));
       return prev; // Don't mutate — server response will prepend
     });
-  }, []);
+  };
 
   return {
     socketExists: !!WS_URL,

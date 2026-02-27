@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, memo, useMemo } from 'react';
+import { useState, useEffect, useRef, memo } from 'react';
 import { useLiveChat } from '../hooks/useLiveChat';
 import type { ChatMessage } from '../hooks/useLiveChat';
 
@@ -138,16 +138,14 @@ export default function ChatRoom() {
   }
 
   // Pre-calculate message groupings (WhatsApp style)
-  const groupedMessages = useMemo(() => {
-    return messages.map((msg, idx) => {
-      if (msg.type === 'system') return { msg, showName: false, showTail: false };
-      
-      const prevMsg = messages[idx - 1];
-      const isFirstFromUser = !prevMsg || prevMsg.type === 'system' || prevMsg.username !== msg.username;
-      
-      return { msg, showName: isFirstFromUser, showTail: isFirstFromUser };
-    });
-  }, [messages]);
+  const groupedMessages = messages.map((msg, idx) => {
+    if (msg.type === 'system') return { msg, showName: false, showTail: false };
+    
+    const prevMsg = messages[idx - 1];
+    const isFirstFromUser = !prevMsg || prevMsg.type === 'system' || prevMsg.username !== msg.username;
+    
+    return { msg, showName: isFirstFromUser, showTail: isFirstFromUser };
+  });
 
   return (
     <div className="flex-1 h-[100dvh] lg:h-screen bg-[#e5ddd5] dark:bg-[#0b141a] sm:border-l border-slate-300 dark:border-slate-800 relative flex justify-center overflow-hidden w-full lg:px-4 lg:py-4">

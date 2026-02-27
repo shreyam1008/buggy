@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import imageCompression from 'browser-image-compression';
 
 type OutputFormat = 'jpeg' | 'png' | 'webp';
@@ -24,7 +24,7 @@ export default function ImageCompressor() {
     };
   }, [origPreview, convPreview]);
 
-  const handleFile = useCallback((file: File) => {
+  const handleFile = (file: File) => {
     if (!file.type.startsWith('image/')) return;
     if (origPreview) URL.revokeObjectURL(origPreview);
     if (convPreview) URL.revokeObjectURL(convPreview);
@@ -33,7 +33,7 @@ export default function ImageCompressor() {
     setConverted(null);
     setConvPreview('');
     setStats(null);
-  }, [origPreview, convPreview]);
+  };
 
   const compress = async () => {
     if (!original) return;
@@ -78,16 +78,16 @@ export default function ImageCompressor() {
     }
   };
 
-  const onDrop = useCallback((e: React.DragEvent) => {
+  const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
     if (file) handleFile(file);
-  }, [handleFile]);
+  };
 
-  const onPaste = useCallback((e: React.ClipboardEvent) => {
+  const onPaste = (e: React.ClipboardEvent) => {
     const file = e.clipboardData.files[0];
     if (file) handleFile(file);
-  }, [handleFile]);
+  };
 
   const reset = () => {
     if (origPreview) URL.revokeObjectURL(origPreview);

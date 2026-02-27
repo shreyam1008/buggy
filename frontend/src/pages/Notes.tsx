@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { SQLocal } from 'sqlocal';
 
@@ -184,6 +184,14 @@ export default function Notes() {
       alert(`Sync Failed: ${error.message}\nMake sure your Cloudflare Worker is deployed and running.`);
     }
   });
+
+  // Auto-sync on mount if empty and hasn't synced recently
+  useEffect(() => {
+    if (dbInitializing) return;
+    if (notes.length === 0 && !lastSynced && !syncMutation.isPending) {
+      syncMutation.mutate();
+    }
+  }, [dbInitializing, notes.length, lastSynced, syncMutation]);
 
   const filtered = notes.filter((n) =>
     n.title.toLowerCase().includes(search.toLowerCase()) ||

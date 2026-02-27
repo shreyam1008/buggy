@@ -8,6 +8,8 @@
   <img src="https://img.shields.io/badge/Backend-Cloudflare_Workers-f38020?style=flat-square" />
   <img src="https://img.shields.io/badge/DB-D1_(SQLite)-green?style=flat-square" />
   <img src="https://img.shields.io/badge/Runtime-Bun-white?style=flat-square" />
+  <img src="https://img.shields.io/badge/Language-TypeScript_6.0_Beta-3178C6?style=flat-square" />
+  <img src="https://img.shields.io/badge/Lint-Oxlint-black?style=flat-square" />
   <img src="https://img.shields.io/badge/AI-NVIDIA_NIM-76b900?style=flat-square" />
 </p>
 
@@ -15,7 +17,7 @@
 
 ## What Is Buggy?
 
-**Buggy** is a production-grade Progressive Web App containing 8 high-performance utilities — from AI chat with live streaming to a native Nepali calendar — all running offline-first on the client and syncing to Cloudflare's global edge network when needed.
+**Buggy** is a Progressive Web App containing 8 high-performance utilities — from a simple light weight Nepali Calender to a AI chat with live streaming — all running offline-first on the client and syncing to Cloudflare's global edge network when needed.
 
 Built by **Shreyam Adhikari** ([@shreyam1008](https://github.com/shreyam1008)).
 
@@ -32,7 +34,7 @@ Built by **Shreyam Adhikari** ([@shreyam1008](https://github.com/shreyam1008)).
 | 📝 **Notes** | Local SQLite (OPFS) + cloud sync to D1 | `sqlocal` + Cloudflare D1 |
 | 🔒 **Bcrypt** | Generate and verify bcrypt hashes | `bcryptjs` (client-only) |
 | ✨ **AI Studio** | Chat with LLMs (streaming SSE) + image generation | NVIDIA NIM API proxy |
-| 💬 **Live Chat** | Real-time global WebSocket ashram with Krishna names | Cloudflare Workers WebSocket |
+| 💬 **Live Chat** | Real-time global WebSocket| Cloudflare Workers WebSocket |
 
 ---
 

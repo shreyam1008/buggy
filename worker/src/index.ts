@@ -1,5 +1,6 @@
 import { handleNotesSync } from './handlers/notes';
 import { handleAIChat, handleAIImage } from './handlers/ai';
+import { handleHealth } from './handlers/health';
 import { json, error, getCorsHeaders } from './utils/response';
 
 // Re-export the Durable Object so Wrangler bundles it
@@ -51,11 +52,7 @@ const routes: Route[] = [
   {
     method: 'GET',
     pattern: /^\/$/,
-    handler: async (_env, req) => json({ 
-      status: 'Buggy Cloudflare Edge is Live', 
-      latencyInfo: 'Globally Distributed via Workers',
-      routes: ['/api/notes/sync', '/api/ai', '/api/ai/image', '/api/chat (ws)']
-    }, req),
+    handler: handleHealth,
   },
   {
     method: 'POST',

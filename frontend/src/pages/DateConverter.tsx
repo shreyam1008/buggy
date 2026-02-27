@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef } from 'react';
 import {
   bsMonthNamesEn, bsMonthNames, adMonthNames, toNepaliNumeral,
 } from '../data/nepaliCalendar';
@@ -31,10 +31,10 @@ export default function DateConverter() {
     return { day, month, year };
   }
 
-  const debouncedConvert = useCallback((fn: () => void) => {
+  const debouncedConvert = (fn: () => void) => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(fn, 200);
-  }, []);
+  };
 
   function handleBsChange(raw: string) {
     const val = autoFormat(raw);

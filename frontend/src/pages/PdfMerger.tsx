@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef } from 'react';
 
 interface PDFFile {
   id: string;
@@ -13,7 +13,7 @@ export default function PdfMerger() {
   const [mergedUrl, setMergedUrl] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const addFiles = useCallback((fileList: FileList | null) => {
+  const addFiles = (fileList: FileList | null) => {
     if (!fileList) return;
     const newFiles: PDFFile[] = [];
     for (let i = 0; i < fileList.length; i++) {
@@ -29,7 +29,7 @@ export default function PdfMerger() {
     }
     setFiles((prev) => [...prev, ...newFiles]);
     setMergedUrl(null);
-  }, []);
+  };
 
   const removeFile = (id: string) => {
     setFiles((prev) => prev.filter((f) => f.id !== id));

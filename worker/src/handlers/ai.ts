@@ -75,7 +75,7 @@ export async function handleAIImage(env: Env, req: Request) {
         return error(`NVIDIA API Error: ${errText}`, req, res.status);
     }
 
-    const data = await res.json();
+    const data = await res.json() as any;
     
     if (data.artifacts && data.artifacts[0]?.base64) {
         return json({ data: [{ b64_json: data.artifacts[0].base64 }] }, req);
