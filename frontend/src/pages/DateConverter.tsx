@@ -1,17 +1,23 @@
 import { useState, useRef } from 'react';
 import {
-  bsMonthNamesEn, bsMonthNames, adMonthNames, toNepaliNumeral,
+  bsMonthNamesEn, bsMonthNames, adMonthNames,
 } from '../data/nepaliCalendar';
 import { bsToAd, adToBs, getDaysInBsMonth, type BsDate } from '../utils/dateConverter';
 
 export default function DateConverter() {
   const [bsInput, setBsInput] = useState('');
-  const [adResult, setAdResult] = useState('');
+  const [adResult, setAdResult] = useState<[string, string] | null>(null);
   const [adInput, setAdInput] = useState('');
-  const [bsResult, setBsResult] = useState('');
+  const [bsResult, setBsResult] = useState<[string, string] | null>(null);
   const [status, setStatus] = useState<{ type: 'info' | 'success' | 'error'; text: string }>({ type: 'info', text: 'Ready' });
   const [copiedField, setCopiedField] = useState('');
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function getOrdinal(n: number) {
+    const s = ["th", "st", "nd", "rd"];
+    const v = n % 100;
+    return n + (s[(v - 20) % 10] || s[v] || s[0]);
+  }
 
   function autoFormat(val: string): string {
     const d = val.replace(/\D/g, '').slice(0, 8);
@@ -39,7 +45,7 @@ export default function DateConverter() {
   function handleBsChange(raw: string) {
     const val = autoFormat(raw);
     setBsInput(val);
-    setAdResult('');
+    setAdResult(null);
     debouncedConvert(() => {
       const p = parse(val);
       if (!p) { setStatus({ type: 'info', text: 'Ready' }); return; }
@@ -48,7 +54,15 @@ export default function DateConverter() {
       if (p.day < 1 || p.day > max) { setStatus({ type: 'error', text: `${bsMonthNamesEn[p.month - 1]} ${p.year} has ${max} days` }); return; }
       const ad = bsToAd(p.year, p.month - 1, p.day);
       const weekday = ad.toLocaleDateString('en-US', { weekday: 'long' });
-      setAdResult(`${ad.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} (${weekday})`);
+      
+      const adDay = ad.getDate();
+      const adMonth = ad.getMonth();
+      const adYear = ad.getFullYear();
+      
+      const primary = `${String(adDay).padStart(2, '0')}/${String(adMonth + 1).padStart(2, '0')}/${adYear} AD`;
+      const secondary = `${getOrdinal(adDay)} ${adMonthNames[adMonth]}, ${adYear} AD (${weekday})`;
+      
+      setAdResult([primary, secondary]);
       setStatus({ type: 'success', text: `${val} BS → AD` });
     });
   }
@@ -56,7 +70,7 @@ export default function DateConverter() {
   function handleAdChange(raw: string) {
     const val = autoFormat(raw);
     setAdInput(val);
-    setBsResult('');
+    setBsResult(null);
     debouncedConvert(() => {
       const p = parse(val);
       if (!p) { setStatus({ type: 'info', text: 'Ready' }); return; }
@@ -64,7 +78,11 @@ export default function DateConverter() {
       const max = new Date(p.year, p.month, 0).getDate();
       if (p.day < 1 || p.day > max) { setStatus({ type: 'error', text: `Invalid day for ${adMonthNames[p.month - 1]}` }); return; }
       const bs: BsDate = adToBs(new Date(p.year, p.month - 1, p.day));
-      setBsResult(`${toNepaliNumeral(bs.day)}-${toNepaliNumeral(bs.month + 1)}-${toNepaliNumeral(bs.year)} (${bsMonthNamesEn[bs.month]} ${bs.day}, ${bs.year} BS)`);
+      
+      const primary = `${String(bs.day).padStart(2, '0')}/${String(bs.month + 1).padStart(2, '0')}/${bs.year} BS`;
+      const secondary = `${getOrdinal(bs.day)} ${bsMonthNamesEn[bs.month]}, ${bs.year} BS`;
+      
+      setBsResult([primary, secondary]);
       setStatus({ type: 'success', text: `${val} AD → BS` });
     });
   }
@@ -95,11 +113,15 @@ export default function DateConverter() {
             className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:ring-2 focus:ring-red-600 transition-colors duration-200"
           />
           {adResult && (
-            <div className="mt-3 flex items-center justify-between gap-2 bg-slate-100 dark:bg-slate-800/50 rounded-lg px-3 py-2.5 transition-colors duration-300 animate-in fade-in slide-in-from-top-2">
-              <strong className="text-sm text-emerald-600 dark:text-emerald-400">{adResult}</strong>
+            <div className="mt-3 flex items-center justify-between gap-2 bg-slate-100 dark:bg-slate-800/50 rounded-lg px-4 py-3 transition-colors duration-300 animate-in fade-in slide-in-from-top-2">
+              <div className="flex flex-col">
+                <strong className="text-base text-emerald-600 dark:text-emerald-400 leading-tight">{adResult[0]}</strong>
+                <span className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">{adResult[1]}</span>
+              </div>
               <button
-                onClick={() => copy(adResult, 'ad')}
-                className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors text-sm cursor-pointer"
+                onClick={() => copy(`${adResult[0]} \n${adResult[1]}`, 'ad')}
+                className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors text-sm cursor-pointer p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700"
+                title="Copy date"
               >
                 {copiedField === 'ad' ? '✓' : '📋'}
               </button>
@@ -121,11 +143,15 @@ export default function DateConverter() {
             className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:ring-2 focus:ring-red-600 transition-colors duration-200"
           />
           {bsResult && (
-            <div className="mt-3 flex items-center justify-between gap-2 bg-slate-100 dark:bg-slate-800/50 rounded-lg px-3 py-2.5 transition-colors duration-300 animate-in fade-in slide-in-from-top-2">
-              <strong className="text-sm text-emerald-600 dark:text-emerald-400">{bsResult}</strong>
+            <div className="mt-3 flex items-center justify-between gap-2 bg-slate-100 dark:bg-slate-800/50 rounded-lg px-4 py-3 transition-colors duration-300 animate-in fade-in slide-in-from-top-2">
+              <div className="flex flex-col">
+                <strong className="text-base text-emerald-600 dark:text-emerald-400 leading-tight">{bsResult[0]}</strong>
+                <span className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">{bsResult[1]}</span>
+              </div>
               <button
-                onClick={() => copy(bsResult, 'bs')}
-                className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors text-sm cursor-pointer"
+                onClick={() => copy(`${bsResult[0]} \n${bsResult[1]}`, 'bs')}
+                className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors text-sm cursor-pointer p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700"
+                title="Copy date"
               >
                 {copiedField === 'bs' ? '✓' : '📋'}
               </button>
