@@ -36,4 +36,51 @@
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
+  <url>
+    <loc>https://shreyam1008.com.np/bcrypt</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- External projects by Shreyam Adhikari (shreyam1008) -->
+  <url>
+    <loc>https://shreyam1008.github.io/dbterm/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://radhey.web.app/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://nepallegalfirm.com.np/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://shreyam1008.github.io/visualise-oklch/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://mamatap.com.np/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://gitvibes.pages.dev/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://shreyam1008.github.io/gobarrygo/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://shreyam1008.github.io/ProtoPeek/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
 </urlset>

@@ -26,4 +26,4 @@ Disallow: /
 User-agent: Omgilibot
 Disallow: /
 
-Sitemap: https://buggy.shreyam1008.com.np/sitemap.xml
+Sitemap: https://shreyam1008.com.np/sitemap.xml

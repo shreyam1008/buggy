@@ -44,6 +44,24 @@ const myApps = [
     label: 'Mamata P',
     description: 'Portfolio website for a legal professional',
   },
+  {
+    href: 'https://gitvibes.pages.dev/',
+    icon: '🌐',
+    label: 'GitVibes',
+    description: 'Social media for code',
+  },
+  {
+    href: 'https://shreyam1008.github.io/gobarrygo/',
+    icon: '🚀',
+    label: 'GoBarryGo',
+    description: '16x faster downloads',
+  },
+  {
+    href: 'https://shreyam1008.github.io/ProtoPeek/',
+    icon: '🔌',
+    label: 'ProtoPeek',
+    description: 'gRPC Tooling',
+  },
 ];
 
 const socials = [
