@@ -20,12 +20,6 @@ const myApps = [
     description: 'Database terminal utility',
   },
   {
-    href: 'https://radhey.web.app/',
-    icon: '⚛️',
-    label: 'Radhey',
-    description: 'React-based project',
-  },
-  {
     href: 'https://nepallegalfirm.com.np/',
     icon: '⚖️',
     label: 'Legal Firm',
@@ -61,6 +55,12 @@ const myApps = [
     icon: '🔌',
     label: 'ProtoPeek',
     description: 'gRPC Tooling',
+  },
+  {
+    href: 'https://radhey.web.app/',
+    icon: '⚛️',
+    label: 'Radhey',
+    description: 'React-based project · Ongoing',
   },
 ];
 
