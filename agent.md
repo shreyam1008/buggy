@@ -62,11 +62,32 @@ There is no CMS. Adding a post = writing a TSX module.
    - `Callout kind="info|warn|tip|quote"` — highlight boxes.
    - `CodeBlock lang="..." filename="..."` — terminal-styled code.
    - Any standard HTML: `<h2 id>`, `<p>`, `<ul>`, `<blockquote>`, etc.
-4. Add one line to `src/content/articles/index.ts` (the REGISTRY array).
-5. Add the URL to `frontend/public/sitemap.xml` with an appropriate
-   `<lastmod>` and `<priority>`.
+4. Add the metadata import to `src/content/articles/registry.ts`
+   (the `ARTICLE_METADATA` array + `ARTICLE_MODULES` map).
+5. Add one lazy() import line to `src/content/articles/index.ts`
+   (the `COMPONENTS` map).
+6. **Done. Push to main.** That's it.
 
-No build step beyond `bun run build`. SEO is automatic via `ArticleLayout`.
+### What happens automatically at build time
+
+The `build` script in `package.json` runs:
+```
+bun scripts/dump-article-meta.ts && vite build
+```
+
+1. **`dump-article-meta.ts`** reads `registry.ts` (Bun can handle
+   TSX natively) and writes `.cache/article-meta.json`.
+2. **`generate-sitemap` Vite plugin** (in `plugins/generate-sitemap.ts`)
+   reads `.cache/article-meta.json` at `closeBundle` and emits:
+   - `dist/sitemap.xml` — all static pages + every article (with
+     correct `<lastmod>`, `<priority>`, `<changefreq>`)
+   - `dist/robots.txt` — full AI crawler rules, sitemap reference
+3. Per-article SEO (JSON-LD `Article` + `BreadcrumbList`, OG, Twitter,
+   canonical) is injected at runtime by `ArticleSEO.tsx`.
+
+**You never edit `sitemap.xml` or `robots.txt` by hand.**
+They are generated fresh on every build from the article registry.
+The static files were deleted from `public/`.
 
 ## Voice and tone
 

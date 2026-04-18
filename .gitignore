@@ -27,3 +27,6 @@ worker/wrangler_log*.txt
 # Dev builds
 frontend/dev-dist/
 frontend/dev-dist
+
+# Build cache (article metadata manifest)
+frontend/.cache/
