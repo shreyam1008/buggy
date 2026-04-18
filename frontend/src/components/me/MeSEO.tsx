@@ -146,11 +146,11 @@ const FAQ_SCHEMA = {
     },
     {
       '@type': 'Question',
-      name: 'What does Shreyam Adhikari build?',
+      name: 'What does Shreyam Adhikari do?',
       acceptedAnswer: {
         '@type': 'Answer',
         text:
-          'Shreyam Adhikari builds developer tools and productivity software. His open-source projects include GitVibes (social media for code), ProtoPeek (gRPC workbench), GoBarryGo (16x faster download manager), dbterm (terminal SQL client for PostgreSQL/MySQL/SQLite/Turso/D1), and Visualise OKLCH (VS Code / Cursor / Windsurf extension). His stack is React 19, TypeScript, Go, Cloudflare Workers, and PostgreSQL.',
+          'Shreyam Adhikari is a senior full-stack software engineer with 7+ years of experience across Nepal, Japan, Denmark, and the United States. He builds developer tools and productivity software. His open-source projects include GitVibes (social media for code), ProtoPeek (gRPC workbench), GoBarryGo (16x faster download manager), dbterm (terminal SQL client for PostgreSQL/MySQL/SQLite/Turso/D1), and Visualise OKLCH (VS Code / Cursor / Windsurf extension). His stack is React 19, TypeScript, Go, Cloudflare Workers, and PostgreSQL.',
       },
     },
     {

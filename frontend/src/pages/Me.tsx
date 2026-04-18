@@ -156,7 +156,7 @@ export default function Me() {
                 },
                 {
                   q: 'What do you actually do for money?',
-                  a: 'Full-stack engineering. Seven years across Nepal, Japan, Denmark, and the US. Bedside tablets for US healthcare, enterprise video pipelines in Denmark, language-education platforms in Japan. Currently shipping open-source tools and consulting.',
+                  a: 'I mass-produce keystrokes and sell them internationally. Seven years of full-stack engineering across four countries. The résumé says "senior engineer." The bank account says "should have picked fintech." Currently shipping open-source tools and consulting — which is a polite way of saying I fix other people\'s code and pretend to enjoy it.',
                 },
                 {
                   q: 'Is the cycling real?',
