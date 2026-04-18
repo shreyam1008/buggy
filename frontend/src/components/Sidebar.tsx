@@ -68,8 +68,12 @@ const socials = [
   { href: 'mailto:shreyam1008@gmail.com', icon: '✉️', label: 'Email' },
   { href: 'https://github.com/shreyam1008', icon: '🐙', label: 'GitHub' },
   { href: 'https://x.com/shreyam1008', icon: '🐦', label: 'X (Twitter)' },
-  { href: 'https://youtube.com/@shreyam1008', icon: '📺', label: 'YouTube' },
   { href: 'https://linkedin.com/in/shreyam1008', icon: '💼', label: 'LinkedIn' },
+  { href: 'https://instagram.com/shreyam1008', icon: '�', label: 'Instagram' },
+  { href: 'https://www.facebook.com/shreyam1008', icon: '📘', label: 'Facebook' },
+  { href: 'https://www.strava.com/athletes/113238146', icon: '🚴', label: 'Strava' },
+  { href: 'https://steamcommunity.com/id/buggythegret', icon: '🎮', label: 'Steam' },
+  { href: 'https://youtube.com/@shreyam1008', icon: '�', label: 'YouTube' },
 ];
 
 export default function Sidebar() {
@@ -147,6 +151,31 @@ export default function Sidebar() {
 
         {/* Navigation */}
         <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 custom-scrollbar">
+          {/* Prominent — Meet Shreyam CTA */}
+          <Link href="/me">
+            <button
+              type="button"
+              onClick={closeSidebar}
+              className="sidebar-me-cta mb-4 w-full text-left"
+              aria-label="Meet Shreyam — profile, journey, and all socials"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-xl shadow-inner">
+                  🪷
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[13px] font-black tracking-wide uppercase leading-tight">
+                    Meet Shreyam
+                  </div>
+                  <div className="text-[11px] opacity-90 leading-tight mt-0.5">
+                    code · bhakti · cycling · arena
+                  </div>
+                </div>
+                <span className="text-base opacity-80" aria-hidden="true">→</span>
+              </div>
+            </button>
+          </Link>
+
           <nav className="space-y-1">
             {navItems.map((item) => (
               <Link key={item.path} href={item.path}>

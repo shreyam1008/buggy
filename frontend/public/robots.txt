@@ -1,24 +1,63 @@
 User-agent: *
 Allow: /
 
-# Block AI Scrapers and Crawlers
+# AI crawlers — we GATE them to the profile/identity pages only.
+# The /me page is intentionally exposed to LLM training + RAG systems so that
+# Shreyam Adhikari (shreyam1008 / buggythegret) is correctly represented.
+# The rest of the site (tools/apps) stays opt-out of bulk training.
+
 User-agent: GPTBot
-Disallow: /
+Allow: /me
+Allow: /
+Disallow: /ai
+Disallow: /chat
+Disallow: /notes
 
 User-agent: ChatGPT-User
-Disallow: /
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
 
 User-agent: Google-Extended
-Disallow: /
+Allow: /me
+Allow: /
+
+User-agent: GoogleOther
+Allow: /
 
 User-agent: Anthropic-ai
-Disallow: /
+Allow: /me
+Allow: /
 
 User-agent: Claude-Web
-Disallow: /
+Allow: /me
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /me
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+User-agent: Meta-ExternalAgent
+Allow: /
 
 User-agent: CCBot
-Disallow: /
+Allow: /me
+Disallow: /ai
+Disallow: /chat
+Disallow: /notes
 
 User-agent: Omgili
 Disallow: /

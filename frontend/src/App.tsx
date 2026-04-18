@@ -12,6 +12,7 @@ const Notes = lazy(() => import('./pages/Notes'));
 const BcryptGenerator = lazy(() => import('./pages/BcryptGenerator'));
 const AI = lazy(() => import('./pages/AI'));
 const ChatRoom = lazy(() => import('./pages/ChatRoom'));
+const Me = lazy(() => import('./pages/Me'));
 
 function Loader() {
   return (
@@ -40,7 +41,10 @@ export default function App() {
               
               {/* Full bleed for Chat */}
               <Route path="/chat" component={ChatRoom} />
-              
+
+              {/* Full bleed for /me — it has its own black cosmic layout */}
+              <Route path="/me" component={Me} />
+
               <Route component={NotFound} />
             </Switch>
           </Suspense>

@@ -1,0 +1,627 @@
+/* ========================================================================
+   /me — The Many Worlds of Shreyam
+   Custom 3D + animation layer. GPU-only. Reduce-motion aware.
+   ======================================================================== */
+
+.me-root {
+  --me-bg: #05030d;
+  --me-ink: #f4f4ff;
+  --me-accent: #ffb86c;
+  --me-saffron: #ff8c42;
+  --me-krishna: #4a90e2;
+  --me-radha: #f5b7d5;
+  --me-gold: #f6c667;
+  --me-code: #58a6ff;
+  --me-iron: #ff4444;
+  --me-mind: #b794f4;
+  --me-arena: #00ff88;
+  color: var(--me-ink);
+  background: var(--me-bg);
+  font-family: 'Inter', system-ui, sans-serif;
+  overflow-x: hidden;
+  position: relative;
+}
+
+.me-scene {
+  perspective: 1400px;
+  perspective-origin: 50% 50%;
+  transform-style: preserve-3d;
+}
+
+/* --- Cosmic Hub: orbit rig --- */
+.me-hub {
+  position: relative;
+  width: 100%;
+  min-height: 92dvh;
+  display: grid;
+  place-items: center;
+  transform-style: preserve-3d;
+  isolation: isolate;
+}
+
+.me-orbit {
+  position: relative;
+  width: min(86vw, 560px);
+  aspect-ratio: 1;
+  transform-style: preserve-3d;
+  animation: me-orbit-spin 48s linear infinite;
+  will-change: transform;
+}
+
+.me-orbit-tilt {
+  transform-style: preserve-3d;
+  transform: rotateX(62deg);
+}
+
+.me-portal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: clamp(88px, 18vw, 128px);
+  height: clamp(88px, 18vw, 128px);
+  margin-top: calc(clamp(88px, 18vw, 128px) / -2);
+  margin-left: calc(clamp(88px, 18vw, 128px) / -2);
+  border-radius: 50%;
+  transform-style: preserve-3d;
+  transform:
+    rotateZ(calc(var(--i) * 51.43deg))
+    translateX(min(42vw, 240px))
+    rotateZ(calc(var(--i) * -51.43deg))
+    rotateX(-62deg);
+  cursor: pointer;
+  transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+.me-portal:hover {
+  filter: brightness(1.25) drop-shadow(0 0 32px var(--portal-glow, #fff));
+}
+
+.me-portal-counter {
+  animation: me-orbit-counter 48s linear infinite;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  transform-style: preserve-3d;
+}
+
+.me-portal-disk {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255,255,255,0.35), transparent 50%),
+    radial-gradient(circle at 50% 50%, var(--portal-color-1, #ff8c42), var(--portal-color-2, #222) 75%);
+  box-shadow:
+    0 0 48px var(--portal-glow, rgba(255,140,66,0.7)),
+    inset 0 -8px 24px rgba(0,0,0,0.4),
+    inset 0 4px 12px rgba(255,255,255,0.25);
+  display: grid;
+  place-items: center;
+  font-size: clamp(28px, 6vw, 44px);
+  backdrop-filter: blur(2px);
+  transition: box-shadow 0.3s ease;
+}
+
+.me-portal:hover .me-portal-disk {
+  box-shadow:
+    0 0 96px var(--portal-glow, rgba(255,140,66,0.9)),
+    inset 0 -8px 24px rgba(0,0,0,0.4),
+    inset 0 4px 12px rgba(255,255,255,0.35);
+}
+
+.me-portal-label {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--me-ink);
+  text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+@keyframes me-orbit-spin {
+  from { transform: rotateZ(0deg); }
+  to   { transform: rotateZ(360deg); }
+}
+
+@keyframes me-orbit-counter {
+  from { transform: rotateZ(0deg); }
+  to   { transform: rotateZ(-360deg); }
+}
+
+/* Core avatar in center */
+.me-core {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: clamp(100px, 22vw, 168px);
+  height: clamp(100px, 22vw, 168px);
+  margin: calc(clamp(100px, 22vw, 168px) / -2) 0 0 calc(clamp(100px, 22vw, 168px) / -2);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 35%, #fff 0%, #fde68a 15%, #f59e0b 40%, #7c2d12 75%, #000 100%);
+  box-shadow:
+    0 0 120px rgba(251, 191, 36, 0.5),
+    0 0 240px rgba(251, 113, 133, 0.3),
+    inset 0 0 48px rgba(0,0,0,0.4);
+  animation: me-core-pulse 6s ease-in-out infinite;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  color: #1a0d00;
+  font-size: clamp(24px, 5vw, 42px);
+  text-shadow: 0 1px 3px rgba(255,255,255,0.4);
+}
+
+@keyframes me-core-pulse {
+  0%, 100% { transform: translateZ(0) scale(1); filter: hue-rotate(0deg); }
+  50%      { transform: translateZ(0) scale(1.04); filter: hue-rotate(12deg); }
+}
+
+/* --- Scroll hint --- */
+.me-scroll-hint {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  opacity: 0.5;
+  animation: me-bob 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes me-bob {
+  0%, 100% { transform: translate(-50%, 0); opacity: 0.45; }
+  50%      { transform: translate(-50%, 6px); opacity: 0.9; }
+}
+
+/* --- Chapters --- */
+.me-chapter {
+  position: relative;
+  min-height: 100dvh;
+  padding: clamp(40px, 8vh, 96px) clamp(20px, 5vw, 72px);
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(24px, 4vh, 56px);
+  align-content: center;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+@media (min-width: 900px) {
+  .me-chapter {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+  }
+}
+
+.me-chapter-title {
+  font-size: clamp(44px, 9vw, 96px);
+  font-weight: 900;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  margin: 0 0 16px 0;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  background-image: var(--chapter-grad, linear-gradient(135deg, #fde68a, #f59e0b));
+}
+
+.me-chapter-kicker {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  opacity: 0.5;
+  margin-bottom: 10px;
+}
+
+.me-chapter-lede {
+  font-size: clamp(16px, 2.2vw, 20px);
+  line-height: 1.55;
+  opacity: 0.92;
+  max-width: 52ch;
+  margin: 0 0 20px 0;
+}
+
+.me-chapter-lede strong {
+  color: var(--chapter-accent, #fde68a);
+  font-weight: 700;
+}
+
+.me-chapter-stat {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  margin: 4px 8px 4px 0;
+  backdrop-filter: blur(8px);
+}
+
+.me-chapter-stat b {
+  font-size: clamp(24px, 4vw, 36px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--chapter-accent, #fde68a);
+  line-height: 1;
+}
+
+.me-chapter-stat span {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.55;
+}
+
+/* Scene panel (right side visual) */
+.me-scene-panel {
+  position: relative;
+  aspect-ratio: 1;
+  max-width: 540px;
+  justify-self: center;
+  width: 100%;
+  perspective: 1000px;
+  transform-style: preserve-3d;
+}
+
+/* --- Code Chapter: floating code cards --- */
+.me-code-card {
+  position: absolute;
+  padding: 14px 18px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(22, 27, 34, 0.95), rgba(13, 17, 23, 0.95));
+  border: 1px solid rgba(88, 166, 255, 0.25);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06);
+  font-family: 'Fira Code', ui-monospace, monospace;
+  font-size: 12px;
+  color: #79c0ff;
+  white-space: nowrap;
+  transform-style: preserve-3d;
+  animation: me-float 8s ease-in-out infinite;
+  will-change: transform;
+}
+
+.me-code-card .kw { color: #ff7b72; }
+.me-code-card .fn { color: #d2a8ff; }
+.me-code-card .str { color: #a5d6ff; }
+.me-code-card .cm { color: #8b949e; font-style: italic; }
+
+@keyframes me-float {
+  0%, 100% { transform: translateZ(0) rotateY(var(--ry, 0deg)) translateY(0); }
+  50%      { transform: translateZ(24px) rotateY(var(--ry, 0deg)) translateY(-10px); }
+}
+
+/* --- Spiritual Chapter: mandala --- */
+.me-mandala {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
+.me-mandala-ring {
+  position: absolute;
+  border: 1px solid rgba(246, 198, 103, 0.35);
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: me-rot 40s linear infinite;
+}
+
+.me-mandala-ring.r2 { animation-duration: 60s; animation-direction: reverse; border-style: dashed; }
+.me-mandala-ring.r3 { animation-duration: 80s; }
+.me-mandala-ring.r4 { animation-duration: 100s; animation-direction: reverse; }
+
+@keyframes me-rot {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* --- Cycling Chapter: perspective road --- */
+.me-road {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #0a0a1a 0%, #0a0a1a 50%, #050510 100%);
+  perspective: 400px;
+  transform-style: preserve-3d;
+}
+
+.me-road-floor {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 400%;
+  height: 70%;
+  transform: translateX(-50%) rotateX(72deg);
+  transform-origin: 50% 100%;
+  background:
+    linear-gradient(to top, rgba(255,140,66,0.15), transparent 70%),
+    repeating-linear-gradient(0deg, transparent 0, transparent 40px, rgba(255,140,66,0.5) 40px, rgba(255,140,66,0.5) 42px),
+    repeating-linear-gradient(90deg, transparent 0, transparent 60px, rgba(255,255,255,0.08) 60px, rgba(255,255,255,0.08) 61px);
+  animation: me-road-move 1.4s linear infinite;
+  will-change: transform, background-position;
+}
+
+@keyframes me-road-move {
+  from { background-position: 0 0, 0 0, 0 0; }
+  to   { background-position: 0 0, 0 42px, 0 0; }
+}
+
+.me-road-sun {
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  width: 140px;
+  height: 140px;
+  margin-left: -70px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fde68a, #f97316 60%, transparent 80%);
+  box-shadow: 0 0 120px rgba(249, 115, 22, 0.6);
+  animation: me-sun-pulse 4s ease-in-out infinite;
+}
+
+@keyframes me-sun-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.95; }
+  50%      { transform: scale(1.05); opacity: 1; }
+}
+
+/* --- Iron Forge: dumbbell hover --- */
+.me-iron-bell {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  animation: me-bell-bob 3s ease-in-out infinite;
+  filter: drop-shadow(0 40px 40px rgba(255, 68, 68, 0.4));
+}
+
+@keyframes me-bell-bob {
+  0%, 100% { transform: translateY(0) rotate(-4deg); }
+  50%      { transform: translateY(-18px) rotate(4deg); }
+}
+
+/* --- Mind Lab: synapses --- */
+.me-neuron {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--me-mind);
+  box-shadow: 0 0 16px var(--me-mind);
+  animation: me-synapse 2.4s ease-in-out infinite;
+}
+
+@keyframes me-synapse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50%      { opacity: 1;   transform: scale(1.4); }
+}
+
+/* --- Arena: chess board + CS:GO radar vibes --- */
+.me-arena-grid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  perspective: 600px;
+}
+
+.me-chess {
+  width: 72%;
+  aspect-ratio: 1;
+  transform: rotateX(48deg) rotateZ(-12deg);
+  transform-style: preserve-3d;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 40px 60px rgba(0,255,136,0.25);
+  animation: me-chess-sway 8s ease-in-out infinite;
+}
+
+@keyframes me-chess-sway {
+  0%, 100% { transform: rotateX(48deg) rotateZ(-12deg); }
+  50%      { transform: rotateX(52deg) rotateZ(-8deg); }
+}
+
+.me-chess > div {
+  background: var(--c, #1a1a22);
+}
+
+/* --- Buttons --- */
+.me-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 999px;
+  background: var(--chapter-accent, #fde68a);
+  color: #0a0a0f;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+}
+
+.me-cta:hover { transform: translateY(-2px); filter: brightness(1.1); }
+.me-cta:active { transform: translateY(0); }
+
+.me-cta-ghost {
+  background: transparent;
+  color: var(--chapter-accent, #fde68a);
+  border: 1.5px solid currentColor;
+}
+
+/* --- Nebula canvas (positioned layer) --- */
+.me-nebula {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.65;
+}
+
+/* --- Walking Sprite --- */
+.me-sprite {
+  position: fixed;
+  bottom: 16px;
+  left: -240px;
+  width: 220px;
+  height: 140px;
+  z-index: 5;
+  pointer-events: none;
+  animation: me-walk 120s linear infinite;
+  will-change: transform;
+}
+
+@keyframes me-walk {
+  0%   { transform: translateX(0) scaleX(1); }
+  48%  { transform: translateX(calc(100vw + 240px)) scaleX(1); }
+  50%  { transform: translateX(calc(100vw + 240px)) scaleX(-1); }
+  98%  { transform: translateX(0) scaleX(-1); }
+  100% { transform: translateX(0) scaleX(1); }
+}
+
+.me-sprite-bob {
+  animation: me-sprite-bob 1.1s ease-in-out infinite;
+  transform-origin: 50% 100%;
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes me-sprite-bob {
+  0%, 100% { transform: translateY(0) rotate(-1deg); }
+  50%      { transform: translateY(-4px) rotate(1deg); }
+}
+
+/* --- FAQ section --- */
+.me-faq-item {
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 18px 22px;
+  background: rgba(255,255,255,0.03);
+  transition: border-color 0.2s ease;
+}
+
+.me-faq-item:hover { border-color: rgba(255,184,108,0.4); }
+
+.me-faq-q {
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.me-faq-q::-webkit-details-marker { display: none; }
+
+.me-faq-q::before {
+  content: '▸';
+  display: inline-block;
+  margin-right: 10px;
+  transition: transform 0.2s ease;
+  color: var(--me-accent);
+}
+
+details[open] .me-faq-q::before { transform: rotate(90deg); }
+
+.me-faq-a {
+  font-size: 15px;
+  opacity: 0.82;
+  line-height: 1.6;
+  padding-top: 6px;
+}
+
+/* --- Ticker band (SEO keyword marquee) --- */
+.me-ticker {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(90deg, rgba(255,140,66,0.08), rgba(183,148,244,0.08));
+  border-block: 1px solid rgba(255,255,255,0.08);
+  padding: 14px 0;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.me-ticker-track {
+  display: inline-block;
+  animation: me-ticker 40s linear infinite;
+  padding-left: 100%;
+}
+
+.me-ticker span { margin: 0 24px; opacity: 0.7; }
+.me-ticker span.hot { color: var(--me-accent); opacity: 1; }
+
+@keyframes me-ticker {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-100%); }
+}
+
+/* Sidebar CTA styles live in index.css so they render on every page. */
+
+/* me-spin used by the Arena chapter's radar */
+@keyframes me-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* --- Visually hidden (for SEO content the crawler reads) --- */
+.me-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --- Reduce motion --- */
+@media (prefers-reduced-motion: reduce) {
+  .me-orbit,
+  .me-core,
+  .me-portal-counter,
+  .me-code-card,
+  .me-road-floor,
+  .me-road-sun,
+  .me-iron-bell,
+  .me-neuron,
+  .me-chess,
+  .me-sprite,
+  .me-sprite-bob,
+  .me-ticker-track,
+  .sidebar-me-cta::before,
+  .me-mandala-ring,
+  .me-scroll-hint {
+    animation: none !important;
+  }
+  .me-sprite { left: 16px; transform: none !important; }
+}
+
+/* --- Custom scrollbar for snapping chapters --- */
+.me-root {
+  scroll-behavior: smooth;
+}

@@ -19,3 +19,52 @@
 .chat-msg-enter {
   animation: chatMsgEnter 0.2s ease-out both;
 }
+
+/* --- Sidebar "Meet Shreyam" CTA — lives globally so the sidebar can render
+       it before /me is loaded. Animated conic border, GPU-only. --- */
+.sidebar-me-cta {
+  position: relative;
+  display: block;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #ff8c42 0%, #f5576c 50%, #b794f4 100%);
+  color: #fff;
+  text-decoration: none;
+  font-weight: 700;
+  overflow: hidden;
+  isolation: isolate;
+  box-shadow: 0 6px 20px rgba(245, 87, 108, 0.35);
+  transition: transform 0.2s ease, filter 0.2s ease;
+  cursor: pointer;
+}
+
+.sidebar-me-cta::before {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  background: conic-gradient(from 0deg, transparent, rgba(255, 255, 255, 0.45), transparent 30%);
+  animation: sidebar-me-spin 4s linear infinite;
+  z-index: -1;
+}
+
+.sidebar-me-cta::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  background: linear-gradient(135deg, #ff8c42 0%, #f5576c 50%, #b794f4 100%);
+  border-radius: 12px;
+  z-index: -1;
+}
+
+.sidebar-me-cta:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+@keyframes sidebar-me-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-me-cta::before { animation: none; }
+}
