@@ -13,6 +13,8 @@ const BcryptGenerator = lazy(() => import('./pages/BcryptGenerator'));
 const AI = lazy(() => import('./pages/AI'));
 const ChatRoom = lazy(() => import('./pages/ChatRoom'));
 const Me = lazy(() => import('./pages/Me'));
+const Log = lazy(() => import('./pages/Log'));
+const LogArticle = lazy(() => import('./pages/LogArticle'));
 
 function Loader() {
   return (
@@ -44,6 +46,10 @@ export default function App() {
 
               {/* Full bleed for /me — it has its own black cosmic layout */}
               <Route path="/me" component={Me} />
+
+              {/* Full bleed for /log — owns its own terminal chrome */}
+              <Route path="/log" component={Log} />
+              <Route path="/log/:slug" component={LogArticle} />
 
               <Route component={NotFound} />
             </Switch>

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "bun scripts/dump-article-meta.ts && vite build",
     "lint": "bunx oxlint@latest src/",
     "preview": "vite preview"
   },
