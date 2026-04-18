@@ -18,13 +18,6 @@ export default function ChapterSpiritual() {
           is on fire and the logs are screaming, the bhajans still play. The
           flute always wins.
         </p>
-        <p className="me-chapter-lede" style={{ opacity: 0.75 }}>
-          I built <a href="https://radhey.web.app/" target="_blank" rel="noopener noreferrer"
-          style={{ color: 'var(--chapter-accent)', textDecoration: 'underline', textUnderlineOffset: 4 }}>Radhey</a> —
-          a tiny offering on the web. Because if I'm going to spend 80% of my
-          life in a terminal, the terminal should at least know{' '}
-          <em>Radhey Radhey</em>.
-        </p>
         <blockquote style={{
           margin: '24px 0',
           padding: '14px 20px',
@@ -44,16 +37,13 @@ export default function ChapterSpiritual() {
           }}>sudo systemctl restart</code>.
         </blockquote>
         <div style={{ marginTop: 20, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-          <a className="me-cta" href="https://radhey.web.app/" target="_blank" rel="noopener noreferrer">
-            🌸 Visit Radhey
-          </a>
           <a
-            className="me-cta me-cta-ghost"
+            className="me-cta"
             href="https://www.jkp.org.in/"
             target="_blank"
             rel="noopener noreferrer"
           >
-            About My Guru →
+            🌸 About My Guru
           </a>
         </div>
       </div>

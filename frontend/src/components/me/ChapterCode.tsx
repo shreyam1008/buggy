@@ -14,10 +14,11 @@ export default function ChapterCode() {
         <h2 id="chapter-code-title" className="me-chapter-title">Binary<br />Realm</h2>
         <p className="me-chapter-lede">
           <strong>This is home.</strong> B.E. in Computer Engineering, Master's in CS, still
-          Googling how to center a div. Shreyam Adhikari — full-stack since before
-          it was a buzzword, <strong>Go on the backend</strong>,{' '}
-          <strong>React 19 on the frontend</strong>, Cloudflare Workers at the edge,
-          and opinions that outnumber my commits.
+          Googling how to center a div. I used to be <em>React by default</em>.
+          I've since changed my mind: now it's <strong>React when it earns its
+          weight</strong>, and <strong>Astro, HTMX, or plain HTML</strong> when
+          the problem is shaped that way. Picking the right tool beats picking
+          the shiny one, every single time.
         </p>
         <p className="me-chapter-lede" style={{ opacity: 0.75 }}>
           I ship open-source tools developers actually use — <em>GitVibes, ProtoPeek,
@@ -27,7 +28,7 @@ export default function ChapterCode() {
         <div style={{ marginTop: 24 }}>
           <span className="me-chapter-stat"><b>7+</b><span>Years shipping</span></span>
           <span className="me-chapter-stat"><b>4</b><span>Countries, same caffeine</span></span>
-          <span className="me-chapter-stat"><b>∞</b><span>Semicolons debated</span></span>
+          <span className="me-chapter-stat"><b>Boring</b><span>&gt; Shiny · every time</span></span>
         </div>
         <div style={{ marginTop: 20, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <a className="me-cta" href="https://github.com/shreyam1008" target="_blank" rel="noopener noreferrer">

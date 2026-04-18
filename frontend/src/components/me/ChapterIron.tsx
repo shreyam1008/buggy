@@ -1,3 +1,13 @@
+import PhotoOrbit, { type OrbitPhoto } from './PhotoOrbit';
+
+const PHOTOS: OrbitPhoto[] = [
+  { src: '/me/photos/gym-1.jpg', alt: 'gym-1.jpg', caption: 'Leg day. The bar disagreed briefly.' },
+  { src: '/me/photos/gym-2.jpg', alt: 'gym-2.jpg', caption: 'Pull day. Chalk everywhere.' },
+  { src: '/me/photos/gym-3.jpg', alt: 'gym-3.jpg', caption: 'Deadlift PR. Mostly adrenaline.' },
+  { src: '/me/photos/gym-4.jpg', alt: 'gym-4.jpg', caption: 'The five trainees, ruining their rest day.' },
+  { src: '/me/photos/gym-5.jpg', alt: 'gym-5.jpg', caption: 'Post-workout. Ego intact, barely.' },
+];
+
 export default function ChapterIron() {
   return (
     <section
@@ -35,10 +45,11 @@ export default function ChapterIron() {
         </p>
       </div>
 
-      {/* Scene panel — floating dumbbell */}
-      <div className="me-scene-panel" aria-hidden="true">
-        <div className="me-iron-bell">
-          <svg viewBox="0 0 240 120" width="90%">
+      {/* Scene panel — floating dumbbell wrapped in PhotoOrbit */}
+      <div className="me-scene-panel">
+        <PhotoOrbit photos={PHOTOS} radius={170} size={70} speed={32} direction="ccw">
+          <div className="me-iron-bell" style={{ width: 240, height: 240 }}>
+            <svg viewBox="0 0 240 120" width="90%" aria-hidden="true">
             <defs>
               <linearGradient id="bell" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#4a4a55" />
@@ -67,22 +78,8 @@ export default function ChapterIron() {
             <text x="25" y="68" fill="#fff" opacity="0.6" fontSize="11" fontWeight="900" textAnchor="middle">20</text>
             <text x="215" y="68" fill="#fff" opacity="0.6" fontSize="11" fontWeight="900" textAnchor="middle">20</text>
           </svg>
-        </div>
-        {/* Sweat drops */}
-        <svg style={{ position: 'absolute', inset: 0 }} viewBox="0 0 400 400" preserveAspectRatio="none">
-          <circle cx="80" cy="80" r="3" fill="#60a5fa" opacity="0.7">
-            <animate attributeName="cy" values="80;380;80" dur="5s" repeatCount="indefinite" />
-            <animate attributeName="opacity" values="0.7;0;0.7" dur="5s" repeatCount="indefinite" />
-          </circle>
-          <circle cx="320" cy="120" r="4" fill="#60a5fa" opacity="0.7">
-            <animate attributeName="cy" values="120;380;120" dur="7s" repeatCount="indefinite" />
-            <animate attributeName="opacity" values="0.7;0;0.7" dur="7s" repeatCount="indefinite" />
-          </circle>
-          <circle cx="200" cy="60" r="3" fill="#60a5fa" opacity="0.7">
-            <animate attributeName="cy" values="60;380;60" dur="6s" repeatCount="indefinite" />
-            <animate attributeName="opacity" values="0.7;0;0.7" dur="6s" repeatCount="indefinite" />
-          </circle>
-        </svg>
+          </div>
+        </PhotoOrbit>
       </div>
     </section>
   );

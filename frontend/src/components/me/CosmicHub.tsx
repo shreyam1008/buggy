@@ -8,13 +8,13 @@ interface Portal {
 }
 
 const PORTALS: Portal[] = [
-  { id: 'code',      label: 'Code',       emoji: '⌨️', colorA: '#58a6ff', colorB: '#1f2937', glow: 'rgba(88,166,255,0.6)' },
-  { id: 'spiritual', label: 'Bhakti',     emoji: '🪷', colorA: '#f6c667', colorB: '#7c2d12', glow: 'rgba(246,198,103,0.6)' },
-  { id: 'cycle',     label: 'Cycle',      emoji: '🚴', colorA: '#ff8c42', colorB: '#7c2d12', glow: 'rgba(255,140,66,0.6)' },
-  { id: 'iron',      label: 'Iron',       emoji: '🏋️', colorA: '#ff4444', colorB: '#4a0000', glow: 'rgba(255,68,68,0.6)' },
-  { id: 'mind',      label: 'Mind',       emoji: '🧠', colorA: '#b794f4', colorB: '#2e1065', glow: 'rgba(183,148,244,0.6)' },
+  { id: 'code',      label: 'Code',       emoji: '⌨️', colorA: '#58a6ff', colorB: '#0b1220', glow: 'rgba(88,166,255,0.6)' },
+  { id: 'spiritual', label: 'Bhakti',     emoji: '🪷', colorA: '#f6c667', colorB: '#5a1f0a', glow: 'rgba(246,198,103,0.6)' },
+  { id: 'outdoors',  label: 'Outdoors',   emoji: '🥾', colorA: '#ff8c42', colorB: '#4a1f06', glow: 'rgba(255,140,66,0.6)' },
+  { id: 'iron',      label: 'Iron',       emoji: '🏋️', colorA: '#ff4444', colorB: '#3a0000', glow: 'rgba(255,68,68,0.6)' },
+  { id: 'mind',      label: 'Mind',       emoji: '🧠', colorA: '#b794f4', colorB: '#1e0b4a', glow: 'rgba(183,148,244,0.6)' },
   { id: 'arena',     label: 'Arena',      emoji: '🎮', colorA: '#00ff88', colorB: '#052e16', glow: 'rgba(0,255,136,0.6)' },
-  { id: 'cluster',   label: 'Connect',    emoji: '🌐', colorA: '#f5b7d5', colorB: '#4a1a2a', glow: 'rgba(245,183,213,0.6)' },
+  { id: 'cluster',   label: 'Connect',    emoji: '🌐', colorA: '#f5b7d5', colorB: '#3a0f1f', glow: 'rgba(245,183,213,0.6)' },
 ];
 
 export default function CosmicHub() {
@@ -30,7 +30,7 @@ export default function CosmicHub() {
           Shreyam Adhikari · shreyam1008 · buggythegret
         </div>
         <h1 style={{
-          fontSize: 'clamp(36px, 7vw, 72px)',
+          fontSize: 'clamp(40px, 8vw, 84px)',
           fontWeight: 900,
           letterSpacing: '-0.03em',
           lineHeight: 0.95,
@@ -40,7 +40,7 @@ export default function CosmicHub() {
           backgroundClip: 'text',
           color: 'transparent',
         }}>
-          The Many Worlds<br />of a Nepali Dev
+          The<br />Many Worlds
         </h1>
         <p style={{ fontSize: 'clamp(14px, 1.8vw, 17px)', opacity: 0.7, maxWidth: '42ch', margin: '0 auto' }}>
           Code is the base. Everything else is dessert. Pick a portal — or scroll to tour them all.

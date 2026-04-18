@@ -89,18 +89,39 @@
   width: 100%;
   height: 100%;
   border-radius: 50%;
+  /* Layered radial gradients to simulate a real sphere:
+     1. soft rim light (bottom-right, color-2)
+     2. large terminator shadow (bottom-left)
+     3. main colour body (color-1 → color-2)
+     4. crisp specular highlight (top-left, white) */
   background:
-    radial-gradient(circle at 30% 30%, rgba(255,255,255,0.35), transparent 50%),
-    radial-gradient(circle at 50% 50%, var(--portal-color-1, #ff8c42), var(--portal-color-2, #222) 75%);
+    radial-gradient(circle at 78% 82%, var(--portal-color-1, #ff8c42) 0%, transparent 32%),
+    radial-gradient(circle at 25% 85%, rgba(0,0,0,0.55) 0%, transparent 55%),
+    radial-gradient(circle at 50% 50%, var(--portal-color-1, #ff8c42) 0%, var(--portal-color-2, #222) 85%),
+    radial-gradient(circle at 30% 25%, rgba(255,255,255,0.75) 0%, rgba(255,255,255,0.15) 22%, transparent 45%);
   box-shadow:
     0 0 48px var(--portal-glow, rgba(255,140,66,0.7)),
-    inset 0 -8px 24px rgba(0,0,0,0.4),
-    inset 0 4px 12px rgba(255,255,255,0.25);
+    inset -8px -12px 24px rgba(0,0,0,0.45),
+    inset 6px 8px 16px rgba(255,255,255,0.18);
   display: grid;
   place-items: center;
   font-size: clamp(28px, 6vw, 44px);
-  backdrop-filter: blur(2px);
-  transition: box-shadow 0.3s ease;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  position: relative;
+}
+
+/* Tiny specular dot — adds "wet sphere" gloss */
+.me-portal-disk::after {
+  content: '';
+  position: absolute;
+  top: 14%;
+  left: 22%;
+  width: 22%;
+  height: 14%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(255,255,255,0.9), rgba(255,255,255,0) 60%);
+  filter: blur(2px);
+  pointer-events: none;
 }
 
 .me-portal:hover .me-portal-disk {
@@ -511,6 +532,286 @@
 @keyframes me-sprite-bob {
   0%, 100% { transform: translateY(0) rotate(-1deg); }
   50%      { transform: translateY(-4px) rotate(1deg); }
+}
+
+/* Circular portrait avatars for the walking Radha-Krishna sprite */
+.me-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+  box-shadow:
+    0 0 0 2px #fde68a,
+    0 0 0 4px rgba(251, 191, 36, 0.5),
+    0 0 18px rgba(251, 191, 36, 0.7),
+    0 8px 16px rgba(0, 0, 0, 0.4);
+}
+
+.me-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.me-avatar-radha {
+  animation: me-avatar-bob 1.15s ease-in-out infinite;
+}
+
+.me-avatar-krishna {
+  animation: me-avatar-bob 1.15s ease-in-out infinite 0.575s;
+}
+
+@keyframes me-avatar-bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-5px); }
+}
+
+@keyframes me-feather-sway {
+  0%, 100% { transform: translateX(-50%) rotate(-6deg); }
+  50%      { transform: translateX(-50%) rotate(8deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .me-avatar-radha,
+  .me-avatar-krishna { animation: none; }
+}
+
+/* ========================================================================
+   PhotoOrbit — orbit ring + bloom expansion
+   ======================================================================== */
+
+.me-photo-orbit {
+  animation: me-photo-orbit-spin var(--orbit-speed, 28s) linear infinite;
+  will-change: transform;
+}
+
+@keyframes me-photo-orbit-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.me-photo-thumb {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--size, 72px);
+  height: var(--size, 72px);
+  margin-top: calc(var(--size, 72px) / -2);
+  margin-left: calc(var(--size, 72px) / -2);
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  transform: rotate(var(--angle, 0deg)) translateX(var(--r, 160px));
+  transition: opacity 0.35s ease, filter 0.25s ease;
+  isolation: isolate;
+}
+
+.me-photo-thumb:hover .me-photo-counter {
+  transform: rotate(calc(var(--angle, 0deg) * -1)) scale(1.12);
+  filter: brightness(1.1);
+}
+
+.me-photo-thumb:focus-visible {
+  outline: 2px solid var(--accent, #fde68a);
+  outline-offset: 4px;
+  border-radius: 50%;
+}
+
+/* Counter-rotate so the photo stays upright while the ring spins */
+.me-photo-counter {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  position: relative;
+  transform: rotate(calc(var(--angle, 0deg) * -1));
+  animation: me-photo-counter-spin var(--orbit-speed, 28s) linear infinite reverse;
+  box-shadow:
+    0 0 0 2px var(--accent, #fde68a),
+    0 0 0 4px rgba(255, 255, 255, 0.12),
+    0 0 24px color-mix(in oklab, var(--accent, #fde68a) 45%, transparent),
+    0 8px 18px rgba(0, 0, 0, 0.45);
+  background: rgba(15, 15, 22, 0.6);
+  transition: transform 0.25s ease, box-shadow 0.3s ease;
+}
+
+@keyframes me-photo-counter-spin {
+  from { rotate: 0deg; }
+  to   { rotate: -360deg; }
+}
+
+.me-photo-counter img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.me-photo-placeholder {
+  display: grid;
+  place-items: center;
+  gap: 4px;
+  width: 100%;
+  height: 100%;
+  padding: 6px;
+  text-align: center;
+  border: 1.5px dashed color-mix(in oklab, var(--accent, #fde68a) 60%, transparent);
+  border-radius: 50%;
+  color: var(--accent, #fde68a);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* --- Bloom expand --- */
+
+.me-photo-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(5, 3, 13, 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  display: grid;
+  place-items: center;
+  padding: clamp(20px, 5vw, 60px);
+  animation: me-backdrop-in 0.3s ease-out;
+}
+
+@keyframes me-backdrop-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.me-photo-bloom {
+  position: relative;
+  max-width: min(90vw, 880px);
+  max-height: 82vh;
+  animation: me-bloom-in 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-style: preserve-3d;
+  perspective: 1200px;
+}
+
+@keyframes me-bloom-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.2) rotateY(-90deg);
+    border-radius: 50%;
+    filter: blur(12px);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(1.04) rotateY(8deg);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotateY(0);
+    filter: blur(0);
+  }
+}
+
+.me-photo-bloom-inner {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 2px var(--accent, #fde68a),
+    0 0 0 6px rgba(255, 255, 255, 0.08),
+    0 0 80px color-mix(in oklab, var(--accent, #fde68a) 40%, transparent),
+    0 30px 80px rgba(0, 0, 0, 0.7);
+  background: #0a0a10;
+}
+
+/* Decorative cosmic rays behind the frame — rotating conic */
+.me-photo-bloom-inner::before {
+  content: '';
+  position: absolute;
+  inset: -40%;
+  background: conic-gradient(
+    from 0deg,
+    color-mix(in oklab, var(--accent, #fde68a) 25%, transparent) 0deg,
+    transparent 30deg,
+    color-mix(in oklab, var(--accent, #fde68a) 15%, transparent) 90deg,
+    transparent 180deg,
+    color-mix(in oklab, var(--accent, #fde68a) 20%, transparent) 270deg,
+    transparent 360deg
+  );
+  z-index: -1;
+  animation: me-photo-bloom-rays 8s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes me-photo-bloom-rays {
+  to { transform: rotate(360deg); }
+}
+
+.me-photo-bloom-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 78vh;
+  object-fit: contain;
+  background: #0a0a10;
+}
+
+.me-photo-bloom-placeholder {
+  display: grid;
+  place-items: center;
+  padding: clamp(40px, 10vw, 120px);
+  min-width: min(90vw, 520px);
+  min-height: min(60vh, 340px);
+  text-align: center;
+  color: var(--accent, #fde68a);
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.02) 0 14px,
+    rgba(255, 255, 255, 0.05) 14px 28px
+  );
+}
+
+.me-photo-bloom-caption {
+  margin-top: 14px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--accent, #fde68a);
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+}
+
+.me-photo-bloom-close {
+  position: absolute;
+  top: -14px;
+  right: -14px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--accent, #fde68a);
+  color: #0a0a0f;
+  border: none;
+  font-weight: 800;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+  display: grid;
+  place-items: center;
+  transition: transform 0.2s ease;
+}
+
+.me-photo-bloom-close:hover { transform: scale(1.1) rotate(90deg); }
+
+@media (prefers-reduced-motion: reduce) {
+  .me-photo-orbit,
+  .me-photo-counter,
+  .me-photo-bloom-inner::before {
+    animation: none !important;
+  }
+  .me-photo-bloom { animation: me-backdrop-in 0.3s ease-out; }
 }
 
 /* --- FAQ section --- */

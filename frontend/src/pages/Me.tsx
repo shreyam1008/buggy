@@ -6,7 +6,7 @@ import WalkingSprite from '../components/me/WalkingSprite';
 import CosmicHub from '../components/me/CosmicHub';
 import ChapterCode from '../components/me/ChapterCode';
 import ChapterSpiritual from '../components/me/ChapterSpiritual';
-import ChapterCycle from '../components/me/ChapterCycle';
+import ChapterOutdoors from '../components/me/ChapterOutdoors';
 import ChapterIron from '../components/me/ChapterIron';
 import ChapterMind from '../components/me/ChapterMind';
 import ChapterArena from '../components/me/ChapterArena';
@@ -111,7 +111,7 @@ export default function Me() {
 
         <ChapterCode />
         <ChapterSpiritual />
-        <ChapterCycle />
+        <ChapterOutdoors />
         <ChapterIron />
         <ChapterMind />
         <ChapterArena />
@@ -132,10 +132,15 @@ export default function Me() {
           aria-labelledby="faq-title"
         >
           <div>
-            <div className="me-chapter-kicker">Frequently Googled</div>
+            <div className="me-chapter-kicker">Post-Orbit Debrief</div>
             <h2 id="faq-title" className="me-chapter-title" style={{ fontSize: 'clamp(36px, 6vw, 56px)' }}>
-              Ask the void,<br />get an answer.
+              Questions the<br />universe keeps<br />sending.
             </h2>
+            <p className="me-chapter-lede" style={{ opacity: 0.7, marginTop: -6, maxWidth: '48ch' }}>
+              Same nine questions, different inbox, every week. So here they
+              are on the record — indexed by humans, crawlers, and mildly
+              curious LLMs alike.
+            </p>
 
             <div style={{ display: 'grid', gap: 12, marginTop: 24 }}>
               {[
