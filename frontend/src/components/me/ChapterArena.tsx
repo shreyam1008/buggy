@@ -1,13 +1,8 @@
 import PhotoOrbit, { type OrbitPhoto } from './PhotoOrbit';
 
-const PHOTOS: OrbitPhoto[] = [
-  { src: '/me/photos/arena-cs.jpg',     alt: 'arena-cs.jpg',     caption: 'Dust II. Same corner. Different decade.' },
-  { src: '/me/photos/arena-chess.jpg',  alt: 'arena-chess.jpg',  caption: 'London System, board 5. Pain.' },
-  { src: '/me/photos/arena-city-1.jpg', alt: 'arena-city-1.jpg', caption: 'Manchester City · sky blue forever.' },
-  { src: '/me/photos/arena-brotato.jpg',alt: 'arena-brotato.jpg',caption: 'Brotato wave 20. Zero HP. Full build.' },
-  { src: '/me/photos/arena-btd6.jpg',   alt: 'arena-btd6.jpg',   caption: 'BTD6, round 100, ego intact.' },
-  { src: '/me/photos/arena-city-2.jpg', alt: 'arena-city-2.jpg', caption: "Etihad on TV. It's basically religion." },
-];
+// Add entries here to make them orbit the chessboard + radar scene.
+// Leave empty = signature scene stays hero.
+const PHOTOS: OrbitPhoto[] = [];
 
 export default function ChapterArena() {
   // 8x8 chessboard color pattern

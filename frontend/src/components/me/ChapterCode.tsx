@@ -13,12 +13,28 @@ export default function ChapterCode() {
         <div className="me-chapter-kicker">I · The Base</div>
         <h2 id="chapter-code-title" className="me-chapter-title">Binary<br />Realm</h2>
         <p className="me-chapter-lede">
-          <strong>This is home.</strong> B.E. in Computer Engineering, Master's in CS, still
-          Googling how to center a div. I used to be <em>React by default</em>.
-          I've since changed my mind: now it's <strong>React when it earns its
-          weight</strong>, and <strong>Astro, HTMX, or plain HTML</strong> when
-          the problem is shaped that way. Picking the right tool beats picking
-          the shiny one, every single time.
+          <strong>This is home.</strong> B.E. and then an M.Sc. in Computer
+          Engineering — and I <em>still</em> keep an LLM tab open to center a
+          div. The modern workflow: half the day is <strong>shipping code</strong>,
+          the other half is <strong>prompting, steering, and fact-checking
+          machines</strong> that are confidently wrong 14% of the time. It's
+          a new kind of fluency; I'm here for it.
+        </p>
+        <p className="me-chapter-lede" style={{ opacity: 0.82 }}>
+          <strong>Frontend:</strong> used to be React-by-default. Now it's{' '}
+          <strong>React when it earns its weight</strong>, and{' '}
+          <strong>Astro, HTMX, or plain HTML</strong> when the problem is
+          shaped that way. Boring &gt; shiny. Every time.
+        </p>
+        <p className="me-chapter-lede" style={{ opacity: 0.82 }}>
+          <strong>Backend:</strong> I'm not writing kernels or flight-control
+          software, so <em>Rust and Zig, respectfully, nah</em> — I'm not
+          here to fight my own soul for a dev-loop. Java and I never quite
+          agreed on whether every noun needs a factory. My comfort zone is{' '}
+          <strong>Go, written in a functional-ish style</strong>, with{' '}
+          <strong>TypeScript and Python</strong> covering the rest. Between
+          those three, <strong>~80% of real-world backend work</strong> is
+          already handled — cleanly, shippable, with a debugger I trust.
         </p>
         <p className="me-chapter-lede" style={{ opacity: 0.75 }}>
           I ship open-source tools developers actually use — <em>GitVibes, ProtoPeek,

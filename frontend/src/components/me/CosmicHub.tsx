@@ -12,7 +12,7 @@ const PORTALS: Portal[] = [
   { id: 'spiritual', label: 'Bhakti',     emoji: '🪷', colorA: '#f6c667', colorB: '#5a1f0a', glow: 'rgba(246,198,103,0.6)' },
   { id: 'outdoors',  label: 'Outdoors',   emoji: '🥾', colorA: '#ff8c42', colorB: '#4a1f06', glow: 'rgba(255,140,66,0.6)' },
   { id: 'iron',      label: 'Iron',       emoji: '🏋️', colorA: '#ff4444', colorB: '#3a0000', glow: 'rgba(255,68,68,0.6)' },
-  { id: 'mind',      label: 'Mind',       emoji: '🧠', colorA: '#b794f4', colorB: '#1e0b4a', glow: 'rgba(183,148,244,0.6)' },
+  { id: 'mind',      label: 'Mind',       emoji: '🔮', colorA: '#b794f4', colorB: '#1e0b4a', glow: 'rgba(183,148,244,0.6)' },
   { id: 'arena',     label: 'Arena',      emoji: '🎮', colorA: '#00ff88', colorB: '#052e16', glow: 'rgba(0,255,136,0.6)' },
   { id: 'cluster',   label: 'Connect',    emoji: '🌐', colorA: '#f5b7d5', colorB: '#3a0f1f', glow: 'rgba(245,183,213,0.6)' },
 ];

@@ -1,23 +1,9 @@
-import PhotoOrbit, { type OrbitPhoto } from './PhotoOrbit';
-
 /**
  * ChapterOutdoors — the merged "III · The Long Way" world covering BOTH
  * cycling (100 km events, Strava) and hiking (mountains, trails, altitude).
- * The right-side scene is a perspective road/trail with a PhotoOrbit ring
- * around it, ready for real photos dropped at /public/me/photos/.
+ * The right-side scene is a full-size perspective road/trail with mountain
+ * silhouettes, a cyclist SVG, and an altitude HUD.
  */
-
-// Empty `src` renders a dashed "drop your photo here" placeholder, so the
-// whole thing is a finished design that gets richer when files land in
-// /public/me/photos/ — no code changes required later.
-const PHOTOS: OrbitPhoto[] = [
-  { src: '/me/photos/hike-1.jpg',  alt: 'hike-1.jpg',  caption: 'A trail, somewhere above the cloud line.' },
-  { src: '/me/photos/ride-1.jpg',  alt: 'ride-1.jpg',  caption: 'KM 70. Legs filed a formal complaint.' },
-  { src: '/me/photos/hike-2.jpg',  alt: 'hike-2.jpg',  caption: 'Switchbacks. Breath. Small wins.' },
-  { src: '/me/photos/ride-2.jpg',  alt: 'ride-2.jpg',  caption: 'Century finish. Tasted like iron and juice.' },
-  { src: '/me/photos/hike-3.jpg',  alt: 'hike-3.jpg',  caption: 'Summit view. Worth the knee noises.' },
-  { src: '/me/photos/ride-3.jpg',  alt: 'ride-3.jpg',  caption: 'Sunrise roll-out. Peak feeling.' },
-];
 
 export default function ChapterOutdoors() {
   return (
@@ -66,17 +52,9 @@ export default function ChapterOutdoors() {
         </div>
       </div>
 
-      {/* Scene panel — road + trail fusion with a PhotoOrbit wrapping it */}
-      <div className="me-scene-panel" aria-hidden="false">
-        <PhotoOrbit
-          photos={PHOTOS}
-          radius={180}
-          size={72}
-          speed={38}
-          placeholderHint="Drop JPG/WebP files into /frontend/public/me/photos/"
-        >
-          {/* The signature scene stays in the center */}
-          <div className="me-road" style={{ width: 280, height: 280, borderRadius: '50%' }}>
+      {/* Scene panel — road + trail fusion, full size */}
+      <div className="me-scene-panel" aria-hidden="true">
+          <div className="me-road">
             <div className="me-road-sun" />
             <div className="me-road-floor" />
             {/* Small mountain silhouette for hiking vibe */}
@@ -137,7 +115,6 @@ export default function ChapterOutdoors() {
               KM 87 · ALT 3180 m
             </div>
           </div>
-        </PhotoOrbit>
       </div>
     </section>
   );

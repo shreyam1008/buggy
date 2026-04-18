@@ -1,12 +1,3 @@
-import PhotoOrbit, { type OrbitPhoto } from './PhotoOrbit';
-
-const PHOTOS: OrbitPhoto[] = [
-  { src: '/me/photos/gym-1.jpg', alt: 'gym-1.jpg', caption: 'Leg day. The bar disagreed briefly.' },
-  { src: '/me/photos/gym-2.jpg', alt: 'gym-2.jpg', caption: 'Pull day. Chalk everywhere.' },
-  { src: '/me/photos/gym-3.jpg', alt: 'gym-3.jpg', caption: 'Deadlift PR. Mostly adrenaline.' },
-  { src: '/me/photos/gym-4.jpg', alt: 'gym-4.jpg', caption: 'The five trainees, ruining their rest day.' },
-  { src: '/me/photos/gym-5.jpg', alt: 'gym-5.jpg', caption: 'Post-workout. Ego intact, barely.' },
-];
 
 export default function ChapterIron() {
   return (
@@ -23,21 +14,31 @@ export default function ChapterIron() {
         <div className="me-chapter-kicker">IV · The Forge</div>
         <h2 id="chapter-iron-title" className="me-chapter-title">Iron<br />Forge</h2>
         <p className="me-chapter-lede">
-          <strong>Gym enthusiast.</strong> Trained roughly 5 people into better
-          versions of themselves. Sample size is statistically insignificant,
-          methodology is 100% vibes — but all 5 are still lifting, so we're
-          calling that a <strong>100% adherence rate</strong> and publishing
-          the paper.
+          <strong>Current ledger:</strong> pressing{' '}
+          <strong>bodyweight</strong>, pulling <strong>2× bodyweight</strong>{' '}
+          off the floor, squatting a PR I'm suspiciously proud of. Trained
+          roughly 5 people into better versions of themselves — all 5 still
+          lifting, so we're publishing the paper at{' '}
+          <em>n = 5, p &lt; 1, vibes-based methodology</em>.
         </p>
-        <p className="me-chapter-lede" style={{ opacity: 0.75 }}>
+        <p className="me-chapter-lede" style={{ opacity: 0.82 }}>
+          <strong>Where I'm going:</strong> a clean{' '}
+          <strong>handstand</strong>, full <strong>side splits</strong>, and a{' '}
+          <strong>2.5× bodyweight deadlift</strong>. Yes, all three. Yes, at
+          the same time in my life. I know the probability chart says this is
+          close to zero — but the probability chart hasn't met me, and it can
+          stand in the corner while I chalk up.
+        </p>
+        <p className="me-chapter-lede" style={{ opacity: 0.72 }}>
           My philosophy: the bar doesn't care about your excuses, your
           deadline, your PR review, or your mood. It just wants to go up.
-          Sometimes I envy its clarity.
+          Some days I envy its clarity.
         </p>
         <div style={{ marginTop: 24 }}>
-          <span className="me-chapter-stat"><b>5</b><span>Humans trained</span></span>
-          <span className="me-chapter-stat"><b>5/5</b><span>Still lifting</span></span>
-          <span className="me-chapter-stat"><b>p &lt; 1</b><span>Very significant, trust me</span></span>
+          <span className="me-chapter-stat"><b>BW</b><span>Bench · done</span></span>
+          <span className="me-chapter-stat"><b>2×BW</b><span>Deadlift · done</span></span>
+          <span className="me-chapter-stat"><b>2.5×</b><span>Deadlift · loading…</span></span>
+          <span className="me-chapter-stat"><b>5</b><span>Humans trained · all still lifting</span></span>
         </div>
         <p style={{ fontSize: 13, opacity: 0.5, marginTop: 18, fontStyle: 'italic' }}>
           (Disclaimer: I am not a certified trainer. I am a certified enthusiast.
@@ -45,11 +46,10 @@ export default function ChapterIron() {
         </p>
       </div>
 
-      {/* Scene panel — floating dumbbell wrapped in PhotoOrbit */}
-      <div className="me-scene-panel">
-        <PhotoOrbit photos={PHOTOS} radius={170} size={70} speed={32} direction="ccw">
-          <div className="me-iron-bell" style={{ width: 240, height: 240 }}>
-            <svg viewBox="0 0 240 120" width="90%" aria-hidden="true">
+      {/* Scene panel — floating dumbbell, full size */}
+      <div className="me-scene-panel" aria-hidden="true">
+        <div className="me-iron-bell">
+          <svg viewBox="0 0 240 120" width="90%">
             <defs>
               <linearGradient id="bell" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#4a4a55" />
@@ -78,8 +78,22 @@ export default function ChapterIron() {
             <text x="25" y="68" fill="#fff" opacity="0.6" fontSize="11" fontWeight="900" textAnchor="middle">20</text>
             <text x="215" y="68" fill="#fff" opacity="0.6" fontSize="11" fontWeight="900" textAnchor="middle">20</text>
           </svg>
-          </div>
-        </PhotoOrbit>
+        </div>
+        {/* Sweat drops */}
+        <svg style={{ position: 'absolute', inset: 0 }} viewBox="0 0 400 400" preserveAspectRatio="none">
+          <circle cx="80" cy="80" r="3" fill="#60a5fa" opacity="0.7">
+            <animate attributeName="cy" values="80;380;80" dur="5s" repeatCount="indefinite" />
+            <animate attributeName="opacity" values="0.7;0;0.7" dur="5s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="320" cy="120" r="4" fill="#60a5fa" opacity="0.7">
+            <animate attributeName="cy" values="120;380;120" dur="7s" repeatCount="indefinite" />
+            <animate attributeName="opacity" values="0.7;0;0.7" dur="7s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="200" cy="60" r="3" fill="#60a5fa" opacity="0.7">
+            <animate attributeName="cy" values="60;380;60" dur="6s" repeatCount="indefinite" />
+            <animate attributeName="opacity" values="0.7;0;0.7" dur="6s" repeatCount="indefinite" />
+          </circle>
+        </svg>
       </div>
     </section>
   );

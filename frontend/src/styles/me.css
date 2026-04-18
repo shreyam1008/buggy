@@ -48,26 +48,30 @@
   will-change: transform;
 }
 
+/* No 3D tilt — portals stay coplanar with the viewport so the spherical
+   shading reads as real spheres instead of flattening into ellipses
+   while the ring rotates. */
 .me-orbit-tilt {
   transform-style: preserve-3d;
-  transform: rotateX(62deg);
 }
 
 .me-portal {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: clamp(88px, 18vw, 128px);
-  height: clamp(88px, 18vw, 128px);
-  margin-top: calc(clamp(88px, 18vw, 128px) / -2);
-  margin-left: calc(clamp(88px, 18vw, 128px) / -2);
+  width: clamp(96px, 18vw, 136px);
+  height: clamp(96px, 18vw, 136px);
+  margin-top: calc(clamp(96px, 18vw, 136px) / -2);
+  margin-left: calc(clamp(96px, 18vw, 136px) / -2);
   border-radius: 50%;
   transform-style: preserve-3d;
+  /* Orbit placement: rotate to the slot angle, translate outward, rotate
+     back so the portal itself is upright. No rotateX compensation needed
+     now that the parent isn't tilted. */
   transform:
     rotateZ(calc(var(--i) * 51.43deg))
     translateX(min(42vw, 240px))
-    rotateZ(calc(var(--i) * -51.43deg))
-    rotateX(-62deg);
+    rotateZ(calc(var(--i) * -51.43deg));
   cursor: pointer;
   transition: transform 0.3s ease, filter 0.3s ease;
 }
@@ -504,22 +508,35 @@
 /* --- Walking Sprite --- */
 .me-sprite {
   position: fixed;
-  bottom: 16px;
-  left: -240px;
-  width: 220px;
-  height: 140px;
+  bottom: 20px;
+  left: -340px;
+  width: clamp(220px, 32vw, 320px);
+  height: clamp(150px, 22vw, 200px);
   z-index: 5;
   pointer-events: none;
-  animation: me-walk 120s linear infinite;
+  animation: me-walk 130s cubic-bezier(0.42, 0, 0.58, 1) infinite;
   will-change: transform;
 }
 
+/* Creative path: instead of a straight line, the couple drifts in a soft
+   sine-wave — up, down, forward — as if walking through a meadow. Fourteen
+   stops per loop give the curve enough resolution to feel organic. */
 @keyframes me-walk {
-  0%   { transform: translateX(0) scaleX(1); }
-  48%  { transform: translateX(calc(100vw + 240px)) scaleX(1); }
-  50%  { transform: translateX(calc(100vw + 240px)) scaleX(-1); }
-  98%  { transform: translateX(0) scaleX(-1); }
-  100% { transform: translateX(0) scaleX(1); }
+  0%   { transform: translate(0,                    0px)   scaleX(1); }
+  8%   { transform: translate(12vw,                 -10px) scaleX(1); }
+  16%  { transform: translate(24vw,                  4px)  scaleX(1); }
+  24%  { transform: translate(36vw,                 -14px) scaleX(1); }
+  32%  { transform: translate(48vw,                  2px)  scaleX(1); }
+  40%  { transform: translate(64vw,                 -10px) scaleX(1); }
+  48%  { transform: translate(calc(100vw + 480px),   0px)  scaleX(1); }
+  50%  { transform: translate(calc(100vw + 480px),   0px)  scaleX(-1); }
+  58%  { transform: translate(64vw,                 -12px) scaleX(-1); }
+  66%  { transform: translate(48vw,                  4px)  scaleX(-1); }
+  74%  { transform: translate(36vw,                 -8px)  scaleX(-1); }
+  82%  { transform: translate(24vw,                  2px)  scaleX(-1); }
+  90%  { transform: translate(12vw,                 -10px) scaleX(-1); }
+  98%  { transform: translate(0,                     0px)  scaleX(-1); }
+  100% { transform: translate(0,                     0px)  scaleX(1); }
 }
 
 .me-sprite-bob {
@@ -536,17 +553,17 @@
 
 /* Circular portrait avatars for the walking Radha-Krishna sprite */
 .me-avatar {
-  width: 72px;
-  height: 72px;
+  width: clamp(72px, 10vw, 96px);
+  height: clamp(72px, 10vw, 96px);
   border-radius: 50%;
   overflow: hidden;
   position: relative;
   flex-shrink: 0;
   box-shadow:
     0 0 0 2px #fde68a,
-    0 0 0 4px rgba(251, 191, 36, 0.5),
-    0 0 18px rgba(251, 191, 36, 0.7),
-    0 8px 16px rgba(0, 0, 0, 0.4);
+    0 0 0 5px rgba(251, 191, 36, 0.55),
+    0 0 22px rgba(251, 191, 36, 0.75),
+    0 10px 22px rgba(0, 0, 0, 0.45);
 }
 
 .me-avatar img {
@@ -812,6 +829,67 @@
     animation: none !important;
   }
   .me-photo-bloom { animation: me-backdrop-in 0.3s ease-out; }
+}
+
+/* ========================================================================
+   BackgroundFlute — subtle self-drawing bansuri in the background.
+   Pure CSS animation, zero JS, ~0 perf cost. Most viewers won't notice —
+   that's the point.
+   ======================================================================== */
+
+.me-bg-flute {
+  position: fixed;
+  top: clamp(80px, 12vh, 140px);
+  right: clamp(-20px, 1vw, 40px);
+  width: clamp(200px, 22vw, 320px);
+  height: auto;
+  z-index: 1;
+  pointer-events: none;
+  color: #fde68a;
+  opacity: 0.07;
+  transform: rotate(-4deg);
+}
+
+.me-bg-flute-body {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: me-bg-flute-draw 90s ease-in-out infinite;
+}
+
+@keyframes me-bg-flute-draw {
+  0%   { stroke-dashoffset: 100; }
+  44%  { stroke-dashoffset: 0; }
+  56%  { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -100; }
+}
+
+.me-bg-flute-hole {
+  opacity: 0;
+  animation: me-bg-flute-hole 90s linear infinite;
+}
+
+@keyframes me-bg-flute-hole {
+  0%, 9%   { opacity: 0; }
+  10%, 55% { opacity: 0.9; }
+  65%, 100%{ opacity: 0; }
+}
+
+.me-bg-flute-notes text {
+  opacity: 0;
+  animation: me-bg-flute-note 90s ease-out infinite;
+}
+
+@keyframes me-bg-flute-note {
+  0%, 13%   { opacity: 0; transform: translateY(0); }
+  15%       { opacity: 0.9; }
+  30%       { opacity: 0; transform: translateY(-14px); }
+  100%      { opacity: 0; transform: translateY(-14px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .me-bg-flute-body   { animation: none; stroke-dashoffset: 0; }
+  .me-bg-flute-hole,
+  .me-bg-flute-notes text { animation: none; opacity: 0.9; }
 }
 
 /* --- FAQ section --- */

@@ -3,6 +3,7 @@ import '../styles/me.css';
 
 import NebulaCanvas from '../components/me/NebulaCanvas';
 import WalkingSprite from '../components/me/WalkingSprite';
+import BackgroundFlute from '../components/me/BackgroundFlute';
 import CosmicHub from '../components/me/CosmicHub';
 import ChapterCode from '../components/me/ChapterCode';
 import ChapterSpiritual from '../components/me/ChapterSpiritual';
@@ -59,6 +60,7 @@ export default function Me() {
     >
       <MeSEO />
       <NebulaCanvas />
+      <BackgroundFlute />
       <WalkingSprite />
 
       {/* Machine-readable identity for crawlers + microdata */}
