@@ -237,7 +237,8 @@ npx wrangler dev     # Local Workers runtime on :8787
 
 ## My Other Apps
 
-- 🖥️ [dbterm](https://shreyam1008.github.io/dbterm/) — Terminal database client
+- � [Markpad](https://shreyam1008.github.io/markpad/) — Native Markdown notepad (Go + Wails, under 10 MB)
+- �🖥️ [dbterm](https://shreyam1008.github.io/dbterm/) — Terminal database client
 - ⚛️ [Radhey](https://radhey.web.app/) — React application
 - ⚖️ [Legal Firm](https://nepallegalfirm.com.np/) — Law firm website
 
